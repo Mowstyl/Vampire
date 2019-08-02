@@ -15,16 +15,9 @@ import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.attribute.Attribute;
 import org.bukkit.block.Block;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.EntityType;
-import org.bukkit.entity.Horse;
-import org.bukkit.entity.Horse.Variant;
-import org.bukkit.entity.HumanEntity;
-import org.bukkit.entity.LivingEntity;
-import org.bukkit.entity.Player;
-import org.bukkit.entity.Projectile;
-import org.bukkit.entity.ThrownPotion;
+import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.block.Action;
@@ -48,6 +41,12 @@ import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.projectiles.ProjectileSource;
 
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
+import java.util.logging.Level;
+
 public class ListenerMain extends Engine
 {
 	// -------------------------------------------- //
@@ -56,6 +55,8 @@ public class ListenerMain extends Engine
 	
 	private static ListenerMain i = new ListenerMain();
 	public static ListenerMain get() { return i; }
+
+	private Map<UUID, Long> lastAccess = new HashMap<>();
 	
 	// -------------------------------------------- //
 	// FX
@@ -504,11 +505,10 @@ public class ListenerMain extends Engine
 		Horse horse = null;
 		if (damagee instanceof Horse)
 		{
-			horse = (Horse)damagee;
-			// only horses, no mules donkeys or undead ones
-			if(horse.getVariant() != Variant.HORSE) return;
+			horse = (Horse) damagee;
 		}
-		
+
+		// only horses, no mules donkeys or undead ones
 		if ( vampire == null || horse == null) return;
 
 		// ... and the vampire can infect horses
@@ -520,15 +520,12 @@ public class ListenerMain extends Engine
 		
 		// ... Then there is a risk for infection ...
 		if (MassiveCore.random.nextDouble() > vampire.combatInfectRisk()) return;
-		
-		// if its wearing armor remove it (otherwise it turns invisible and can crash people)
-		ItemStack horseArmor = horse.getInventory().getArmor();
-		if(horseArmor != null)
-		{
-			horse.getWorld().dropItem(horse.getLocation(), horseArmor);
-			horse.getInventory().setArmor(null);
-		}
-		horse.setVariant(MassiveCore.random.nextDouble() > 0.5 ? Variant.SKELETON_HORSE : Variant.UNDEAD_HORSE);
+
+		// ... then we spawn the new horse ...
+		horse.getWorld().spawnEntity(horse.getLocation(), MassiveCore.random.nextDouble() > 0.5 ? EntityType.SKELETON_HORSE : EntityType.ZOMBIE_HORSE);
+
+		// ... and we Thanos the old one ...
+		horse.remove();
 	}
 
 	// -------------------------------------------- //
@@ -576,11 +573,7 @@ public class ListenerMain extends Engine
 		// ... that has blood left ...
 		if (damagee.getHealth() < 0) return;
 		if (damagee.isDead()) return;
-		if (damagee instanceof Horse)
-		{
-			Horse horse = (Horse) damagee;
-			if(horse.getVariant() == Variant.SKELETON_HORSE || horse.getVariant() == Variant.UNDEAD_HORSE) return;
-		}
+		if (damagee instanceof SkeletonHorse || damagee instanceof ZombieHorse) return;
 		
 		// ... and the liable damager is a vampire ...
 		Entity damager = MUtil.getLiableDamager(event);
@@ -596,7 +589,7 @@ public class ListenerMain extends Engine
 		// ... drink blood! ;,,;
 		double damage = event.getDamage();
 		if (damagee.getHealth() < damage) damage = damagee.getHealth();
-		double food = damage / damagee.getMaxHealth() * fullFoodQuotient * player.getMaxHealth();
+		double food = damage / damagee.getAttribute(Attribute.GENERIC_MAX_HEALTH).getBaseValue() * fullFoodQuotient * player.getAttribute(Attribute.GENERIC_MAX_HEALTH).getBaseValue();
 		
 		vampire.getFood().add(food);
 	}
@@ -729,8 +722,16 @@ public class ListenerMain extends Engine
 		// ... run altar logic.
 		Player player = event.getPlayer();
 		if (player == null || MUtil.isntPlayer(player)) return;
+
+		// ... Avoid repeating this twice
+		long timestamp = (new Date()).getTime();
+		if (lastAccess.containsKey(player.getUniqueId()) && timestamp - lastAccess.get(player.getUniqueId()) < 500)
+			return;
+		else
+			lastAccess.put(player.getUniqueId(), timestamp);
+
 		MConf mconf = MConf.get();
-		
+
 		if(mconf.getAltarDark().evalBlockUse(event.getClickedBlock(), player) || mconf.getAltarLight().evalBlockUse(event.getClickedBlock(), player))
 		{
 			event.setCancelled(true);
