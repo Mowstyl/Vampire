@@ -2,6 +2,7 @@ package com.clanjhoo.vampire.Listeners;
 
 import com.clanjhoo.vampire.VampireRevamp;
 import com.clanjhoo.vampire.entity.UPlayer;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Phantom;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -28,7 +29,7 @@ public class PhantomListener implements Listener {
         if ((e.getEntity() instanceof Phantom) && e.getSpawnReason() == CreatureSpawnEvent.SpawnReason.NATURAL) {
             Phantom phan = (Phantom) e.getEntity();
             UPlayer uPlayer = UPlayer.get(phan.getSpawningEntity());
-            if (uPlayer.isVampire() && !uPlayer.truceIsBroken()) {
+            if (uPlayer.isVampire() && !uPlayer.truceIsBroken() && plugin.mConf.getTruceEntityTypes().contains(EntityType.PHANTOM)) {
                 e.setCancelled(true);
             }
         }
