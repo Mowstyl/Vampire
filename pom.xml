@@ -1,74 +1,161 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <!-- Parent -->
-    <parent>
-        <groupId>com.massivecraft.massivesuper</groupId>
-        <artifactId>MassiveSuper</artifactId>
-        <version>3.2.2</version>
-        <relativePath>../MassiveSuper</relativePath>
-    </parent>
-
     <!-- Basics -->
-    <groupId>com.massivecraft.vampire</groupId>
-    <artifactId>Vampire</artifactId>
+    <groupId>com.clanjhoo.vampire</groupId>
+    <artifactId>VampireRevamp</artifactId>
     <packaging>jar</packaging>
+    <version>1.0.BETA-4</version>
 
     <!-- Info -->
     <name>${project.artifactId}</name>
-    <description>${massiveColorInfo}Anyone can become a vampire, but do you want to? During daytime vampires cower from sunlight. During the night the humans reach for their holy water and wooden stakes as the vampires roam the lands with inhuman strength, speed and levitation-powers. Driven by their endless bloodlust, they devour all living in their way. ${massiveDescriptionSuffix}</description>
-    <url>${massiveBaseUrl}/vampire</url>
+    <description>Anyone can become a vampire, but do you want to? During daytime vampires cower from sunlight. During the night the humans reach for their holy water and wooden stakes as the vampires roam the lands with inhuman strength, speed and levitation-powers. Driven by their endless bloodlust, they devour all living in their way.</description>
+    <url>https://clanjhoo.com</url>
+
+
+    <!-- Build -->
+    <build>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+                <includes>
+                    <include>plugin.yml</include>
+                </includes>
+            </resource>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>false</filtering>
+                <excludes>
+                    <exclude>plugin.yml</exclude>
+                </excludes>
+            </resource>
+        </resources>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>1.8</source>
+                    <target>1.8</target>
+                    <compilerArgs>
+                        <arg>-parameters</arg>
+                    </compilerArgs>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <configuration>
+                    <dependencyReducedPomLocation>${project.build.directory}/dependency-reduced-pom.xml</dependencyReducedPomLocation>
+                    <relocations>
+                        <relocation>
+                            <pattern>co.aikar.commands</pattern>
+                            <shadedPattern>co.aikar.acf-paper</shadedPattern> <!-- Replace this -->
+                        </relocation>
+                    </relocations>
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+                            <promoteTransitiveDependencies>true</promoteTransitiveDependencies>
+                            <artifactSet>
+                                <includes>
+                                    <include>co.aikar:acf-paper</include>
+                                    <include>co.aikar:acf-bukkit</include>
+                                    <include>co.aikar:acf-core</include>
+                                    <include>co.aikar:locales</include>
+                                    <include>co.aikar:Table</include>
+                                    <include>co.aikar:minecraft-timings</include>
+                                    <include>net.jodah:expiringmap</include>
+                                </includes>
+                            </artifactSet>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+    <!-- Repositories -->
+    <repositories>
+        <repository>
+            <id>spigot-repo</id>
+            <url>https://hub.spigotmc.org/nexus/content/repositories/snapshots/</url>
+        </repository>
+        <repository>
+            <id>sk89q-repo</id>
+            <url>http://maven.sk89q.com/repo/</url>
+        </repository>
+        <repository>
+            <id>md_5-public</id>
+            <url>http://repo.md-5.net/content/groups/public/</url>
+        </repository>
+        <repository>
+            <id>aikar</id>
+            <url>https://repo.aikar.co/content/groups/aikar/</url>
+        </repository>
+        <repository>
+            <id>papermc</id>
+            <url>https://papermc.io/repo/repository/maven-public/</url>
+        </repository>
+    </repositories>
 
     <!-- Dependencies -->
     <dependencies>
+        <!-- Paper -->
+        <dependency>
+            <groupId>com.destroystokyo.paper</groupId>
+            <artifactId>paper-api</artifactId>
+            <version>1.15.2-R0.1-SNAPSHOT</version>
+            <scope>provided</scope>
+        </dependency>
         <!-- Spigot -->
+        <!--
         <dependency>
             <groupId>org.spigotmc</groupId>
             <artifactId>spigot-api</artifactId>
+            <version>1.15.2-R0.1-SNAPSHOT</version>
         </dependency>
-        <!-- MassiveCore -->
-        <dependency>
-            <groupId>com.massivecraft.massivecore</groupId>
-            <artifactId>MassiveCore</artifactId>
-        </dependency>
+        -->
         <!-- WorldEdit -->
         <dependency>
             <groupId>com.sk89q.worldedit</groupId>
             <artifactId>worldedit-core</artifactId>
+            <version>7.1.0</version>
         </dependency>
         <dependency>
             <groupId>com.sk89q.worldedit</groupId>
             <artifactId>worldedit-bukkit</artifactId>
+            <version>7.1.0</version>
         </dependency>
         <!-- WorldGuard -->
         <dependency>
             <groupId>com.sk89q.worldguard</groupId>
             <artifactId>worldguard-core</artifactId>
+            <version>7.0.2</version>
         </dependency>
         <dependency>
             <groupId>com.sk89q.worldguard</groupId>
             <artifactId>worldguard-bukkit</artifactId>
+            <version>7.0.2</version>
+        </dependency>
+        <!--Aikar-->
+        <dependency>
+            <groupId>co.aikar</groupId>
+            <artifactId>acf-paper</artifactId>
+            <version>0.5.0-SNAPSHOT</version>
+        </dependency>
+        <!--LibsDisguises-->
+        <dependency>
+            <groupId>LibsDisguises</groupId>
+            <artifactId>LibsDisguises</artifactId>
+            <version>9.8.9-SNAPSHOT</version>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
-
-    <!-- Build -->
-    <build>
-        <!-- Resources -->
-        <resources>
-            <!-- Standard -->
-            <resource>
-                <directory>${project.basedir}</directory>
-                <filtering>true</filtering>
-                <includes>
-                    <include>*.yml</include>
-                </includes>
-            </resource>
-            <!-- OpenSource -->
-            <resource>
-                <directory>${project.build.sourceDirectory}</directory>
-                <filtering>false</filtering>
-            </resource>
-        </resources>
-    </build>
-    
 </project>
