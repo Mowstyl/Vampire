@@ -191,7 +191,7 @@ public class UPlayer {
                     if (player != null) {
                         MConf mconf = plugin.mConf;
                         mconf.getEffectConfHuman().removePotionEffects(player);
-                        player.setSleepingIgnored(true);
+                        // player.setSleepingIgnored(true);
                     }
                 } else {
                     this.msg(plugin.mLang.vampireFalse);
@@ -202,10 +202,10 @@ public class UPlayer {
                     this.setBloodlusting(false);
                     this.setIntending(false);
                     this.setUsingNightVision(false);
-                    player.setSleepingIgnored(false);
 
                     Player player = this.getPlayer();
                     if (player != null) {
+                        // player.setSleepingIgnored(false);
                         MConf mconf = plugin.mConf;
                         mconf.getEffectConfVampire().removePotionEffects(player);
                     }
