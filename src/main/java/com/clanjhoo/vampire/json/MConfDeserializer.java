@@ -86,6 +86,7 @@ public class MConfDeserializer implements JsonDeserializer<MConf> {
             mConf.setBlockDamageFrom(gson.fromJson(root.getAsJsonArray("blockDamageFrom"), setDCType));
             mConf.setBlockHealthFrom(gson.fromJson(root.getAsJsonArray("blockHealthFrom"), setRRType));
 
+            /*
             Map<String, Boolean> upv = new HashMap<>(),
                                  uph = new HashMap<>();
             for(Map.Entry<String, JsonElement> entry : root.getAsJsonObject("updatePermsVampire").entrySet()) {
@@ -94,6 +95,8 @@ public class MConfDeserializer implements JsonDeserializer<MConf> {
             for(Map.Entry<String, JsonElement> entry : root.getAsJsonObject("updatePermsHuman").entrySet()) {
                 uph.put(entry.getKey(), entry.getValue().getAsBoolean());
             }
+            */
+
             mConf.setUpdateRespawnFood(root.get("updateRespawnFood").getAsInt());
             mConf.setUpdateRespawnHealth(root.get("updateRespawnHealth").getAsInt());
             mConf.setUpdateNameColor(root.get("updateNameColor").getAsBoolean());

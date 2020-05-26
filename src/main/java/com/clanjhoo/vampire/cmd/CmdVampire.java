@@ -10,9 +10,7 @@ import com.clanjhoo.vampire.InfectionReason;
 import com.clanjhoo.vampire.Perm;
 import com.clanjhoo.vampire.VampireRevamp;
 import com.clanjhoo.vampire.entity.MConf;
-import com.clanjhoo.vampire.entity.MLang;
 import com.clanjhoo.vampire.entity.UPlayer;
-import com.clanjhoo.vampire.entity.UPlayerColl;
 import com.clanjhoo.vampire.util.*;
 import me.libraryaddict.disguise.DisguiseAPI;
 import net.md_5.bungee.api.chat.BaseComponent;
@@ -51,27 +49,27 @@ public class CmdVampire extends BaseCommand {
 
 			RootCommand vampireCommand = plugin.pumanager.getRegisteredRootCommands().iterator().next();
 
-			sender.sendMessage(TextUtil.getHelpHeader(help, maxPages, help.getCommandName()));
+			sender.spigot().sendMessage(TextUtil.getHelpHeader(help, maxPages, help.getCommandName()));
 			for (Entry<String, RegisteredCommand> entry : vampireCommand.getSubCommands().entries()) {
 				commandMap.put(entry.getKey(), entry.getValue());
 				//Bukkit.getLogger().log(Level.INFO, "Key: " + entry.getKey());
 			}
 
 			if (help.getPage() == 1) {
-				sender.sendMessage(TextUtil.getCommandHelp("help", commandMap.get("help"), sender, CollectionUtil.list("?", "h", "help"), 0));
-				sender.sendMessage(TextUtil.getCommandHelp("show", commandMap.get("show"), sender, plugin.mConf.getAliasesVampireShow(), 0));
-				sender.sendMessage(TextUtil.getCommandHelp("bloodlust", commandMap.get("bloodlust"), sender, plugin.mConf.getAliasesVampireModeBloodlust(), 1));
-				sender.sendMessage(TextUtil.getCommandHelp("intend", commandMap.get("intend"), sender, plugin.mConf.getAliasesVampireModeIntend(), 1));
-				sender.sendMessage(TextUtil.getCommandHelp("nightvision", commandMap.get("nightvision"), sender, plugin.mConf.getAliasesVampireModeNightvision(), 1));
-				sender.sendMessage(TextUtil.getCommandHelp("offer", commandMap.get("offer"), sender, plugin.mConf.getAliasesVampireOffer(), 0));
-				sender.sendMessage(TextUtil.getCommandHelp("accept", commandMap.get("accept"), sender, plugin.mConf.getAliasesVampireAccept(), 0));
-				sender.sendMessage(TextUtil.getCommandHelp("flask", commandMap.get("flask"), sender, plugin.mConf.getAliasesVampireFlask(), 0));
-				sender.sendMessage(TextUtil.getCommandHelp("shriek", commandMap.get("shriek"), sender, plugin.mConf.getAliasesVampireShriek(), 0));
+				sender.spigot().sendMessage(TextUtil.getCommandHelp("help", commandMap.get("help"), sender, CollectionUtil.list("?", "h", "help"), 0));
+				sender.spigot().sendMessage(TextUtil.getCommandHelp("show", commandMap.get("show"), sender, plugin.mConf.getAliasesVampireShow(), 0));
+				sender.spigot().sendMessage(TextUtil.getCommandHelp("bloodlust", commandMap.get("bloodlust"), sender, plugin.mConf.getAliasesVampireModeBloodlust(), 1));
+				sender.spigot().sendMessage(TextUtil.getCommandHelp("intend", commandMap.get("intend"), sender, plugin.mConf.getAliasesVampireModeIntend(), 1));
+				sender.spigot().sendMessage(TextUtil.getCommandHelp("nightvision", commandMap.get("nightvision"), sender, plugin.mConf.getAliasesVampireModeNightvision(), 1));
+				sender.spigot().sendMessage(TextUtil.getCommandHelp("offer", commandMap.get("offer"), sender, plugin.mConf.getAliasesVampireOffer(), 0));
+				sender.spigot().sendMessage(TextUtil.getCommandHelp("accept", commandMap.get("accept"), sender, plugin.mConf.getAliasesVampireAccept(), 0));
+				sender.spigot().sendMessage(TextUtil.getCommandHelp("flask", commandMap.get("flask"), sender, plugin.mConf.getAliasesVampireFlask(), 0));
+				sender.spigot().sendMessage(TextUtil.getCommandHelp("shriek", commandMap.get("shriek"), sender, plugin.mConf.getAliasesVampireShriek(), 0));
 			} else {
-				sender.sendMessage(TextUtil.getCommandHelp("batusi", commandMap.get("batusi"), sender, plugin.mConf.getAliasesVampireModeBatusi(), 2));
-				sender.sendMessage(TextUtil.getCommandHelp("list", commandMap.get("list"), sender, plugin.mConf.getAliasesVampireList(), 0));
-				sender.sendMessage(TextUtil.getCommandHelp("set", commandMap.get("set"), sender, plugin.mConf.getAliasesVampireSet(), 0));
-				sender.sendMessage(TextUtil.getCommandHelp("version", commandMap.get("version"), sender, plugin.mConf.getAliasesVampireVersion(), 0));
+				sender.spigot().sendMessage(TextUtil.getCommandHelp("batusi", commandMap.get("batusi"), sender, plugin.mConf.getAliasesVampireModeBatusi(), 2));
+				sender.spigot().sendMessage(TextUtil.getCommandHelp("list", commandMap.get("list"), sender, plugin.mConf.getAliasesVampireList(), 0));
+				sender.spigot().sendMessage(TextUtil.getCommandHelp("set", commandMap.get("set"), sender, plugin.mConf.getAliasesVampireSet(), 0));
+				sender.spigot().sendMessage(TextUtil.getCommandHelp("version", commandMap.get("version"), sender, plugin.mConf.getAliasesVampireVersion(), 0));
 			}
 		}
 		else {
@@ -86,16 +84,15 @@ public class CmdVampire extends BaseCommand {
 	@Syntax("[player=you]")
 	public void onShow(CommandSender sender, @Optional String targetName) {
 		if (sender instanceof Player || targetName != null) {
-			Player player = null;
-			UPlayer uplayer = null;
+			Player player;
+			UPlayer uplayer;
 			if (targetName == null) {
 				player = (Player) sender;
-				uplayer = UPlayer.get(player);
 			}
 			else {
 				player = Bukkit.getPlayer(targetName);
-				uplayer = UPlayer.get(player);
 			}
+			uplayer = UPlayer.get(player);
 
 			MConf mconf = plugin.mConf;
 			if (player != null && uplayer != null) {
@@ -112,12 +109,18 @@ public class CmdVampire extends BaseCommand {
 						are = "is";
 					}
 
-					msg(sender, "<b>Vampire " + player.getDisplayName());
+					sender.spigot().sendMessage(TextUtil.getPlayerInfoHeader(uplayer.isVampire(),
+																			 uplayer.isNosferatu(),
+																			 player.getDisplayName()));
 					if (uplayer.isVampire()) {
+						String vampireType = ChatColor.RED + "vampire";
 						if (uplayer.isNosferatu())
-							msg(sender, "<i>" + You + " <i>" + are + " a nosferatu.");
-						else
-							msg(sender, "<i>" + You + " <i>" + are + " a vampire.");
+							vampireType = ChatColor.DARK_RED + "nosferatu";
+						sender.sendMessage(ChatColor.YELLOW + "" +
+											ChatColor.ITALIC + You +
+											ChatColor.RESET + " " +
+											ChatColor.YELLOW + are + " a " + vampireType +
+											ChatColor.YELLOW + ".");
 						msg(sender, uplayer.getReasonDesc(self));
 
 						msg(sender, uplayer.bloodlustMsg());
@@ -415,7 +418,7 @@ public class CmdVampire extends BaseCommand {
 	public void onVersion(CommandSender sender) {
 		List<BaseComponent[]> pd = TextUtil.getPluginDescription(plugin);
 		for (BaseComponent[] mess : pd) {
-			sender.sendMessage(mess);
+			sender.spigot().sendMessage(mess);
 		}
 	}
 
@@ -492,18 +495,18 @@ public class CmdVampire extends BaseCommand {
 			Map<String, RegisteredCommand> commandMap = new HashMap<>();
 			RootCommand vampireCommand = plugin.pumanager.getRegisteredRootCommands().iterator().next();
 
-			sender.sendMessage(TextUtil.getHelpHeader(help, maxPages, "set"));
+			sender.spigot().sendMessage(TextUtil.getHelpHeader(help, maxPages, "set"));
 			for (Entry<String, RegisteredCommand> entry : vampireCommand.getSubCommands().entries()) {
 				commandMap.put(entry.getKey(), entry.getValue());
 				//Bukkit.getLogger().log(Level.INFO, "Key: " + entry.getKey());
 			}
 
 			if (help.getPage() == 1) {
-				sender.sendMessage(TextUtil.getCommandHelp("vampire", commandMap.get("set vampire"), sender, plugin.mConf.getAliasesVampireSetVampire(), 0));
-				sender.sendMessage(TextUtil.getCommandHelp("nosferatu", commandMap.get("set nosferatu"), sender, plugin.mConf.getAliasesVampireSetNosferatu(), 0));
-				sender.sendMessage(TextUtil.getCommandHelp("infection", commandMap.get("set infection"), sender, plugin.mConf.getAliasesVampireSetInfection(), 0));
-				sender.sendMessage(TextUtil.getCommandHelp("food", commandMap.get("set food"), sender, plugin.mConf.getAliasesVampireSetFood(), 0));
-				sender.sendMessage(TextUtil.getCommandHelp("health", commandMap.get("set health"), sender, plugin.mConf.getAliasesVampireSetHealth(), 0));
+				sender.spigot().sendMessage(TextUtil.getCommandHelp("vampire", commandMap.get("set vampire"), sender, plugin.mConf.getAliasesVampireSetVampire(), 0));
+				sender.spigot().sendMessage(TextUtil.getCommandHelp("nosferatu", commandMap.get("set nosferatu"), sender, plugin.mConf.getAliasesVampireSetNosferatu(), 0));
+				sender.spigot().sendMessage(TextUtil.getCommandHelp("infection", commandMap.get("set infection"), sender, plugin.mConf.getAliasesVampireSetInfection(), 0));
+				sender.spigot().sendMessage(TextUtil.getCommandHelp("food", commandMap.get("set food"), sender, plugin.mConf.getAliasesVampireSetFood(), 0));
+				sender.spigot().sendMessage(TextUtil.getCommandHelp("health", commandMap.get("set health"), sender, plugin.mConf.getAliasesVampireSetHealth(), 0));
 			}
 		}
 

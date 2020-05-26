@@ -3,6 +3,7 @@ package com.clanjhoo.vampire.util;
 import co.aikar.commands.CommandHelp;
 import co.aikar.commands.RegisteredCommand;
 import com.clanjhoo.vampire.Perm;
+import com.clanjhoo.vampire.VampireRevamp;
 import com.clanjhoo.vampire.entity.UPlayer;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.chat.BaseComponent;
@@ -247,6 +248,28 @@ public class TextUtil {
         return implodeCommaAnd(objects, "");
     }
 
+    public static BaseComponent[] getPlayerInfoHeader(boolean isVampire, boolean isNosferatu, String playerName) {
+        BaseComponent[] comps = new BaseComponent[4];
+
+        comps[0] = new TextComponent("_______.[ ");
+        comps[0].setColor(ChatColor.GOLD);
+
+        comps[1] = new TextComponent("Player ");
+        if (!isVampire)
+            comps[1].setColor(ChatColor.DARK_GREEN);
+        else if (!isNosferatu)
+            comps[1].setColor(ChatColor.RED);
+        else
+            comps[1].setColor(ChatColor.DARK_RED);
+
+        comps[2] = new TextComponent(playerName);
+
+        comps[3] = new TextComponent(" ].___________");
+        comps[3].setColor(ChatColor.GOLD);
+
+        return comps;
+    }
+
     public static BaseComponent[] getPluginDescriptionHeader() {
         BaseComponent[] comps = new BaseComponent[3];
 
@@ -309,15 +332,14 @@ public class TextUtil {
         BaseComponent[] comps;
         String commandStr = "/v";
         boolean isSuggestion = true;
+        int size = 4;
 
         command = command.toLowerCase();
-        if (!command.equals("set")) {
-            comps = new BaseComponent[4];
-        }
-        else {
-            comps = new BaseComponent[3];
+        if (command.equals("set")) {
             isSuggestion = false;
+            size = 3;
         }
+        comps = new BaseComponent[size];
 
         if (command.equals("vampire") || command.equals("nosferatu") || command.equals("infection") || command.equals("food") || command.equals("health")) {
             commandStr += " set";

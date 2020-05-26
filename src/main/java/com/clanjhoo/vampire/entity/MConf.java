@@ -672,25 +672,26 @@ public class MConf {
 
     // These are the creature types that won't target vampires
     private Set<EntityType> truceEntityTypes = CollectionUtil.set(
-            EntityType.BLAZE,
-            EntityType.CAVE_SPIDER,
-            EntityType.CREEPER,
-            EntityType.ENDERMAN,
+            //EntityType.BLAZE,
+            //EntityType.CAVE_SPIDER,
+            //EntityType.CREEPER,
+            EntityType.DROWNED,
+            //EntityType.ENDERMAN,
+            //EntityType.ENDERMITE,
             EntityType.GHAST,
             EntityType.GIANT,
-            EntityType.MAGMA_CUBE,
-            EntityType.PIG_ZOMBIE,
-            EntityType.SKELETON,
-            EntityType.SPIDER,
-            EntityType.ZOMBIE,
-            EntityType.WITCH,
-            EntityType.GUARDIAN,
-            EntityType.SILVERFISH,
-            EntityType.ENDERMITE,
-            EntityType.DROWNED,
+            //EntityType.GUARDIAN,
             EntityType.HUSK,
+            //EntityType.MAGMA_CUBE,
+            EntityType.PIG_ZOMBIE,
+            EntityType.PHANTOM,
+            //EntityType.SILVERFISH,
+            EntityType.SKELETON,
             EntityType.STRAY,
-            EntityType.PHANTOM
+            //EntityType.SPIDER,
+            //EntityType.WITCH,
+            EntityType.WITHER_SKELETON,
+            EntityType.ZOMBIE
     );
 
     public Set<EntityType> getTruceEntityTypes() {
@@ -736,6 +737,8 @@ public class MConf {
         this.combatWoodDamage = combatWoodDamage;
     }
 
+    // Disabled by default
+    /*
     private Set<Material> combatWoodMaterials = CollectionUtil.set(
             Material.WOODEN_AXE,
             Material.WOODEN_HOE,
@@ -764,6 +767,8 @@ public class MConf {
             Material.SPRUCE_FENCE,
             Material.SPRUCE_FENCE_GATE
     );
+    */
+    private Set<Material> combatWoodMaterials = CollectionUtil.set();
 
     public Set<Material> getCombatWoodMaterials() {
         return this.combatWoodMaterials;

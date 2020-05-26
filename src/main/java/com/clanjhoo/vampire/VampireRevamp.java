@@ -22,6 +22,7 @@ import com.clanjhoo.vampire.util.SunUtil;
 import com.google.common.collect.ImmutableList;
 import com.google.gson.Gson;
 import org.bukkit.Bukkit;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -54,7 +55,7 @@ public class VampireRevamp extends JavaPlugin {
 	public MConf mConf;
 	public MLang mLang;
 	public UPlayerColl uPlayerColl;
-	public boolean isPapermc = false;
+	public static boolean isPapermc = false;
 	
 	// -------------------------------------------- //
 	// FIELDS
@@ -67,7 +68,7 @@ public class VampireRevamp extends JavaPlugin {
 	public void onLoad() {
 		isPapermc = false;
 		try {
-			isPapermc = Class.forName("com.destroystokyo.paper.VersionHistoryManager.VersionData") != null;
+			isPapermc = Class.forName("com.destroystokyo.paper.VersionHistoryManager$VersionData") != null;
 		} catch (ClassNotFoundException e) {
 			this.getLogger().info("Use Paper for more features like Phantom related ones!");
 		}
@@ -118,7 +119,7 @@ public class VampireRevamp extends JavaPlugin {
 
 		// Listener
 		Bukkit.getPluginManager().registerEvents(new ListenerMain(this), this);
-		if (isPapermc)
+		if (isPapermc && this.mConf.getTruceEntityTypes().contains(EntityType.PHANTOM))
 			Bukkit.getPluginManager().registerEvents(new PhantomListener(this), this);
 
 		BukkitScheduler scheduler = getServer().getScheduler();
