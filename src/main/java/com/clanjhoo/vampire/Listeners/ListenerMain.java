@@ -1,14 +1,19 @@
 package com.clanjhoo.vampire.Listeners;
 
+import co.aikar.commands.MessageType;
 import com.clanjhoo.vampire.*;
-import com.clanjhoo.vampire.entity.MConf;
+import com.clanjhoo.vampire.event.InfectionChangeEvent;
+import com.clanjhoo.vampire.event.VampireTypeChangeEvent;
+import com.clanjhoo.vampire.keyproviders.HolyWaterMessageKeys;
+import com.clanjhoo.vampire.keyproviders.SkillMessageKeys;
+import com.clanjhoo.vampire.keyproviders.VampirismMessageKeys;
+import com.clanjhoo.vampire.config.PluginConfig;
 import com.clanjhoo.vampire.entity.UPlayer;
 import com.clanjhoo.vampire.util.EventUtil;
 import com.clanjhoo.vampire.util.FxUtil;
 import com.clanjhoo.vampire.util.EntityUtil;
 import com.clanjhoo.vampire.util.MathUtil;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -32,18 +37,14 @@ public class ListenerMain implements Listener {
     // INSTANCE & CONSTRUCT
     // -------------------------------------------- //
 
-    private final VampireRevamp plugin;
-
-    public ListenerMain(VampireRevamp plugin) {
-        this.plugin = plugin;
-    }
-
     // -------------------------------------------- //
     // FX
     // -------------------------------------------- //
 
     @EventHandler(priority = EventPriority.NORMAL)
     public void fxOnDeath(EntityDeathEvent event) {
+        if (VampireRevamp.getVampireConfig().general.isBlacklisted(event.getEntity().getWorld()))
+            return;
         // If a vampire dies ...
         if (EntityUtil.isPlayer(event.getEntity())) {
             UPlayer uplayer = UPlayer.get((Player) event.getEntity());
@@ -63,10 +64,12 @@ public class ListenerMain implements Listener {
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void blockDamage(EntityDamageEvent event) {
+        if (VampireRevamp.getVampireConfig().general.isBlacklisted(event.getEntity().getWorld()))
+            return;
         Entity entity = event.getEntity();
-        MConf mconf = plugin.mConf;
+        PluginConfig conf = VampireRevamp.getVampireConfig();
 
-        if (mconf.getBlockDamageFrom().contains(event.getCause())) {
+        if (conf.vampire.blockDamageFrom.contains(event.getCause())) {
             if (EntityUtil.isPlayer(entity)) {
                 UPlayer uplayer = UPlayer.get((Player) entity);
 
@@ -79,10 +82,12 @@ public class ListenerMain implements Listener {
 
     @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
     public void blockRegainHealth(EntityRegainHealthEvent event) {
+        if (VampireRevamp.getVampireConfig().general.isBlacklisted(event.getEntity().getWorld()))
+            return;
         Entity entity = event.getEntity();
-        MConf mconf = plugin.mConf;
+        PluginConfig conf = VampireRevamp.getVampireConfig();
 
-        if (mconf.getBlockHealthFrom().contains(event.getRegainReason())) {
+        if (conf.vampire.blockHealthFrom.contains(event.getRegainReason())) {
             if (EntityUtil.isPlayer(entity)) {
                 UPlayer uplayer = UPlayer.get((Player) entity);
 
@@ -95,6 +100,8 @@ public class ListenerMain implements Listener {
 
     @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
     public void blockFoodChange(FoodLevelChangeEvent event) {
+        if (VampireRevamp.getVampireConfig().general.isBlacklisted(event.getEntity().getWorld()))
+            return;
         Entity entity = event.getEntity();
         if (EntityUtil.isPlayer(entity)) {
             UPlayer uplayer = UPlayer.get((Player) entity);
@@ -117,7 +124,7 @@ public class ListenerMain implements Listener {
             UPlayer uplayer = UPlayer.get(player);
 
             if (uplayer == null) {
-                uplayer = plugin.uPlayerColl.add(event.getPlayer());
+                uplayer = VampireRevamp.getInstance().uPlayerColl.add(event.getPlayer());
             }
             uplayer.update();
         }
@@ -125,14 +132,14 @@ public class ListenerMain implements Listener {
 
     @EventHandler(priority = EventPriority.NORMAL)
     public void updateOnQuit(PlayerQuitEvent event) {
-        plugin.uPlayerColl.savePlayer(event.getPlayer().getUniqueId());
+        VampireRevamp.getInstance().uPlayerColl.savePlayer(event.getPlayer().getUniqueId());
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void updateOnTeleport(PlayerTeleportEvent event) {
         final Player player = event.getPlayer();
         if (EntityUtil.isPlayer(player)) {
-            Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
+            Bukkit.getScheduler().scheduleSyncDelayedTask(VampireRevamp.getInstance(), new Runnable() {
                 @Override
                 public void run() {
                     UPlayer uplayer = UPlayer.get(player);
@@ -144,6 +151,8 @@ public class ListenerMain implements Listener {
 
     @EventHandler(priority = EventPriority.NORMAL)
     public void updateOnDeath(EntityDeathEvent event) {
+        if (VampireRevamp.getVampireConfig().general.isBlacklisted(event.getEntity().getWorld()))
+            return;
         // If a vampire dies ...
         LivingEntity entity = event.getEntity();
 
@@ -153,7 +162,6 @@ public class ListenerMain implements Listener {
             if (uplayer != null && uplayer.isVampire()) {
                 // Close down bloodlust.
                 uplayer.setRad(0);
-                uplayer.setTemp(0);
                 uplayer.setBloodlusting(false);
             }
         }
@@ -161,6 +169,8 @@ public class ListenerMain implements Listener {
 
     @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
     public void updateOnRespawn(PlayerRespawnEvent event) {
+        if (VampireRevamp.getVampireConfig().general.isBlacklisted(event.getPlayer().getWorld()))
+            return;
         // If a vampire respawns ...
         Player player = event.getPlayer();
 
@@ -169,12 +179,12 @@ public class ListenerMain implements Listener {
 
             if (uplayer != null && uplayer.isVampire()) {
                 // ... modify food and health levels and force another speed-update.
-                Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
+                Bukkit.getScheduler().scheduleSyncDelayedTask(VampireRevamp.getInstance(), new Runnable() {
                     @Override
                     public void run() {
-                        MConf mconf = plugin.mConf;
-                        player.setFoodLevel(mconf.getUpdateRespawnFood());
-                        player.setHealth((double) mconf.getUpdateRespawnHealth());
+                        PluginConfig conf = VampireRevamp.getVampireConfig();
+                        player.setFoodLevel(conf.vampire.respawnFood);
+                        player.setHealth((double) conf.vampire.respawnHealth);
                         EntityUtil.sendHealthFoodUpdatePacket(player);
                         uplayer.update();
                     }
@@ -183,9 +193,10 @@ public class ListenerMain implements Listener {
         }
     }
 
+    /*
     private void updateNameColor(Player player) {
         if (EntityUtil.isPlayer(player)) {
-            MConf mconf = plugin.mConf;
+            PluginConfig conf = VampireRevamp.getVampireConfig();
             if (mconf.isUpdateNameColor()) {
                 UPlayer uplayer = UPlayer.get(player);
 
@@ -210,7 +221,7 @@ public class ListenerMain implements Listener {
     public void updateNameColor(PlayerTeleportEvent event) {
         updateNameColor(event.getPlayer());
     }
-
+    */
 
     // -------------------------------------------- //
     // DROP SELF
@@ -218,13 +229,15 @@ public class ListenerMain implements Listener {
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void dropSelf(BlockBreakEvent event) {
+        if (VampireRevamp.getVampireConfig().general.isBlacklisted(event.getPlayer().getWorld()))
+            return;
         // If a non-creative player ...
         Player player = event.getPlayer();
-        MConf mconf = plugin.mConf;
+        PluginConfig conf = VampireRevamp.getVampireConfig();
         if (EntityUtil.isPlayer(player) && player.getGameMode() != GameMode.CREATIVE) {
             // ... broke a self-dropping block ...
             Material material = event.getBlock().getType();
-            if (mconf.getDropSelfMaterials().contains(material)) {
+            if (conf.general.dropSelfMaterials.contains(material)) {
                 // ... then we make it drop itself.
                 event.setCancelled(true);
                 event.getBlock().getWorld().dropItemNaturally(event.getBlock().getLocation(), new ItemStack(material, 1));
@@ -239,6 +252,8 @@ public class ListenerMain implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void bloodlustSmokeTrail(PlayerMoveEvent event) {
+        if (VampireRevamp.getVampireConfig().general.isBlacklisted(event.getPlayer().getWorld()))
+            return;
         // If a noncreative player ...
         Player player = event.getPlayer();
         if (EntityUtil.isPlayer(player) && player.getGameMode() != GameMode.CREATIVE) {
@@ -252,11 +267,11 @@ public class ListenerMain implements Listener {
                 // ... that has bloodlust on ...
                 if (uplayer != null && uplayer.isVampire() && uplayer.isBloodlusting()) {
                     // ... then spawn smoke trail.
-                    MConf mconf = plugin.mConf;
+                    PluginConfig conf = VampireRevamp.getVampireConfig();
                     Location one = event.getFrom().clone();
                     Location two = one.clone().add(0, 1, 0);
-                    long count1 = MathUtil.probabilityRound(mconf.getBloodlustSmokes());
-                    long count2 = MathUtil.probabilityRound(mconf.getBloodlustSmokes());
+                    long count1 = MathUtil.probabilityRound(conf.vampire.bloodlust.smokes);
+                    long count2 = MathUtil.probabilityRound(conf.vampire.bloodlust.smokes);
                     for (long i = count1; i > 0; i--) FxUtil.smoke(one);
                     for (long i = count2; i > 0; i--) FxUtil.smoke(two);
                 }
@@ -266,6 +281,8 @@ public class ListenerMain implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void bloodlustGameModeToggle(PlayerGameModeChangeEvent event) {
+        if (VampireRevamp.getVampireConfig().general.isBlacklisted(event.getPlayer().getWorld()))
+            return;
         // If a player enters creative or spectator mode ...
         if (event.getNewGameMode() == GameMode.CREATIVE || event.getNewGameMode() == GameMode.SPECTATOR) {
             // ... turn of bloodlust ...
@@ -286,13 +303,15 @@ public class ListenerMain implements Listener {
 
     @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
     public void truceTarget(EntityTargetEvent event) {
+        if (VampireRevamp.getVampireConfig().general.isBlacklisted(event.getEntity().getWorld()))
+            return;
         // If a player is targeted...
         if (EntityUtil.isPlayer(event.getTarget())) {
             Player player = (Player) event.getTarget();
-            MConf mconf = plugin.mConf;
+            PluginConfig conf = VampireRevamp.getVampireConfig();
 
             // ... by creature that cares about the truce with vampires ...
-            if (mconf.getTruceEntityTypes().contains(event.getEntityType())) {
+            if (conf.truce.entityTypes.contains(event.getEntityType())) {
                 UPlayer uplayer = UPlayer.get(player);
 
                 // ... and that player is a vampire ...
@@ -315,11 +334,13 @@ public class ListenerMain implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void truceDamage(EntityDamageEvent event) {
+        if (VampireRevamp.getVampireConfig().general.isBlacklisted(event.getEntity().getWorld()))
+            return;
         // If this is a combat event ...
         if (EventUtil.isCombatEvent(event)) {
             // ... to a creature that cares about the truce with vampires...
-            MConf mconf = plugin.mConf;
-            if (mconf.getTruceEntityTypes().contains(event.getEntityType())) {
+            PluginConfig conf = VampireRevamp.getVampireConfig();
+            if (conf.truce.entityTypes.contains(event.getEntityType())) {
                 // ... and the liable damager is a vampire ...
                 Entity damager = EventUtil.getLiableDamager(event);
 
@@ -341,6 +362,8 @@ public class ListenerMain implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void regen(EntityDamageEvent event) {
+        if (VampireRevamp.getVampireConfig().general.isBlacklisted(event.getEntity().getWorld()))
+            return;
         // If the damagee is a vampire ...
         Entity entity = event.getEntity();
 
@@ -360,6 +383,8 @@ public class ListenerMain implements Listener {
 
     @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
     public void combatVulnerability(EntityDamageEvent event) {
+        if (VampireRevamp.getVampireConfig().general.isBlacklisted(event.getEntity().getWorld()))
+            return;
         // If this is a close combat event ...
         if (EventUtil.isCloseCombatEvent(event)) {
             // ... where the liable damager is a human entity ...
@@ -369,16 +394,16 @@ public class ListenerMain implements Listener {
 
             if (damagerEntity instanceof HumanEntity && EntityUtil.isPlayer(entity)) {
                 HumanEntity damager = (HumanEntity) damagerEntity;
-                MConf mconf = plugin.mConf;
+                PluginConfig conf = VampireRevamp.getVampireConfig();
 
                 // ... and the damagee is a vampire ...
                 UPlayer vampire = UPlayer.get((Player) entity);
                 if (vampire != null && vampire.isVampire()) {
                     // ... and a wooden item was used ...
                     ItemStack item = EntityUtil.getWeapon(damager);
-                    if (item != null && mconf.getCombatWoodMaterials().contains(item.getType())) {
+                    if (item != null && conf.vampire.holyItem.materials.contains(item.getType())) {
                         // ... Then modify damage!
-                        EventUtil.setDamage(event, mconf.getCombatWoodDamage());
+                        EventUtil.setDamage(event, event.getDamage() * conf.vampire.holyItem.damageFactor);
                     }
                 }
             }
@@ -387,6 +412,8 @@ public class ListenerMain implements Listener {
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void combatStrength(EntityDamageEvent event) {
+        if (VampireRevamp.getVampireConfig().general.isBlacklisted(event.getEntity().getWorld()))
+            return;
         // If this is a close combat event ...
         if (EventUtil.isCloseCombatEvent(event)) {
             // ... and the liable damager is a vampire ...
@@ -395,8 +422,9 @@ public class ListenerMain implements Listener {
                 UPlayer vampire = UPlayer.get((Player) damager);
 
                 if (vampire != null && vampire.isVampire()) {
+                    PluginConfig conf = VampireRevamp.getVampireConfig();
                     // ... and this event isn't a forbidden mcmmo one ...
-                    if (plugin.mConf.isCombatDamageFactorWithMcmmoAbilities()
+                    if (conf.general.damageWithMcmmo
                             || !event.getClass().getName().equals("com.gmail.nossr50.events.fake.FakeEntityDamageByEntityEvent")) {
                         // ... Then modify damage!
                         EventUtil.scaleDamage(event, vampire.combatDamageFactor());
@@ -412,6 +440,8 @@ public class ListenerMain implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void infection(EntityDamageEvent event) {
+        if (VampireRevamp.getVampireConfig().general.isBlacklisted(event.getEntity().getWorld()))
+            return;
         // If this is a close combat event ...
         if (EventUtil.isCloseCombatEvent(event)) {
             // ... where there is one vampire and one non-vampire ...
@@ -449,10 +479,12 @@ public class ListenerMain implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void infectHorse(EntityDamageEvent event) {
+        if (VampireRevamp.getVampireConfig().general.isBlacklisted(event.getEntity().getWorld()))
+            return;
         // If this is a close combat event ...
         // ... and the vampires can infect horses...
-        MConf mconf = plugin.mConf;
-        if (EventUtil.isCloseCombatEvent(event) && mconf.isCanInfectHorses()) {
+        PluginConfig conf = VampireRevamp.getVampireConfig();
+        if (EventUtil.isCloseCombatEvent(event) && conf.vampire.canInfectHorses) {
             // ... where there is one vampire ...
             // ... and one is a living horse ...
             Entity damager = EventUtil.getLiableDamager(event);
@@ -484,10 +516,12 @@ public class ListenerMain implements Listener {
 
     @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
     public void foodCake(PlayerInteractEvent event) {
+        if (VampireRevamp.getVampireConfig().general.isBlacklisted(event.getPlayer().getWorld()))
+            return;
         Player player = event.getPlayer();
-        MConf mconf = plugin.mConf;
+        PluginConfig conf = VampireRevamp.getVampireConfig();
         // If cake eating is not allowed for vampires ...
-        if (EntityUtil.isPlayer(player) && !mconf.isFoodCakeAllowed()) {
+        if (EntityUtil.isPlayer(player) && !conf.vampire.canEatCake) {
             // .. and the player right-clicks a cake block ...
             if (event.getAction() == Action.RIGHT_CLICK_BLOCK && event.getClickedBlock().getType() == Material.CAKE) {
                 // ... and the player is a vampire ...
@@ -495,7 +529,10 @@ public class ListenerMain implements Listener {
                 if (uplayer != null && uplayer.isVampire()) {
                     // ... we deny!
                     event.setCancelled(true);
-                    uplayer.msg(plugin.mLang.foodCantEat, "cake");
+                    VampireRevamp.sendMessage(player,
+                            MessageType.ERROR,
+                            VampirismMessageKeys.CANT_EAT_ITEM,
+                            "{item}", event.getClickedBlock().getType().name());
                 }
             }
         }
@@ -503,15 +540,17 @@ public class ListenerMain implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void foodBlood(EntityDamageEvent event) {
+        if (VampireRevamp.getVampireConfig().general.isBlacklisted(event.getEntity().getWorld()))
+            return;
         // If this is a close combat event ...
         // ... to a living entity ...
         if (EventUtil.isCloseCombatEvent(event) && event.getEntity() instanceof LivingEntity) {
             LivingEntity damagee = (LivingEntity) event.getEntity();
-            MConf mconf = plugin.mConf;
+            PluginConfig conf = VampireRevamp.getVampireConfig();
 
             // ... of a tasty type ...
-            Double fullFoodQuotient = mconf.getEntityTypeFullFoodQuotient().get(damagee.getType());
-            if (fullFoodQuotient != null && fullFoodQuotient > 0) {
+            double fullFoodQuotient = conf.fullFoodQuotient.getOrDefault(damagee.getType(), 0D);
+            if (fullFoodQuotient != 0) {
                 // ... that has blood left ...
                 if (damagee != null && damagee.isValid() && !damagee.isDead() && damagee.getHealth() > 0) {
                     // ... and the liable damager is a vampire ...
@@ -521,9 +560,14 @@ public class ListenerMain implements Listener {
                         // ... and the player is still retrievable ...
                         if (vampire != null && vampire.isVampire() && vampire.getPlayer() != null) {
                             // ... drink blood! ;,,;
-                            double damage = event.getDamage();
-                            if (damagee.getHealth() < damage) damage = damagee.getHealth();
-                            double food = damage / damagee.getAttribute(Attribute.GENERIC_MAX_HEALTH).getBaseValue() * fullFoodQuotient * vampire.getPlayer().getAttribute(Attribute.GENERIC_MAX_HEALTH).getBaseValue();
+                            double damage = event.getFinalDamage();
+                            if (conf.general.useOldFoodFormula)
+                                damage = event.getDamage();
+                            if (damagee.getHealth() < damage)
+                                damage = damagee.getHealth();
+                            double food = damage * fullFoodQuotient;
+                            if (conf.general.useOldFoodFormula)
+                                food = damage / damagee.getAttribute(Attribute.GENERIC_MAX_HEALTH).getBaseValue() * fullFoodQuotient * vampire.getPlayer().getAttribute(Attribute.GENERIC_MAX_HEALTH).getBaseValue();
 
                             vampire.getFood().add(food);
                         }
@@ -539,6 +583,9 @@ public class ListenerMain implements Listener {
 
     @EventHandler(priority = EventPriority.NORMAL)
     public void bloodFlaskConsume(PlayerItemConsumeEvent event) {
+        if (VampireRevamp.getVampireConfig().general.isBlacklisted(event.getPlayer().getWorld()))
+            return;
+
         ItemStack item = event.getItem();
         // If the item is a potion ...
         // ... and is a blood flask ...
@@ -571,7 +618,9 @@ public class ListenerMain implements Listener {
                         }
                     }
                 } else {
-                    uplayer.msg(plugin.mLang.flaskBloodlusting);
+                    VampireRevamp.sendMessage(event.getPlayer(),
+                            MessageType.ERROR,
+                            SkillMessageKeys.FLASK_BLOODLUSTING);
                     event.setCancelled(true);
                 }
             }
@@ -591,8 +640,9 @@ public class ListenerMain implements Listener {
     public void holyWater(ProjectileHitEvent event) {
         // If this projectile is a thrown potion ...
         Projectile projectile = event.getEntity();
-        MConf mconf = plugin.mConf;
-        if (projectile instanceof ThrownPotion) {
+        PluginConfig conf = VampireRevamp.getVampireConfig();
+        if (!conf.general.isBlacklisted(projectile.getWorld()) &&
+                projectile instanceof ThrownPotion) {
             ThrownPotion thrownPotion = (ThrownPotion) projectile;
 
             // ... and the potion type is holy water ...
@@ -607,9 +657,12 @@ public class ListenerMain implements Listener {
                     // ... then to all nearby players ...
                     for (Player player : splashLocation.getWorld().getPlayers()) {
                         if (EntityUtil.isPlayer(player)
-                                && player.getLocation().distance(splashLocation) <= mconf.getHolyWaterSplashRadius()) {
+                                && player.getLocation().distance(splashLocation) <= conf.holyWater.splashRadius) {
                             UPlayer uplayer = UPlayer.get(player);
-                            uplayer.msg(plugin.mLang.holyWaterCommon, shooter.getDisplayName());
+                            VampireRevamp.sendMessage(player,
+                                    MessageType.INFO,
+                                    HolyWaterMessageKeys.COMMON_REACT,
+                                    "{player}", shooter.getDisplayName());
                             uplayer.runFxEnderBurst();
 
                             // Trigger a damage event so other plugins can cancel this.
@@ -617,14 +670,20 @@ public class ListenerMain implements Listener {
                             Bukkit.getPluginManager().callEvent(triggeredEvent);
                             if (!triggeredEvent.isCancelled()) {
                                 if (uplayer.isHealthy()) {
-                                    uplayer.msg(plugin.mLang.holyWaterHealthy);
+                                    VampireRevamp.sendMessage(player,
+                                            MessageType.INFO,
+                                            HolyWaterMessageKeys.HEALTHY_REACT);
                                 } else if (uplayer.isInfected()) {
-                                    uplayer.msg(plugin.mLang.holyWaterInfected);
+                                    VampireRevamp.sendMessage(player,
+                                            MessageType.INFO,
+                                            HolyWaterMessageKeys.INFECTED_REACT);
                                     uplayer.setInfection(0);
                                     uplayer.runFxEnder();
                                 } else if (uplayer.isVampire()) {
-                                    uplayer.msg(plugin.mLang.holyWaterVampire);
-                                    uplayer.addTemp(mconf.getHolyWaterTemp());
+                                    VampireRevamp.sendMessage(player,
+                                            MessageType.INFO,
+                                            HolyWaterMessageKeys.VAMPIRE_REACT);
+                                    uplayer.addTemp(conf.holyWater.temperature);
                                     uplayer.runFxFlameBurst();
                                 }
                             }
@@ -641,17 +700,21 @@ public class ListenerMain implements Listener {
 
     @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
     public void altars(PlayerInteractEvent event) {
+        if (VampireRevamp.getVampireConfig().general.isBlacklisted(event.getPlayer().getWorld()))
+            return;
         // If the player right-clicked a block ...
         Action action = event.getAction();
         // ... without a placeable item in hand ...
         // ... and the event isn't fired with the off-hand ...
-        if (action == Action.RIGHT_CLICK_BLOCK && !event.isBlockInHand() && event.getHand() != EquipmentSlot.OFF_HAND) {
+        if (action == Action.RIGHT_CLICK_BLOCK &&
+                event.getHand() != EquipmentSlot.OFF_HAND &&
+                (!VampireRevamp.getVampireConfig().altar.checkIfBlockInHand || !event.isBlockInHand())) {
             // ... run altar logic.
             Player player = event.getPlayer();
             if (EntityUtil.isPlayer(player)) {
-                MConf mconf = plugin.mConf;
+                VampireRevamp plugin = VampireRevamp.getInstance();
 
-                if (mconf.getAltarDark().evalBlockUse(event.getClickedBlock(), player) || mconf.getAltarLight().evalBlockUse(event.getClickedBlock(), player)) {
+                if (plugin.getAltarDark().evalBlockUse(event.getClickedBlock(), player) || plugin.getAltarLight().evalBlockUse(event.getClickedBlock(), player)) {
                     event.setCancelled(true);
                 }
             }

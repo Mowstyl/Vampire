@@ -5,7 +5,7 @@
     <groupId>com.clanjhoo.vampire</groupId>
     <artifactId>VampireRevamp</artifactId>
     <packaging>jar</packaging>
-    <version>1.0.BETA-4</version>
+    <version>1.0.BETA-5</version>
 
     <!-- Info -->
     <name>${project.artifactId}</name>
@@ -103,15 +103,29 @@
             <id>papermc</id>
             <url>https://papermc.io/repo/repository/maven-public/</url>
         </repository>
+        <repository>
+            <id>placeholderapi</id>
+            <url>https://repo.extendedclip.com/content/repositories/placeholderapi/</url>
+        </repository>
     </repositories>
 
     <!-- Dependencies -->
     <dependencies>
         <!-- Paper -->
+        <!--
         <dependency>
             <groupId>com.destroystokyo.paper</groupId>
             <artifactId>paper-api</artifactId>
-            <version>1.15.2-R0.1-SNAPSHOT</version>
+            <version>1.16.1-R0.1-SNAPSHOT</version>
+            <scope>provided</scope>
+        </dependency>
+        -->
+        <!--
+        -->
+        <dependency>
+            <groupId>com.destroystokyo.paper</groupId>
+            <artifactId>paper-api</artifactId>
+            <version>1.16.1-R0.1-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
         <!-- Spigot -->
@@ -123,26 +137,49 @@
         </dependency>
         -->
         <!-- WorldEdit -->
+        <!--
         <dependency>
             <groupId>com.sk89q.worldedit</groupId>
             <artifactId>worldedit-core</artifactId>
-            <version>7.1.0</version>
+            <version>6.1.4-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>com.sk89q.worldedit</groupId>
             <artifactId>worldedit-bukkit</artifactId>
-            <version>7.1.0</version>
+            <version>6.1.5</version>
+        </dependency>
+        -->
+        <!--
+        -->
+        <dependency>
+            <groupId>com.sk89q.worldedit</groupId>
+            <artifactId>worldedit-core</artifactId>
+            <version>7.2.0-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>com.sk89q.worldedit</groupId>
+            <artifactId>worldedit-bukkit</artifactId>
+            <version>7.2.0-SNAPSHOT</version>
         </dependency>
         <!-- WorldGuard -->
+        <!--
+        <dependency>
+            <groupId>com.sk89q.worldguard</groupId>
+            <artifactId>worldguard-legacy</artifactId>
+            <version>6.2</version>
+        </dependency>
+        -->
+        <!--
+        -->
         <dependency>
             <groupId>com.sk89q.worldguard</groupId>
             <artifactId>worldguard-core</artifactId>
-            <version>7.0.2</version>
+            <version>7.0.4-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>com.sk89q.worldguard</groupId>
             <artifactId>worldguard-bukkit</artifactId>
-            <version>7.0.2</version>
+            <version>7.0.4-SNAPSHOT</version>
         </dependency>
         <!--Aikar-->
         <dependency>
@@ -154,8 +191,23 @@
         <dependency>
             <groupId>LibsDisguises</groupId>
             <artifactId>LibsDisguises</artifactId>
-            <version>10.0.12-SNAPSHOT</version>
+            <version>10.0.15</version>
             <scope>provided</scope>
+        </dependency>
+        <!--PlaceholderAPI-->
+        <dependency>
+            <groupId>me.clip</groupId>
+            <artifactId>placeholderapi</artifactId>
+            <version>2.10.6</version>
+            <scope>provided</scope>
+        </dependency>
+        <!--PlaceholderAPI-->
+        <dependency>
+            <groupId>us.rfsmassacre</groupId>
+            <artifactId>Werewolves</artifactId>
+            <version>1.4.9-SNAPSHOT</version>
+            <scope>system</scope>
+            <systemPath>F:/Users/Mowser/MineLibs/Werewolf-1.4.9-SNAPSHOT.jar</systemPath>
         </dependency>
     </dependencies>
 </project>

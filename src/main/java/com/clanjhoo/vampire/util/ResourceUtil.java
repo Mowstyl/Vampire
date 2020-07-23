@@ -1,5 +1,9 @@
 package com.clanjhoo.vampire.util;
 
+import co.aikar.commands.MessageType;
+import co.aikar.locales.MessageKeyProvider;
+import com.clanjhoo.vampire.keyproviders.AltarMessageKeys;
+import com.clanjhoo.vampire.keyproviders.CommandMessageKeys;
 import com.clanjhoo.vampire.Perm;
 import com.clanjhoo.vampire.VampireRevamp;
 import org.bukkit.Material;
@@ -14,9 +18,7 @@ import org.bukkit.potion.PotionData;
 import org.bukkit.potion.PotionType;
 
 import javax.annotation.Nonnull;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 
 public class ResourceUtil {
 	public static VampireRevamp plugin;
@@ -31,9 +33,11 @@ public class ResourceUtil {
 		}
 		else if (verbose && permissible instanceof CommandSender)
 		{
-			CommandSender sender = (CommandSender) permissible;
-			String message = "You don't have permissions to do " + permission.name() + "!";
-			sender.sendMessage(TextUtil.parse(message));
+			VampireRevamp.sendMessage((CommandSender) permissible,
+					MessageType.ERROR,
+					CommandMessageKeys.NOT_ENOUGH_PERMS,
+					"{action}", permission.name(),
+					"{perm}", permissionId);
 		}
 
 		return hasPerm;
@@ -101,38 +105,28 @@ public class ResourceUtil {
 		player.updateInventory();
 	}
 	
-	public static String describe(Collection<? extends ItemStack> stacks) {
-		List<String> lines = new ArrayList<>();
+	public static void describe(Collection<? extends ItemStack> stacks, Player player) {
 		for (ItemStack stack : stacks) {
-			String desc = describe(stack.getType(), stack.getDurability());
-			lines.add(TextUtil.parse("<h>%d <p>%s", stack.getAmount(), desc));
-					
+			VampireRevamp.sendMessage(player,
+					MessageType.INFO,
+					AltarMessageKeys.RESOURCE,
+					"{amount}", String.format("%d", stack.getAmount()),
+					"{item}", stack.getType().name());
 		}
-		return TextUtil.implode(lines, TextUtil.parse("<i>, "));
 	}
 	
-	public static String describe(Material type, short damage) {
-		if (type == Material.POTION && damage == 0) return "Water Bottle";
-		if (type == Material.LAPIS_LAZULI && damage == 0 ) return "Lapis Lazuli Dye";
-		if (type == Material.CHARCOAL && damage == 0 ) return "Charcoal";
-		
-		return type.name();
-	}
-	
-	public static boolean playerRemoveAttempt(Player player, Collection<? extends ItemStack> stacks, String success, String fail) {
-		if ( ! playerHas(player, stacks))
-		{
-			player.sendMessage(TextUtil.parse(fail));
-			player.sendMessage(describe(stacks));
-			return false;
+	public static boolean playerRemoveAttempt(Player player, Collection<? extends ItemStack> stacks, MessageKeyProvider success, MessageKeyProvider fail) {
+		boolean result = false;
+		if (playerHas(player, stacks)) {
+			playerRemove(player, stacks);
+			result = true;
 		}
-
-		playerRemove(player, stacks);
-
-		player.sendMessage(TextUtil.parse(success));
-		player.sendMessage(describe(stacks));
+		VampireRevamp.sendMessage(player,
+				MessageType.INFO,
+				result ? success : fail);
+		describe(stacks, player);
 		
-		return true;
+		return result;
 	}
 
 	public static ItemStack getWaterBottles(int qty) {

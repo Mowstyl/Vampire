@@ -1,20 +1,16 @@
 package com.clanjhoo.vampire;
 
-import com.clanjhoo.vampire.entity.UPlayer;
-import com.clanjhoo.vampire.util.TextUtil;
-import org.bukkit.Bukkit;
-import org.bukkit.OfflinePlayer;
+import com.clanjhoo.vampire.keyproviders.InfectionMessageKeys;
 
 public enum InfectionReason
 {
-	ALTAR(true, false, "altar", "<i>You infected yourself using an <h>altar<i>.", "<i>%1$s was infected using an <h>altar<i>."),
-	COMBAT_MISTAKE(false, true, "combat mistake", "<h>%2$s <i>infected you during combat by mistake.", "<h>%2$s <i>infected %1$s during combat by mistake."),
-	COMBAT_INTENDED(false, true, "combat intended", "<h>%2$s <i>infected you during combat on purpose.", "<h>%2$s <i>infected %1$s during combat on purpose."),
-	TRADE(false, true, "offer", "<i>You were infected from drinking <h>%2$s<i>'s blood.", "<i>%1$s was infected from drinking <h>%2$s<i>'s blood."),
-	FLASK(true, false, "blood flask", "<i>You were infected by a <h>blood flask<i>.", "<i>%1$s was infected by a <h>blood flask<i>."),
-	OPERATOR(true, false, "evil powers", "<i>You were infected by <h>evil powers<i>.", "<i>%1$s was infected by <h>evil powers<i>."),
-	UNKNOWN(true, false, "unknown", "<i>You were infected for <h>unknown <i>reasons.", "<i>%1$s was infected for <h>unknown <i>reasons."),
-	;
+	ALTAR(true, false, "altar", InfectionMessageKeys.ALTAR),
+	COMBAT_MISTAKE(false, true, "combat mistake", InfectionMessageKeys.COMBAT_MISTAKE),
+	COMBAT_INTENDED(false, true, "combat intended", InfectionMessageKeys.COMBAT_INTENDED),
+	TRADE(false, true, "offer", InfectionMessageKeys.TRADE),
+	FLASK(true, false, "blood flask", InfectionMessageKeys.FLASK),
+	OPERATOR(true, false, "evil powers", InfectionMessageKeys.COMMAND),
+	UNKNOWN(true, false, "unknown", InfectionMessageKeys.UNKNOWN);
 	
 	// Would the victim notice this way of infection?
 	private final boolean noticeable;
@@ -29,45 +25,15 @@ public enum InfectionReason
 	public String getShortname() { return this.shortname; }
 	
 	// Desc when showing yourself.
-	private final String selfdesc;
-	public String getSelfdesc() { return this.selfdesc; }
+	private final InfectionMessageKeys descKey;
+	public InfectionMessageKeys getDescKey() { return this.descKey; }
 	
-	// Desc when showing other player.
-	private final String otherdesc;
-	public String getOtherdesc() { return this.otherdesc; }
-	
-	InfectionReason(final boolean notice, final boolean player, final String shortname, final String selfdesc, final String otherdesc)
+	InfectionReason(final boolean notice, final boolean player, final String shortname, final InfectionMessageKeys descKey)
 	{
 		this.noticeable = notice;
 		this.maker = player;
 		this.shortname = shortname;
-		this.selfdesc = selfdesc;
-		this.otherdesc = otherdesc;
-	}
-	
-	public String getDesc(UPlayer uplayer, boolean self)
-	{
-		String description;
-
-		switch (this) {
-			case COMBAT_MISTAKE:
-			case COMBAT_INTENDED:
-			case TRADE:
-				OfflinePlayer maybeMaker = Bukkit.getOfflinePlayer(uplayer.getMakerUUID());
-				String makerName = maybeMaker != null ? maybeMaker.getName() : uplayer.getMakerUUID().toString();
-				if (self)
-					description = TextUtil.parse(this.selfdesc, "", makerName);
-				else
-					description = TextUtil.parse(this.otherdesc, uplayer.getPlayer().getDisplayName(), makerName);
-				break;
-			default:
-				if (self)
-					description = TextUtil.parse(this.selfdesc);
-				else
-					description = TextUtil.parse(this.otherdesc, uplayer.getPlayer().getDisplayName());
-		}
-
-		return description;
+		this.descKey = descKey;
 	}
 
 	public static InfectionReason fromName(String name) {

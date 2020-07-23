@@ -65,10 +65,9 @@ public class Recipe
 		for (Entry<Material, Integer> item : this.materialQuantities.entrySet()) {
 			Material material = item.getKey();
 			int count = item.getValue();
-			lines.add(TextUtil.parse("<h>%d <p>%s", count, material.name()));
-					
+			lines.add(String.format("<light_purple>%d</light_purple> <dark_aqua>%s</dark_aqua>", count, material.name()));
 		}
-		return TextUtil.implode(lines, TextUtil.parse("<i>, "));
+		return String.join("<yellow>, </yellow>", lines);
 	}
 	
 }

@@ -16,7 +16,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 
 public class EntityUtil {
-    public static VampireRevamp plugin;
     public static final Map<UUID, PermissionAttachment> perms = new ConcurrentHashMap<>();
 
     public static Player getAsPlayer(Entity entity) {
@@ -117,6 +116,7 @@ public class EntityUtil {
 
     public static boolean despawnBats(Player p) {
         boolean result = false;
+        VampireRevamp plugin = VampireRevamp.getInstance();
 
         try {
             if (plugin.batmap.containsKey(p.getUniqueId())) {
@@ -144,6 +144,7 @@ public class EntityUtil {
 
     public static boolean spawnBats(Player p, int qty) {
         boolean result = false;
+        VampireRevamp plugin = VampireRevamp.getInstance();
 
         try {
             if (plugin.batmap.containsKey(p.getUniqueId())) {
@@ -167,7 +168,7 @@ public class EntityUtil {
             result = true;
         }
         catch (Exception ex) {
-            plugin.getLogger().log(Level.WARNING, "Error spawning bats!: " + ex.getClass().getCanonicalName() + ": " + ex.getMessage());
+            VampireRevamp.log(Level.WARNING, "Error spawning bats!: " + ex.getMessage());
             ex.printStackTrace();
         }
 

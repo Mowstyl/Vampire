@@ -1,19 +1,11 @@
 package com.clanjhoo.vampire.util;
 
 import com.clanjhoo.vampire.VampireRevamp;
-import com.clanjhoo.vampire.entity.MConf;
 
-import com.sk89q.worldedit.bukkit.BukkitAdapter;
-import com.sk89q.worldedit.math.BlockVector3;
-import com.sk89q.worldguard.WorldGuard;
+import com.clanjhoo.vampire.compat.WorldGuardCompat;
 import com.sk89q.worldguard.protection.flags.Flag;
-import com.sk89q.worldguard.protection.flags.Flags;
-import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
-import org.bukkit.Bukkit;
-import org.bukkit.Material;
-import org.bukkit.WeatherType;
-import org.bukkit.World;
+import org.bukkit.*;
 import org.bukkit.World.Environment;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
@@ -24,7 +16,6 @@ import java.util.Set;
 
 public class SunUtil
 {
-	public static VampireRevamp plugin;
 	// -------------------------------------------- //
 	// CONSTANTS
 	// -------------------------------------------- //
@@ -36,7 +27,7 @@ public class SunUtil
 	public final static int HALF_DAYTIME_TICKS = DAYTIME_TICKS / 2;
 	public final static double HALF_PI = Math.PI / 2;
 	public final static double MDTICKS_TO_ANGLE_FACTIOR = HALF_PI / HALF_DAYTIME_TICKS;
-	
+
 	// -------------------------------------------- //
 	// SOLAR RADIATION CALCULATION
 	// -------------------------------------------- //
@@ -48,16 +39,20 @@ public class SunUtil
 	public static int calcMidDeltaTicks(World world, Player player)
 	{
 		long rtime = world.getFullTime();
-		if (plugin.mConf.isUseWorldGuardRegions() && Bukkit.getServer().getPluginManager().isPluginEnabled("WorldGuard")) {
-			RegionManager rm = WorldGuard.getInstance().getPlatform().getRegionContainer().get(BukkitAdapter.adapt(world));
-			if (rm != null) {
+		WorldGuardCompat wg = VampireRevamp.getWorldGuardCompat();
+
+		if (wg.useWG) {
+			Set<ProtectedRegion> prset = wg.getApplicableRegions(wg.getRegionManager(wg.getRegionContainer(), player.getWorld()), player.getLocation()).getRegions();
+			Flag<?> TIME_LOCK = wg.getFlag("TIME_LOCK");
+
+			if (prset != null && TIME_LOCK != null) {
 				int bestPriority = 0;
-				Set<ProtectedRegion> prset = rm.getApplicableRegions(BlockVector3.at(player.getLocation().getX(), player.getLocation().getY(), player.getLocation().getZ())).getRegions();
+
 				for (ProtectedRegion pr : prset) {
 					Map<Flag<?>, Object> flags = pr.getFlags();
-					if (flags.containsKey(Flags.TIME_LOCK)) {
+					if (flags.containsKey(TIME_LOCK)) {
 						try {
-							long auxrtime = Long.parseLong((String) flags.get(Flags.TIME_LOCK));
+							long auxrtime = Long.parseLong((String) flags.get(TIME_LOCK));
 							if (pr.getPriority() >= bestPriority) {
 								rtime = auxrtime;
 								bestPriority = pr.getPriority();
@@ -95,18 +90,27 @@ public class SunUtil
 	 */
 	public static double calcSolarRad(World world, Player player)
 	{
-		if (world.getEnvironment() != Environment.NORMAL) return 0d;
+		if (world.getEnvironment() != Environment.NORMAL)
+			return 0d;
 		boolean storming = world.hasStorm();
-		if (plugin.mConf.isUseWorldGuardRegions() && Bukkit.getServer().getPluginManager().isPluginEnabled("WorldGuard")) {
-			RegionManager rm = WorldGuard.getInstance().getPlatform().getRegionContainer().get(BukkitAdapter.adapt(world));
-			if (rm != null) {
+		WorldGuardCompat wg = VampireRevamp.getWorldGuardCompat();
+
+		if (wg.useWG) {
+			Set<ProtectedRegion> prset = wg.getApplicableRegions(wg.getRegionManager(wg.getRegionContainer(), player.getWorld()), player.getLocation()).getRegions();
+			Flag<?> WEATHER_LOCK = wg.getFlag("WEATHER_LOCK");
+
+			if (prset != null && WEATHER_LOCK != null) {
 				int bestPriority = 0;
-				Set<ProtectedRegion> prset = rm.getApplicableRegions(BlockVector3.at(player.getLocation().getX(), player.getLocation().getY(), player.getLocation().getZ())).getRegions();
 				for (ProtectedRegion pr : prset) {
 					Map<Flag<?>, Object> flags = pr.getFlags();
-					if (flags.containsKey(Flags.WEATHER_LOCK)) {
+					if (flags.containsKey(WEATHER_LOCK)) {
 						try {
-							boolean auxstorm = ((com.sk89q.worldedit.world.weather.WeatherType) flags.get(Flags.WEATHER_LOCK)).getName().equals(WeatherType.DOWNFALL.name());
+							boolean auxstorm;
+							if (!wg.oldWG)
+								auxstorm = ((com.sk89q.worldedit.world.weather.WeatherType) flags.get(WEATHER_LOCK)).getName().equals(WeatherType.DOWNFALL.name());
+							else
+								auxstorm = ((WeatherType) flags.get(WEATHER_LOCK)).equals(WeatherType.DOWNFALL);
+
 							if (pr.getPriority() >= bestPriority) {
 								storming = auxstorm;
 								bestPriority = pr.getPriority();
@@ -147,7 +151,7 @@ public class SunUtil
 		for (int y = block.getY(); y <= maxy && ret < 1d; y++)
 		{
 			Material type = world.getBlockAt(x, y, z).getType();
-			Double opacity = plugin.mConf.getTypeOpacity().get(type);
+			Double opacity = VampireRevamp.getVampireConfig().radiation.opacity.get(type);
 			if (opacity == null)
 			{
 				opacity = 1d; // Blocks not in that map have opacity 1;
@@ -178,7 +182,7 @@ public class SunUtil
 			if (itemStack == null) continue;
 			if (itemStack.getAmount() == 0) continue;
 			if (itemStack.getType() == Material.AIR) continue;
-			ret += plugin.mConf.getOpacityPerArmorPiece();
+			ret += VampireRevamp.getVampireConfig().radiation.opacityPerArmorPiece;
 		}
 		return ret;
 	}

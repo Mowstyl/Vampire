@@ -14,10 +14,10 @@ public class PhantomListener implements Listener {
     // INSTANCE & CONSTRUCT
     // -------------------------------------------- //
 
-    private final VampireRevamp plugin;
+    private boolean trucePhantoms;
 
-    public PhantomListener(VampireRevamp plugin) {
-        this.plugin = plugin;
+    public PhantomListener() {
+        trucePhantoms = VampireRevamp.getVampireConfig().truce.entityTypes.contains(EntityType.PHANTOM);
     }
 
     // -------------------------------------------- //
@@ -29,7 +29,7 @@ public class PhantomListener implements Listener {
         if ((e.getEntity() instanceof Phantom) && e.getSpawnReason() == CreatureSpawnEvent.SpawnReason.NATURAL) {
             Phantom phan = (Phantom) e.getEntity();
             UPlayer uPlayer = UPlayer.get(phan.getSpawningEntity());
-            if (uPlayer.isVampire() && !uPlayer.truceIsBroken() && plugin.mConf.getTruceEntityTypes().contains(EntityType.PHANTOM)) {
+            if (trucePhantoms && uPlayer.isVampire() && !uPlayer.truceIsBroken()) {
                 e.setCancelled(true);
             }
         }

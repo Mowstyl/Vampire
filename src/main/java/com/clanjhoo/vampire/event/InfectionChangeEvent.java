@@ -4,7 +4,7 @@ import com.clanjhoo.vampire.entity.UPlayer;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 
-public class EventVampirePlayerVampireChange extends Event {
+public class InfectionChangeEvent extends Event {
     // -------------------------------------------- //
     // REQUIRED EVENT CODE
     // -------------------------------------------- //
@@ -25,14 +25,14 @@ public class EventVampirePlayerVampireChange extends Event {
     // FIELD
     // -------------------------------------------- //
 
-    private boolean vampire;
+    private double infection;
 
-    public boolean isVampire() {
-        return this.vampire;
+    public double getInfection() {
+        return this.infection;
     }
 
-    public void setVampire(boolean vampire) {
-        this.vampire = vampire;
+    public void setInfection(double infection) {
+        this.infection = infection;
     }
 
     private final UPlayer uplayer;
@@ -45,10 +45,9 @@ public class EventVampirePlayerVampireChange extends Event {
     // CONSTRUCT
     // -------------------------------------------- //
 
-    public EventVampirePlayerVampireChange(boolean vampire, UPlayer uplayer) {
-        this.vampire = vampire;
+    public InfectionChangeEvent(double infection, UPlayer uplayer) {
+        this.infection = infection;
         this.uplayer = uplayer;
-        this.cancel = false;
     }
 
     public void setCancelled(boolean cancel) {

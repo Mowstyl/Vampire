@@ -1,10 +1,11 @@
 package com.clanjhoo.vampire.altar;
 
+import co.aikar.commands.MessageType;
+import com.clanjhoo.vampire.keyproviders.AltarMessageKeys;
 import com.clanjhoo.vampire.VampireRevamp;
-import com.clanjhoo.vampire.entity.MConf;
+import com.clanjhoo.vampire.config.PluginConfig;
 import com.clanjhoo.vampire.entity.UPlayer;
 import com.clanjhoo.vampire.util.EntityUtil;
-import com.clanjhoo.vampire.util.TextUtil;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
@@ -13,18 +14,15 @@ import org.bukkit.inventory.ItemStack;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
 public abstract class Altar {
-    public String name;
-    public String desc;
+    public boolean isDark;
     public Material coreMaterial;
     public Map<Material, Integer> materialCounts;
-    public List<ItemStack> resources;
-    public VampireRevamp plugin;
+    public Set<ItemStack> resources;
 
     public boolean evalBlockUse(Block coreBlock, Player player) {
         boolean blockUse = false;
@@ -32,21 +30,21 @@ public abstract class Altar {
 
         if (EntityUtil.isPlayer(player) && coreBlock.getType() == coreMaterial) {
             UPlayer uplayer = UPlayer.get(player);
-            MConf mconf = plugin.mConf;
+            PluginConfig conf = VampireRevamp.getVampireConfig();
 
             // Make sure we include the coreBlock material in the wanted ones
             if (!this.materialCounts.containsKey(this.coreMaterial)) {
                 this.materialCounts.put(this.coreMaterial, 1);
             }
 
-            ArrayList<Block> blocks = getCubeBlocks(coreBlock, mconf.getAltarSearchRadius());
+            ArrayList<Block> blocks = getCubeBlocks(coreBlock, conf.altar.searchRadius);
             Map<Material, Integer> nearbyMaterialCounts = countMaterials(blocks, this.materialCounts.keySet());
 
             int requiredMaterialCountSum = this.sumCollection(this.materialCounts.values());
             int nearbyMaterialCountSum = this.sumCollection(nearbyMaterialCounts.values());
 
             // If the blocks are to far from looking anything like an altar we will just skip.
-            if (nearbyMaterialCountSum >= requiredMaterialCountSum * mconf.getAltarMinRatioForInfo()) {
+            if (nearbyMaterialCountSum >= requiredMaterialCountSum * conf.altar.minRatioForInfo) {
 
                 // What alter blocks are missing?
                 Map<Material, Integer> missingMaterialCounts = this.getMissingMaterialCounts(nearbyMaterialCounts);
@@ -54,13 +52,19 @@ public abstract class Altar {
                 // Is the altar complete?
                 if (this.sumCollection(missingMaterialCounts.values()) > 0) {
                     // Send info on what to do to finish the altar
-                    message = TextUtil.parse(plugin.mLang.altarIncomplete, this.name);
-                    player.sendMessage(message);
+                    String altarName = isDark ? VampireRevamp.getMessage(player, AltarMessageKeys.ALTAR_DARK_NAME) : VampireRevamp.getMessage(player, AltarMessageKeys.ALTAR_LIGHT_NAME);
+                    VampireRevamp.sendMessage(player,
+                            MessageType.INFO,
+                            AltarMessageKeys.INCOMPLETE,
+                            "{altar_name}", altarName);
                     for (Entry<Material, Integer> entry : missingMaterialCounts.entrySet()) {
                         Material material = entry.getKey();
-                        int count = entry.getValue();
-                        message = TextUtil.parse("<h>%d <p>%s", count, material.name());
-                        player.sendMessage(message);
+                        Integer count = entry.getValue();
+                        VampireRevamp.sendMessage(player,
+                                MessageType.INFO,
+                                AltarMessageKeys.INCOMPLETE,
+                                "{amount}", count.toString(),
+                                "{item}", material.name());
                     }
                 } else {
                     blockUse = this.use(uplayer, player);
@@ -73,7 +77,9 @@ public abstract class Altar {
     public abstract boolean use(UPlayer uplayer, Player player);
 
     public void watch(UPlayer uplayer, Player player) {
-        uplayer.msg(this.desc);
+        VampireRevamp.sendMessage(player,
+                MessageType.INFO,
+                isDark ? AltarMessageKeys.ALTAR_DARK_DESC : AltarMessageKeys.ALTAR_LIGHT_DESC);
     }
 
     // ------------------------------------------------------------ //

@@ -4,13 +4,11 @@ import com.clanjhoo.vampire.VampireRevamp;
 import com.clanjhoo.vampire.util.FileUtil;
 import com.google.common.io.Files;
 import com.google.gson.Gson;
-import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
 import java.io.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.logging.Level;
 
 public class UPlayerColl {
 	// -------------------------------------------- //

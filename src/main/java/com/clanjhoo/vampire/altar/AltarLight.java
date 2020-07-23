@@ -1,13 +1,14 @@
 package com.clanjhoo.vampire.altar;
 
+import co.aikar.commands.MessageType;
 import com.clanjhoo.vampire.HolyWaterUtil;
+import com.clanjhoo.vampire.keyproviders.AltarMessageKeys;
+import com.clanjhoo.vampire.keyproviders.HolyWaterMessageKeys;
 import com.clanjhoo.vampire.Perm;
 import com.clanjhoo.vampire.VampireRevamp;
-import com.clanjhoo.vampire.entity.MLang;
-import com.clanjhoo.vampire.entity.MConf;
+import com.clanjhoo.vampire.config.SingleAltarConfig;
 import com.clanjhoo.vampire.entity.UPlayer;
 import com.clanjhoo.vampire.util.ResourceUtil;
-import com.google.common.collect.ImmutableList;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -15,47 +16,41 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.PotionMeta;
 import org.bukkit.potion.PotionType;
 
-import java.util.HashMap;
-
 public class AltarLight extends Altar
 {
-	public AltarLight(VampireRevamp plugin)
+	public AltarLight()
 	{
-		this.plugin = plugin;
-		this.name = this.plugin.mLang.altarLightName;
-		this.desc = this.plugin.mLang.altarLightDesc;
-		
-		this.coreMaterial = Material.LAPIS_BLOCK;
-		
-		this.materialCounts = new HashMap<>();
-		this.materialCounts.put(Material.GLOWSTONE, 30);
-		this.materialCounts.put(Material.DANDELION, 5);
-		this.materialCounts.put(Material.POPPY, 5);
-		this.materialCounts.put(Material.DIAMOND_BLOCK, 2);
-		
-		this.resources = ImmutableList.of(
-			new ItemStack(Material.WATER_BUCKET, 1),
-			new ItemStack(Material.DIAMOND, 1),
-			new ItemStack(Material.SUGAR, 20),
-			new ItemStack(Material.WHEAT, 20)
-		);
+		SingleAltarConfig darkAltar = VampireRevamp.getVampireConfig().altar.darkAltar;
+		this.coreMaterial = darkAltar.coreMaterial;
+
+		this.materialCounts = darkAltar.buildMaterials;
+
+		this.resources = darkAltar.activate;
+
+		this.isDark = false;
 	}
 	
 	@Override
 	public boolean use(final UPlayer uplayer, final Player player)
 	{
 		boolean success = false;
-		MConf mconf = plugin.mConf;
-		uplayer.msg("");
-		uplayer.msg(this.desc);
+		player.sendMessage("");
+		VampireRevamp.sendMessage(player,
+				MessageType.INFO,
+				AltarMessageKeys.ALTAR_LIGHT_DESC);
 		
 		if (Perm.ALTAR_LIGHT.has(player, true)) {
 			if (!uplayer.isVampire() && playerHoldsWaterBottle(player)) {
-				if (ResourceUtil.playerRemoveAttempt(player, mconf.getHolyWaterResources(), plugin.mLang.altarLightWaterResourceSuccess, plugin.mLang.altarLightWaterResourceFail)) {
-					Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
+				if (ResourceUtil.playerRemoveAttempt(player,
+						VampireRevamp.getVampireConfig().holyWater.resources,
+						HolyWaterMessageKeys.CREATE_SUCCESS,
+						HolyWaterMessageKeys.CREATE_FAIL)) {
+					Bukkit.getScheduler().scheduleSyncDelayedTask(VampireRevamp.getInstance(), new Runnable() {
 						public void run() {
 							ResourceUtil.playerAdd(player, HolyWaterUtil.createHolyWater());
-							uplayer.msg(plugin.mLang.altarLightWaterResult);
+							VampireRevamp.sendMessage(player,
+									MessageType.INFO,
+									HolyWaterMessageKeys.CREATE_RESULT);
 							uplayer.runFxEnderBurst();
 						}
 					}, 1);
@@ -63,14 +58,21 @@ public class AltarLight extends Altar
 				}
 			}
 			else {
-				uplayer.msg(plugin.mLang.altarLightCommon);
+				VampireRevamp.sendMessage(player,
+						MessageType.INFO,
+						AltarMessageKeys.ALTAR_LIGHT_COMMON);
 				uplayer.runFxEnder();
 
 				if (uplayer.isVampire()) {
-					if (ResourceUtil.playerRemoveAttempt(player, this.resources, plugin.mLang.altarResourceSuccess, plugin.mLang.altarResourceFail)) {
-						Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
+					if (ResourceUtil.playerRemoveAttempt(player,
+							this.resources,
+							AltarMessageKeys.ACTIVATE_SUCCESS,
+							AltarMessageKeys.ACTIVATE_FAIL)) {
+						Bukkit.getScheduler().scheduleSyncDelayedTask(VampireRevamp.getInstance(), new Runnable() {
 							public void run() {
-								uplayer.msg(plugin.mLang.altarLightVampire);
+								VampireRevamp.sendMessage(player,
+										MessageType.INFO,
+										AltarMessageKeys.ALTAR_LIGHT_VAMPIRE);
 								player.getWorld().strikeLightningEffect(player.getLocation().add(0, 3, 0));
 								uplayer.runFxEnderBurst();
 								uplayer.setVampire(false);
@@ -79,9 +81,13 @@ public class AltarLight extends Altar
 						success = true;
 					}
 				} else if (uplayer.isHealthy()) {
-					uplayer.msg(plugin.mLang.altarLightHealthy);
+					VampireRevamp.sendMessage(player,
+							MessageType.INFO,
+							AltarMessageKeys.ALTAR_LIGHT_HEALTHY);
 				} else if (uplayer.isInfected()) {
-					uplayer.msg(plugin.mLang.altarLightInfected);
+					VampireRevamp.sendMessage(player,
+							MessageType.INFO,
+							AltarMessageKeys.ALTAR_LIGHT_INFECTED);
 					uplayer.setInfection(0);
 					uplayer.runFxEnderBurst();
 				}

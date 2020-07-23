@@ -1,22 +1,28 @@
 package com.clanjhoo.vampire.entity;
 
+import co.aikar.commands.MessageType;
 import com.clanjhoo.vampire.InfectionReason;
+import com.clanjhoo.vampire.keyproviders.*;
 import com.clanjhoo.vampire.VampireRevamp;
 import com.clanjhoo.vampire.accumulator.UPlayerFoodAccumulator;
-import com.clanjhoo.vampire.event.EventVampirePlayerInfectionChange;
-import com.clanjhoo.vampire.event.EventVampirePlayerVampireChange;
+import com.clanjhoo.vampire.config.PluginConfig;
+import com.clanjhoo.vampire.config.RadiationEffectConfig;
+import com.clanjhoo.vampire.config.StateEffectConfig;
+import com.clanjhoo.vampire.event.InfectionChangeEvent;
+import com.clanjhoo.vampire.event.VampireTypeChangeEvent;
 import com.clanjhoo.vampire.util.*;
+import me.libraryaddict.disguise.DisguiseAPI;
 import org.bukkit.*;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.Creature;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
-import org.bukkit.permissions.PermissionAttachment;
+import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
+import java.util.logging.Level;
 
 public class UPlayer {
     // -------------------------------------------- //
@@ -104,10 +110,6 @@ public class UPlayer {
      */
     private transient long tradeOfferedAtMillis = 0;
     /**
-     * TRANSIENT: permission assignments
-     */
-    private transient PermissionAttachment permA = null;
-    /**
      * TRANSIENT FX: smoke
      */
     private transient long fxSmokeMillis = 0;
@@ -115,11 +117,6 @@ public class UPlayer {
      * TRANSIENT FX: ender
      */
     private transient long fxEnderMillis = 0;
-
-    /**
-     * TRANSIENT: plugin
-     */
-    public static VampireRevamp plugin;
 
 
     // -------------------------------------------- //
@@ -145,7 +142,7 @@ public class UPlayer {
         UPlayer uPlayer = null;
 
         if (uuid != null)
-            uPlayer = plugin.uPlayerColl.get(uuid);
+            uPlayer = VampireRevamp.getInstance().uPlayerColl.get(uuid);
 
         return uPlayer;
     }
@@ -176,42 +173,42 @@ public class UPlayer {
         this.setInfection(0);
 
         if (this.vampire != val) {
-            EventVampirePlayerVampireChange event = new EventVampirePlayerVampireChange(val, this);
+            VampireTypeChangeEvent event = new VampireTypeChangeEvent(val, this);
             Bukkit.getPluginManager().callEvent(event);
             if (!event.isCancelled()) {
                 this.vampire = val;
+                Player player = this.getPlayer();
+                if (player != null) {
+                    PluginConfig conf = VampireRevamp.getVampireConfig();
+                    if (this.vampire) {
+                        VampireRevamp.sendMessage(this.getPlayer(),
+                                MessageType.INFO,
+                                VampirismMessageKeys.TURNED_VAMPIRE);
+                        this.runFxShriek();
+                        this.runFxSmokeBurst();
+                        this.runFxSmoke();
 
-                if (this.vampire) {
-                    this.msg(plugin.mLang.vampireTrue);
-                    this.runFxShriek();
-                    this.runFxSmokeBurst();
-                    this.runFxSmoke();
-
-                    Player player = this.getPlayer();
-                    if (player != null) {
-                        MConf mconf = plugin.mConf;
-                        mconf.getEffectConfHuman().removePotionEffects(player);
+                        conf.potionEffects.human.removePotionEffects(player);
                         // player.setSleepingIgnored(true);
-                    }
-                } else {
-                    this.msg(plugin.mLang.vampireFalse);
-                    this.runFxEnder();
-                    this.setNosferatu(false);
-                    this.setMaker(null);
-                    this.setReason(null);
-                    this.setBloodlusting(false);
-                    this.setIntending(false);
-                    this.setUsingNightVision(false);
+                    } else {
+                        VampireRevamp.sendMessage(this.getPlayer(),
+                                MessageType.INFO,
+                                VampirismMessageKeys.CURED_VAMPIRE);
+                        this.runFxEnder();
+                        this.setNosferatu(false);
+                        this.setMaker(null);
+                        this.setReason(null);
+                        this.setBloodlusting(false);
+                        this.setIntending(false);
+                        this.setUsingNightVision(false);
 
-                    Player player = this.getPlayer();
-                    if (player != null) {
                         // player.setSleepingIgnored(false);
-                        MConf mconf = plugin.mConf;
-                        mconf.getEffectConfVampire().removePotionEffects(player);
+                        conf.potionEffects.nosferatu.removePotionEffects(player);
+                        conf.potionEffects.vampire.removePotionEffects(player);
                     }
-                }
 
-                this.update();
+                    this.update();
+                }
             }
         }
     }
@@ -235,7 +232,7 @@ public class UPlayer {
     public void setInfection(double val) {
         if (this.infection != val) {
             // Call event
-            EventVampirePlayerInfectionChange event = new EventVampirePlayerInfectionChange(val, this);
+            InfectionChangeEvent event = new InfectionChangeEvent(val, this);
             Bukkit.getPluginManager().callEvent(event);
             if (!event.isCancelled()) {
                 val = event.getInfection();
@@ -244,19 +241,20 @@ public class UPlayer {
                     this.setVampire(true);
                 } else if (val <= 0D) {
                     if (this.infection > 0D && !this.isVampire()) {
-                        this.msg(plugin.mLang.infectionCured);
+                        VampireRevamp.sendMessage(this.getPlayer(),
+                                MessageType.INFO,
+                                InfectionMessageKeys.CURED);
                     }
                     this.infection = 0D;
 
                     Player player = this.getPlayer();
                     if (player != null) {
-                        MConf mconf = plugin.mConf;
-                        mconf.getEffectConfInfected().removePotionEffects(player);
+                        VampireRevamp.getVampireConfig().potionEffects.infected.removePotionEffects(player);
                     }
                 } else {
                     this.infection = val;
                 }
-                this.updatePotionEffects();
+                this.update();
             }
         }
     }
@@ -266,12 +264,27 @@ public class UPlayer {
     }
 
     public void addInfection(double val, InfectionReason reason, UPlayer maker) {
+        Player player = getPlayer();
         if (!vampire) {
             this.setReason(reason);
             this.setMakerUUID(maker == null ? null : maker.getPlayerUUID());
-            plugin.log(this.getReasonDesc(false));
+
+            String parent = null;
+            if (reason.isMaker()) {
+                parent = getMakerName();
+            }
+            if (parent == null || parent.isEmpty()) {
+                parent = "someone";
+            }
+
+            // plugin.log(this.getReasonDesc(false));
             if (reason.isNoticeable())
-                this.msg(this.getReasonDesc(true));
+                VampireRevamp.sendMessage(player,
+                        MessageType.INFO,
+                        reason.getDescKey(),
+                        "{player}", VampireRevamp.getMessage(player, GrammarMessageKeys.YOU),
+                        "{to_be_past}", VampireRevamp.getMessage(player, GrammarMessageKeys.TO_BE_2ND_PAST),
+                        "{parent}", parent);
             this.addInfection(val);
         }
     }
@@ -293,10 +306,6 @@ public class UPlayer {
         this.reason = reason;
     }
 
-    public String getReasonDesc(boolean self) {
-        return this.getReason().getDesc(this, self);
-    }
-
     public UUID getMakerUUID() {
         return this.makerUUID;
     }
@@ -306,7 +315,11 @@ public class UPlayer {
     }
 
     public UPlayer getMaker() {
-        return plugin.uPlayerColl.get(this.makerUUID);
+        return VampireRevamp.getInstance().uPlayerColl.get(this.makerUUID);
+    }
+
+    public String getMakerName() {
+        return Bukkit.getOfflinePlayer(this.makerUUID).getName();
     }
 
     public void setMaker(UPlayer val) {
@@ -319,11 +332,18 @@ public class UPlayer {
 
     public void setIntending(boolean val) {
         this.intending = val;
-        this.msg(this.intendMsg());
-    }
+        Player p = getPlayer();
 
-    public String intendMsg() {
-        return plugin.mLang.boolIsY("Infect intent", this.isIntending()) + " " + plugin.mLang.quotaIsPercent("Combat infect risk", this.combatInfectRisk());
+        if (p != null) {
+            String on = VampireRevamp.getMessage(p, GrammarMessageKeys.ON);
+            String off = VampireRevamp.getMessage(p, GrammarMessageKeys.OFF);
+
+            VampireRevamp.sendMessage(p,
+                    MessageType.INFO,
+                    CommandMessageKeys.SHOW_INTENT,
+                    "{enabled}", isIntending() ? on : off,
+                    "{percent}", String.format("%.1f", combatInfectRisk() * 100));
+        }
     }
 
     public boolean isBloodlusting() {
@@ -331,39 +351,75 @@ public class UPlayer {
     }
 
     public void setBloodlusting(boolean val) {
+        Player me = this.getPlayer();
+        if (me == null) {
+            VampireRevamp.log(Level.WARNING, "Error getting player in UPlayer!");
+            return;
+        }
+        PluginConfig conf = VampireRevamp.getVampireConfig();
+
+        String bloodlustAction = VampireRevamp.getMessage(me, GrammarMessageKeys.BLOODLUST);
+
         if (this.bloodlusting == val) {
             // No real change - just view the info.
-            this.msg(plugin.mLang.boolIsY("Bloodlust", val));
-        } else {
-            Player me = this.getPlayer();
-            if (me != null) {
-                if (val) {
-                    // There are a few rules to when you can turn it on:
-                    if (!this.isVampire()) {
-                        msg(plugin.mLang.onlyVampsCanX, "use bloodlust");
-                    } else if (this.getFood() != null && this.getFood().get() < plugin.mConf.getBloodlustMinFood()) {
-                        msg("<b>Your food is too low for bloodlust.");
-                    } else if (me.getGameMode() == GameMode.CREATIVE
-                            || me.getGameMode() == GameMode.SPECTATOR) {
-                        msg("<b>You can't use bloodlust while in Creative or Spectator Mode."); // or offline :P but offline players wont see the message
-                    } else {
-                        this.bloodlusting = true;
-                        this.update();
-                        this.msg(this.bloodlustMsg());
-                    }
-                } else {
-                    MConf mconf = plugin.mConf;
-                    mconf.getEffectConfBloodlust().removePotionEffects(me);
-                    this.bloodlusting = false;
-                    this.update();
-                    this.msg(this.bloodlustMsg());
-                }
+            String on = VampireRevamp.getMessage(me, GrammarMessageKeys.ON);
+            String off = VampireRevamp.getMessage(me, GrammarMessageKeys.OFF);
+            VampireRevamp.sendMessage(me,
+                    MessageType.INFO,
+                    GrammarMessageKeys.X_IS_Y,
+                    "{key}", bloodlustAction,
+                    "{value}", val ? on : off);
+            return;
+        }
+
+        if (val) { // Enabling bloodlust
+            // There are a few rules to when you can turn it on:
+            if (!this.isVampire()) {
+                String vampireType = VampireRevamp.getMessage(me, GrammarMessageKeys.VAMPIRE_TYPE);
+                VampireRevamp.sendMessage(me,
+                        MessageType.ERROR,
+                        GrammarMessageKeys.ONLY_TYPE_CAN_ACTION,
+                        "{vampire_type}", vampireType,
+                        "{action}", bloodlustAction);
+            } else if (this.getFood() != null && this.getFood().get() < conf.vampire.bloodlust.minFood) {
+                VampireRevamp.sendMessage(me,
+                        MessageType.ERROR,
+                        SkillMessageKeys.BLOODLUST_LOW_FOOD);
+            } else if (conf.vampire.bloodlust.checkGamemode &&
+                            (me.getGameMode() == GameMode.CREATIVE ||
+                             me.getGameMode() == GameMode.SPECTATOR)) { // or offline :P but offline players wont see the message
+                VampireRevamp.sendMessage(me,
+                        MessageType.ERROR,
+                        SkillMessageKeys.BLOODLUST_GAMEMODE_CHECK);
+            } else if (!conf.vampire.bloodlust.enabled) {
+                VampireRevamp.sendMessage(me,
+                        MessageType.ERROR,
+                        CommandMessageKeys.DISABLED_ACTION,
+                        "{action}", bloodlustAction);
+            } else {
+                this.bloodlusting = true;
+                this.update();
+                String on = VampireRevamp.getMessage(me, GrammarMessageKeys.ON);
+                VampireRevamp.sendMessage(me,
+                        MessageType.INFO,
+                        CommandMessageKeys.SHOW_BLOODLUST,
+                        "{bloodlust}", bloodlustAction,
+                        "{enabled}", on,
+                        "{percent}", String.format("%.1f", this.combatDamageFactor() * 100));
             }
         }
-    }
-
-    public String bloodlustMsg() {
-        return plugin.mLang.boolIsY("Bloodlust", this.isBloodlusting()) + " " + plugin.mLang.quotaIsPercent("combat damage", this.combatDamageFactor());
+        else { // Disabling bloodlust
+            this.bloodlusting = false;
+            conf.potionEffects.bloodlust.removePotionEffects(me);
+            this.update();
+            String off = VampireRevamp.getMessage(me, GrammarMessageKeys.OFF);
+            VampireRevamp.sendMessage(me,
+                    MessageType.INFO,
+                    CommandMessageKeys.SHOW_BLOODLUST,
+                    "{bloodlust}", bloodlustAction,
+                    "{enabled}", off,
+                    "{percent}", String.format("%.1f", this.combatDamageFactor() * 100));
+        }
     }
 
     public boolean isUsingNightVision() {
@@ -371,26 +427,40 @@ public class UPlayer {
     }
 
     public void setUsingNightVision(boolean val) {
+        Player me = this.getPlayer();
+        if (me == null)
+            return;
+
         // If an actual change is being made ...
         if (this.usingNightVision != val) {
+            PluginConfig conf = VampireRevamp.getVampireConfig();
             // ... do change stuff ...
-            this.usingNightVision = val;
+            if (conf.vampire.nightvision.enabled) {
+                this.usingNightVision = val;
 
-            // ... remove the nightvision potion effects ...
-            Player me = this.getPlayer();
-            if (me != null) {
-                MConf mconf = plugin.mConf;
-                mconf.getEffectConfNightvision().removePotionEffects(me);
+                // ... remove the nightvision potion effects ...
+                conf.potionEffects.nightvision.removePotionEffects(me);
+
+                // ... trigger a potion effect update ...
+                this.update();
+
+                String onString = val ?
+                        VampireRevamp.getMessage(me, GrammarMessageKeys.ON) :
+                        VampireRevamp.getMessage(me, GrammarMessageKeys.OFF);
+
+                VampireRevamp.sendMessage(me,
+                        MessageType.INFO,
+                        CommandMessageKeys.SHOW_NIGHTVISION,
+                        "{enabled}", onString);
             }
-
-            // ... trigger a potion effect update ...
-            this.updatePotionEffects();
-            this.msg(this.usingNightVisionMsg());
+            else {
+                String nightvisionAction = VampireRevamp.getMessage(me, GrammarMessageKeys.NIGHTVISION);
+                VampireRevamp.sendMessage(me,
+                        MessageType.ERROR,
+                        CommandMessageKeys.DISABLED_ACTION,
+                        "{action}", nightvisionAction);
+            }
         }
-    }
-
-    public String usingNightVisionMsg() {
-        return plugin.mLang.boolIsY("Nightvision", this.isUsingNightVision());
     }
 
     public UUID getPlayerUUID() {
@@ -528,7 +598,7 @@ public class UPlayer {
     public void runFxSmokeBurst() {
         Player me = this.getPlayer();
         if (me != null) {
-            double dcount = plugin.mConf.getFxSmokeBurstCount();
+            double dcount = VampireRevamp.getVampireConfig().specialEffects.smokeBurstCount;
             long lcount = MathUtil.probabilityRound(dcount);
             for (long i = lcount; i > 0; i--) FxUtil.smoke(me);
         }
@@ -538,7 +608,7 @@ public class UPlayer {
     public void runFxEnderBurst() {
         Player me = this.getPlayer();
         if (me != null) {
-            double dcount = plugin.mConf.getFxEnderBurstCount();
+            double dcount = VampireRevamp.getVampireConfig().specialEffects.enderBurstCount;
             long lcount = MathUtil.probabilityRound(dcount);
             for (long i = lcount; i > 0; i--) FxUtil.ender(me, 0);
         }
@@ -548,7 +618,7 @@ public class UPlayer {
     public void runFxFlameBurst() {
         Player me = this.getPlayer();
         if (me != null) {
-            double dcount = plugin.mConf.getFxFlameBurstCount();
+            double dcount = VampireRevamp.getVampireConfig().specialEffects.flameBurstCount;
             long lcount = MathUtil.probabilityRound(dcount);
             for (long i = lcount; i > 0; i--) FxUtil.flame(me);
         }
@@ -561,40 +631,111 @@ public class UPlayer {
     public void shriek() {
         // You must be online to shriek
         Player me = this.getPlayer();
-        if (me != null) {
-            MConf mconf = plugin.mConf;
+        if (me == null) {
+            return;
+        }
 
-            // You must be a vampire to shriek
-            if (this.isVampire()) {
-                long now = System.currentTimeMillis();
+        // You must be a vampire to shriek
+        if (this.isVampire()) {
+            PluginConfig conf = VampireRevamp.getVampireConfig();
+            long now = System.currentTimeMillis();
 
-                long millisSinceLastShriekWaitMessage = now - this.lastShriekWaitMessageMillis;
-                if (millisSinceLastShriekWaitMessage >= mconf.getShriekWaitMessageCooldownMillis()) {
-                    long millisSinceLastShriek = now - this.lastShriekMillis;
-                    long millisToWait = mconf.getShriekCooldownMillis() - millisSinceLastShriek;
+            long millisSinceLastShriekWaitMessage = now - this.lastShriekWaitMessageMillis;
+            if (millisSinceLastShriekWaitMessage >= conf.vampire.shriek.waitMessageCooldownMillis) {
+                long millisSinceLastShriek = now - this.lastShriekMillis;
+                long millisToWait = conf.vampire.shriek.cooldownMillis - millisSinceLastShriek;
 
-                    if (millisToWait > 0) {
-                        long secondsToWait = (long) Math.ceil(millisToWait / 1000D);
-                        this.msg(plugin.mLang.shriekWait, secondsToWait);
-                        this.lastShriekWaitMessageMillis = now;
-                    } else {
-                        this.runFxShriek();
-                        this.runFxSmokeBurst();
-                        this.lastShriekMillis = now;
-                    }
+                if (millisToWait > 0) {
+                    long secondsToWait = (long) Math.ceil(millisToWait / 1000D);
+                    VampireRevamp.sendMessage(me,
+                            MessageType.ERROR,
+                            SkillMessageKeys.SHRIEK_WAIT,
+                            "{seconds}", String.format("%d", secondsToWait));
+                    this.lastShriekWaitMessageMillis = now;
+                } else {
+                    this.runFxShriek();
+                    this.runFxSmokeBurst();
+                    this.lastShriekMillis = now;
                 }
-            } else {
-                msg(plugin.mLang.onlyVampsCanX, "shriek");
             }
+        } else {
+            String vampireType = VampireRevamp.getMessage(me, GrammarMessageKeys.VAMPIRE_TYPE);
+            String shriekAction = VampireRevamp.getMessage(me, GrammarMessageKeys.SHRIEK);
+            VampireRevamp.sendMessage(me,
+                    MessageType.ERROR,
+                    GrammarMessageKeys.ONLY_TYPE_CAN_ACTION,
+                    "{vampire_type}", vampireType,
+                    "{action}", shriekAction);
         }
     }
 
-    public void msg(String message) {
-        this.getPlayer().sendMessage(TextUtil.parse(message));
+    public void setBatusi(boolean activate) {
+        if (activate)
+            enableBatusi();
+        else
+            disableBatusi();
     }
 
-    public void msg(String message, Object... args) {
-        this.getPlayer().sendMessage(TextUtil.parse(message, args));
+    public boolean isBatusi() {
+        Player player = this.getPlayer();
+        if (player == null)
+            return false;
+        return VampireRevamp.getInstance().batEnabled.getOrDefault(player.getUniqueId(), false);
+    }
+
+    private void enableBatusi() {
+        VampireRevamp plugin = VampireRevamp.getInstance();
+        Player sender = this.getPlayer();
+
+        if (sender == null)
+            return;
+
+        if (!plugin.batEnabled.getOrDefault(sender.getUniqueId(), false)) {
+            EntityUtil.spawnBats(sender, 9);
+            if (plugin.isDisguiseEnabled)
+                DisguiseUtil.disguiseBat(sender);
+            plugin.batEnabled.put(sender.getUniqueId(), true);
+            sender.setAllowFlight(true);
+            sender.setFlying(true);
+            VampireRevamp.sendMessage(sender,
+                    MessageType.INFO,
+                    CommandMessageKeys.BATUSI_TOGGLED_ON);
+        } else {
+            if (plugin.isDisguiseEnabled)
+                DisguiseUtil.disguiseBat(sender);
+            sender.setAllowFlight(true);
+            sender.setFlying(true);
+            VampireRevamp.sendMessage(sender,
+                    MessageType.INFO,
+                    CommandMessageKeys.BATUSI_ALREADY_USED);
+        }
+    }
+
+    private void disableBatusi() {
+        VampireRevamp plugin = VampireRevamp.getInstance();
+        Player sender = this.getPlayer();
+
+        if (sender == null)
+            return;
+
+        try {
+            EntityUtil.despawnBats(sender);
+            if (plugin.isDisguiseEnabled)
+                DisguiseAPI.undisguiseToAll(sender);
+            sender.setAllowFlight(false);
+            sender.setFlying(false);
+            plugin.batEnabled.put(sender.getUniqueId(), false);
+            VampireRevamp.sendMessage(sender,
+                    MessageType.INFO,
+                    CommandMessageKeys.BATUSI_TOGGLED_OFF);
+        }
+        catch (Exception ex) {
+            VampireRevamp.sendMessage(sender,
+                    MessageType.INFO,
+                    CommandMessageKeys.BATUSI_ERROR);
+            plugin.getLogger().log(Level.WARNING, "Error while removing bat cloud!: " + ex.getMessage());
+            ex.printStackTrace();
+        }
     }
 
     // -------------------------------------------- //
@@ -602,75 +743,83 @@ public class UPlayer {
     // -------------------------------------------- //
 
     public void update() {
-        //this.updatePermissions();
-        this.updatePotionEffects();
-    }
-
-    // -------------------------------------------- //
-    // UPDATE > PERMISSONS
-    // -------------------------------------------- //
-
-    /*
-    public void updatePermissions() {
-        // Player
         Player player = this.getPlayer();
+        PluginConfig conf = VampireRevamp.getVampireConfig();
+
         if (player != null) {
-            // Attachment
-            PermissionAttachment attachment;
-            if (EntityUtil.perms.containsKey(playerUUID)) {
-                attachment = EntityUtil.perms.get(playerUUID);
-            } else {
-                attachment = player.addAttachment(VampireRevamp.get());
+            if (!conf.general.isBlacklisted(player.getWorld())) {
+                //this.updatePermissions();
+                this.updatePotionEffects();
             }
-
-            if (attachment != null) {
-                // Permissions
-                MConf mconf = plugin.mConf;
-                Map<String, Boolean> permissions = (this.isVampire() ? mconf.getUpdatePermsVampire() : mconf.getUpdatePermsHuman());
-
-                // Update
-                EntityUtil.updatePermissions(attachment, permissions);
+            else {
+                this.setBloodlusting(false);
+                this.setUsingNightVision(false);
+                this.setIntending(false);
+                this.setBatusi(false);
+                this.setRad(0);
+                this.setTemp(0);
             }
         }
     }
-    */
+
+    public boolean canHaveNosferatuEffects() {
+        PluginConfig conf = VampireRevamp.getVampireConfig();
+        return this.isNosferatu() &&
+                (!conf.radiation.removeBuffs.enabled ||
+                 !conf.radiation.removeBuffs.affectNosferatu ||
+                 this.getTemp() <= conf.radiation.removeBuffs.temperature);
+    }
+
+    public boolean canHaveVampireEffects() {
+        PluginConfig conf = VampireRevamp.getVampireConfig();
+        return this.isVampire() &&
+                (!conf.radiation.removeBuffs.enabled ||
+                        this.getTemp() <= conf.radiation.removeBuffs.temperature);
+    }
 
     // -------------------------------------------- //
     // UPDATE > POTION EFFECTS
     // -------------------------------------------- //
 
     public void updatePotionEffects() {
-        final int okDuration = 300;
+        // Find the player and their conf
+        Player player = this.getPlayer();
+        if (player == null || player.isDead())
+            return;
+        PluginConfig conf = VampireRevamp.getVampireConfig();
+        final int targetDuration = conf.potionEffects.seconds * 20;
 
         // TODO: I made this dirty fix for lower tps.
         // TODO: The real solution is to tick based on millis and not ticks.
-        //final int targetDuration = okDuration*2;
-        final int targetDuration = okDuration * 4;
 
-        // Find the player and their conf
-        Player player = this.getPlayer();
-        if (player != null && !player.isDead()) {
-            MConf mconf = plugin.mConf;
+        List<StateEffectConfig> effectConfs = new LinkedList<>();
+        effectConfs.add(conf.potionEffects.vampire);
+        effectConfs.add(conf.potionEffects.bloodlust);
+        effectConfs.add(conf.potionEffects.human);
+        effectConfs.add(conf.potionEffects.infected);
+        effectConfs.add(conf.potionEffects.nightvision);
+        effectConfs.add(conf.potionEffects.nosferatu);
+        Collections.sort(effectConfs);
 
-            // Add effects based their
-            if (this.isHuman()) {
-                mconf.getEffectConfHuman().addPotionEffects(player, targetDuration, okDuration);
+        for (StateEffectConfig effectConf : effectConfs) {
+            //VampireRevamp.debugLog(Level.INFO, "Group: " + effectConf.toString());
+            if (effectConf.passesChecks.apply(this)) {
+                //VampireRevamp.debugLog(Level.INFO, "Passes!");
+                effectConf.addPotionEffects(player, targetDuration);
             }
+        }
 
-            if (this.isInfected()) {
-                mconf.getEffectConfInfected().addPotionEffects(player, targetDuration, okDuration);
-            }
+        if (isVampire()) {
+            List<RadiationEffectConfig> debuffConfs = conf.radiation.effects;
 
-            if (this.isVampire() && this.getTemp() <= mconf.getSunStopEffectsTemp()) {
-                mconf.getEffectConfVampire().addPotionEffects(player, targetDuration, okDuration);
-            }
-
-            if (this.isVampire() && mconf.isNightvisionCanBeUsed() && this.isUsingNightVision()) {
-                mconf.getEffectConfNightvision().addPotionEffects(player, targetDuration, okDuration);
-            }
-
-            if (this.isVampire() && this.isBloodlusting()) {
-                mconf.getEffectConfBloodlust().addPotionEffects(player, targetDuration, okDuration);
+            for (RadiationEffectConfig debuffConf : debuffConfs) {
+                if (this.getTemp() >= debuffConf.temperature &&
+                        ((debuffConf.affectNosferatu && this.isNosferatu()) ||
+                        !debuffConf.affectNosferatu && !this.isNosferatu())) {
+                    if (player.hasPotionEffect(debuffConf.type))
+                        player.removePotionEffect(debuffConf.type);
+                    player.addPotionEffect(new PotionEffect(debuffConf.type, debuffConf.ticks, debuffConf.strength, true, false));
+                }
             }
         }
     }
@@ -680,24 +829,27 @@ public class UPlayer {
     // -------------------------------------------- //
 
     public void tick(long millis) {
-        this.tickRadTemp(millis);
-        this.tickInfection(millis);
-        this.tickRegen(millis);
-        this.tickBloodlust(millis);
-        this.tickPotionEffects(millis);
-        this.tickEffects(millis);
-        this.tickTruce(millis);
+        Player player = this.getPlayer();
+        PluginConfig conf = VampireRevamp.getVampireConfig();
+        if (player != null && !conf.general.isBlacklisted(player.getWorld())) {
+            this.tickRadTemp(millis);
+            this.tickInfection(millis);
+            this.tickRegen(millis);
+            this.tickBloodlust(millis);
+            this.tickPotionEffects(millis);
+            this.tickEffects(millis);
+            this.tickTruce(millis);
+        }
     }
 
     public void tickRadTemp(long millis) {
         // Update rad and temp
         Player me = this.getPlayer();
         if (me != null) {
-            MConf mconf = plugin.mConf;
-
+            PluginConfig conf = VampireRevamp.getVampireConfig();
             if (me.getGameMode() != GameMode.CREATIVE && this.isVampire() && !me.isDead()) {
-                this.rad = mconf.getBaseRad() + SunUtil.calcPlayerIrradiation(me);
-                double tempDelta = mconf.getTempPerRadAndMilli() * this.rad * millis;
+                this.rad = conf.radiation.baseRadiation + SunUtil.calcPlayerIrradiation(me);
+                double tempDelta = conf.radiation.tempPerRadAndMilli * this.rad * millis;
                 this.addTemp(tempDelta);
             } else {
                 this.rad = 0;
@@ -711,43 +863,57 @@ public class UPlayer {
         if (this.isInfected() && me != null
                 && me.getGameMode() != GameMode.CREATIVE
                 && me.getGameMode() != GameMode.SPECTATOR) {
-            MConf mconf = plugin.mConf;
 
             int indexOld = this.infectionGetMessageIndex();
-            this.addInfection(millis * mconf.getInfectionPerMilli());
+            PluginConfig conf = VampireRevamp.getVampireConfig();
+            this.addInfection(millis * conf.infection.amountPerMilli);
             int indexNew = this.infectionGetMessageIndex();
 
             if (!this.isVampire() && indexOld != indexNew) {
-                if (mconf.getInfectionProgressDamage() != 0)
-                    me.damage(mconf.getInfectionProgressDamage());
-                if (mconf.getInfectionProgressNauseaTicks() > 0)
-                    FxUtil.ensure(PotionEffectType.CONFUSION, me, mconf.getInfectionProgressNauseaTicks());
+                if (conf.infection.progressDamage != 0)
+                    me.damage(conf.infection.progressDamage);
+                if (conf.infection.progressNauseaTicks > 0)
+                    FxUtil.ensure(PotionEffectType.CONFUSION, me, conf.infection.progressNauseaTicks);
 
-                this.msg(plugin.mLang.infectionFeeling.get(indexNew));
-                this.msg(plugin.mLang.infectionHint.get(MathUtil.random.nextInt(plugin.mLang.infectionHint.size())));
+                VampireRevamp.sendMessage(me,
+                        MessageType.INFO,
+                        InfectionMessageKeys.getFeeling(indexNew));
+                VampireRevamp.sendMessage(me,
+                        MessageType.INFO,
+                        InfectionMessageKeys.getHint(MathUtil.random.nextInt(InfectionMessageKeys.getMaxHint())));
             }
         }
     }
 
     public int infectionGetMessageIndex() {
-        return (int) ((plugin.mLang.infectionFeeling.size() + 1) * this.getInfection() / 1D) - 1;
+        return (int) ((InfectionMessageKeys.getMaxFeeling() + 1) * this.getInfection() / 1D) - 1;
     }
 
     public void tickRegen(long millis) {
         Player me = this.getPlayer();
-        MConf mconf = plugin.mConf;
-        if (this.isVampire() && this.getTemp() <= mconf.getSunStopEffectsTemp()
-                && me != null
+        PluginConfig conf = VampireRevamp.getVampireConfig();
+        boolean enabled = (this.isVampire() && conf.vampire.regen.enabled) ||
+                          (this.isNosferatu() && conf.vampire.regenNosferatu.enabled);
+        boolean buffsActive = !conf.radiation.removeBuffs.enabled ||
+                                this.getTemp() < conf.radiation.removeBuffs.temperature ||
+                                (this.isNosferatu() && !conf.radiation.removeBuffs.affectNosferatu);
+        double minFood = this.isNosferatu() ? conf.vampire.regenNosferatu.minFood : conf.vampire.regen.minFood;
+        int delayMillis = this.isNosferatu() ? conf.vampire.regenNosferatu.delayMillis : conf.vampire.regen.delayMillis;
+        double foodPerMilli = this.isNosferatu() ? conf.vampire.regenNosferatu.foodPerMilli : conf.vampire.regen.foodPerMilli;
+        double healthPerFood = this.isNosferatu() ? conf.vampire.regenNosferatu.healthPerFood : conf.vampire.regen.healthPerFood;
+
+        if (me != null
+                && enabled
+                && buffsActive
                 && me.getGameMode() != GameMode.CREATIVE
                 && me.getGameMode() != GameMode.SPECTATOR
                 && !me.isDead()
                 && me.getHealth() < me.getAttribute(Attribute.GENERIC_MAX_HEALTH).getBaseValue()
-                && this.getFood().get() >= mconf.getRegenMinFood()) {
+                && this.getFood().get() >= minFood) {
             long millisSinceLastDamage = System.currentTimeMillis() - this.lastDamageMillis;
-            if (millisSinceLastDamage >= mconf.getRegenDelayMillis()) {
-                double foodDiff = this.getFood().add(-mconf.getRegenFoodPerMilli() * millis);
-                double nosferatuFactor = this.isNosferatu() ? 1.5 : 1;
-                double healthTarget = me.getHealth() - foodDiff * mconf.getRegenHealthPerFood() * nosferatuFactor;
+            if (millisSinceLastDamage >= delayMillis) {
+                double foodDiff = this.getFood().add(-foodPerMilli * millis);
+                double healthTarget = me.getHealth() - foodDiff * healthPerFood;
 
                 healthTarget = Math.min(healthTarget, me.getAttribute(Attribute.GENERIC_MAX_HEALTH).getBaseValue());
                 healthTarget = Math.max(healthTarget, 0D);
@@ -759,13 +925,13 @@ public class UPlayer {
 
     public void tickBloodlust(long millis) {
         Player me = this.getPlayer();
+        PluginConfig conf = VampireRevamp.getVampireConfig();
         if (this.isVampire() && this.isBloodlusting()
                 && me != null && !me.isDead()
                 && me.getGameMode() != GameMode.CREATIVE
                 && me.getGameMode() != GameMode.SPECTATOR) {
-            MConf mconf = plugin.mConf;
-            this.getFood().add(millis * mconf.getBloodlustFoodPerMilli());
-            if (this.getFood().get() < mconf.getBloodlustMinFood())
+            this.getFood().add(millis * conf.vampire.bloodlust.foodPerMilli);
+            if (this.getFood().get() < conf.vampire.bloodlust.minFood)
                 this.setBloodlusting(false);
         }
     }
@@ -780,12 +946,12 @@ public class UPlayer {
         if (me != null && !me.isDead()
                 && me.getGameMode() != GameMode.CREATIVE
                 && me.getGameMode() != GameMode.SPECTATOR) {
-            MConf mconf = plugin.mConf;
+            PluginConfig conf = VampireRevamp.getVampireConfig();
 
             // FX: Smoke
             if (this.fxSmokeMillis > 0) {
                 this.fxSmokeMillis -= millis;
-                double dcount = mconf.getFxSmokePerMilli() * millis;
+                double dcount = conf.specialEffects.smokePerMilli * millis;
                 long lcount = MathUtil.probabilityRound(dcount);
                 for (long i = lcount; i > 0; i--)
                     FxUtil.smoke(me);
@@ -794,35 +960,28 @@ public class UPlayer {
             // FX: Ender
             if (this.fxEnderMillis > 0) {
                 this.fxEnderMillis -= millis;
-                double dcount = mconf.getFxEnderPerMilli() * millis;
+                double dcount = conf.specialEffects.enderPerMilli * millis;
                 long lcount = MathUtil.probabilityRound(dcount);
                 for (long i = lcount; i > 0; i--)
-                    FxUtil.ender(me, mconf.getFxEnderRandomMaxLen());
+                    FxUtil.ender(me, conf.specialEffects.enderRandomMaxLen);
             }
 
             // Vampire sun reactions
             if (this.isVampire()) {
                 // Buffs
-                if (!this.isNosferatu()) {
-                    if (this.getTemp() > mconf.getSunNauseaTemp())
-                        FxUtil.ensure(PotionEffectType.CONFUSION, me, mconf.getSunNauseaTicks());
-                    if (this.getTemp() > mconf.getSunWeaknessTemp())
-                        FxUtil.ensure(PotionEffectType.WEAKNESS, me, mconf.getSunWeaknessTicks());
-                    if (this.getTemp() > mconf.getSunSlowTemp())
-                        FxUtil.ensure(PotionEffectType.SLOW, me, mconf.getSunSlowTicks());
-                    if (this.getTemp() > mconf.getSunBlindnessTemp())
-                        FxUtil.ensure(PotionEffectType.BLINDNESS, me, mconf.getSunBlindnessTicks());
-                    if (this.getTemp() > mconf.getSunBurnTemp())
-                        FxUtil.ensureBurn(me, mconf.getSunBurnTicks());
+                if (conf.radiation.burn.enabled &&
+                        (!this.isNosferatu() || conf.radiation.burn.affectNosferatu)) {
+                    if (this.getTemp() > conf.radiation.burn.temperature)
+                        FxUtil.ensureBurn(me, conf.radiation.burn.ticks);
                 }
 
                 // Fx
-                double dsmokes = mconf.getSunSmokesPerTempAndMilli() * this.temp * millis;
+                double dsmokes = conf.radiation.smokesPerTempAndMilli * this.temp * millis;
                 long lsmokes = MathUtil.probabilityRound(dsmokes);
                 for (long i = lsmokes; i > 0; i--)
                     FxUtil.smoke(me);
 
-                double dflames = mconf.getSunFlamesPerTempAndMilli() * this.temp * millis;
+                double dflames = conf.radiation.flamesPerTempAndMilli * this.temp * millis;
                 long lflames = MathUtil.probabilityRound(dflames);
                 for (long i = lflames; i > 0; i--)
                     FxUtil.flame(me);
@@ -838,18 +997,22 @@ public class UPlayer {
     public void tradeAccept() {
         Player me = this.getPlayer();
         if (me != null) {
-            MConf mconf = plugin.mConf;
-
             UPlayer vyou = this.tradeOfferedFrom;
+            Player you = vyou == null ? null : vyou.getPlayer();
+            PluginConfig conf = VampireRevamp.getVampireConfig();
 
             // Any offer available?
-            if (vyou == null || System.currentTimeMillis() - this.tradeOfferedAtMillis > mconf.getTradeOfferToleranceMillis()) {
-                this.msg(plugin.mLang.tradeAcceptNone);
+            if (you == null || System.currentTimeMillis() - this.tradeOfferedAtMillis > conf.trade.offerToleranceMillis) {
+                VampireRevamp.sendMessage(me,
+                        MessageType.ERROR,
+                        TradingMessageKeys.ACCEPT_NONE);
             } // Standing close enough?
-            else if (!this.withinDistanceOf(vyou, mconf.getTradeOfferMaxDistance())) {
-                this.msg(plugin.mLang.tradeNotClose, vyou.player.getDisplayName());
+            else if (!this.withinDistanceOf(vyou, conf.trade.offerMaxDistance)) {
+                VampireRevamp.sendMessage(me,
+                        MessageType.ERROR,
+                        TradingMessageKeys.NOT_CLOSE,
+                        "{player}", you.getDisplayName());
             } else {
-                Player you = vyou.getPlayer();
                 double amount = this.tradeOfferedAmount;
 
                 // Enough blood?
@@ -859,12 +1022,17 @@ public class UPlayer {
                     enough = vyou.getFood().get();
                 } else {
                     // but blood is health for humans
-                    enough = vyou.getPlayer().getHealth();
+                    enough = you.getHealth();
                 }
 
                 if (this.tradeOfferedAmount > enough) {
-                    vyou.msg(plugin.mLang.tradeLackingOut);
-                    this.msg(plugin.mLang.tradeLackingIn, you.getDisplayName());
+                    VampireRevamp.sendMessage(you,
+                            MessageType.ERROR,
+                            TradingMessageKeys.LACKING_OUT);
+                    VampireRevamp.sendMessage(me,
+                            MessageType.ERROR,
+                            TradingMessageKeys.LACKING_IN,
+                            "{player}", you.getDisplayName());
                 } else {
                     // Transfer blood (food for vampires, life for humans)
                     if (vyou.isVampire()) {
@@ -873,7 +1041,7 @@ public class UPlayer {
                         vyou.getPlayer().damage(amount);
                     }
 
-                    this.getFood().add(amount * mconf.getTradePercentage());
+                    this.getFood().add(amount * conf.trade.percentage);
 
                     // Risk infection/boost infection
                     if (vyou.isVampire() && !this.isVampire()) {
@@ -885,8 +1053,16 @@ public class UPlayer {
                         }
                     }
                     // Trader Messages
-                    vyou.msg(plugin.mLang.tradeTransferOut, me.getDisplayName(), amount);
-                    this.msg(plugin.mLang.tradeTransferIn, amount, you.getDisplayName());
+                    VampireRevamp.sendMessage(you,
+                            MessageType.INFO,
+                            TradingMessageKeys.TRANSFER_OUT,
+                            "{player}", me.getDisplayName(),
+                            "{amount}", String.format("%.1f", amount));
+                    VampireRevamp.sendMessage(me,
+                            MessageType.INFO,
+                            TradingMessageKeys.TRANSFER_IN,
+                            "{player}", you.getDisplayName(),
+                            "{amount}", String.format("%.1f", amount));
 
                     // Who noticed?
                     Location tradeLocation = me.getLocation();
@@ -894,12 +1070,15 @@ public class UPlayer {
                     Location l1 = me.getEyeLocation();
                     Location l2 = you.getEyeLocation();
                     for (Player player : tradeWorld.getPlayers()) {
-                        if (player.getLocation().distance(tradeLocation) <= mconf.getTradeVisualDistance()) {
+                        if (player.getLocation().distance(tradeLocation) <= conf.trade.visualDistance) {
                             player.playEffect(l1, Effect.POTION_BREAK, 5);
                             player.playEffect(l2, Effect.POTION_BREAK, 5);
                             if (!player.equals(me) && !player.equals(you)) {
-                                String message = TextUtil.parse(plugin.mLang.tradeSeen, me.getDisplayName(), you.getDisplayName());
-                                player.sendMessage(message);
+                                VampireRevamp.sendMessage(player,
+                                        MessageType.INFO,
+                                        TradingMessageKeys.SEEN,
+                                        "{player}", me.getDisplayName(),
+                                        "{source}", you.getDisplayName());
                             }
                         }
                     }
@@ -917,21 +1096,37 @@ public class UPlayer {
         Player you = vyou.getPlayer();
         Player me = this.getPlayer();
         if (you != null && me != null) {
-            MConf mconf = plugin.mConf;
-
-            if (!this.withinDistanceOf(vyou, mconf.getTradeOfferMaxDistance())) {
-                this.msg(plugin.mLang.tradeNotClose, vyou.getPlayer().getDisplayName());
-            } else if (this == vyou) {
-                this.msg(plugin.mLang.tradeSelf);
+            PluginConfig conf = VampireRevamp.getVampireConfig();
+            if (!this.withinDistanceOf(vyou, conf.trade.offerMaxDistance)) {
+                VampireRevamp.sendMessage(me,
+                        MessageType.INFO,
+                        TradingMessageKeys.NOT_CLOSE,
+                        "{player}", you.getDisplayName());
+            } else if (me.equals(you)) {
+                VampireRevamp.sendMessage(me,
+                        MessageType.INFO,
+                        TradingMessageKeys.SELF);
                 FxUtil.ensure(PotionEffectType.CONFUSION, me, 12 * 20);
             } else {
                 vyou.tradeOfferedFrom = this;
                 vyou.tradeOfferedAtMillis = System.currentTimeMillis();
                 vyou.tradeOfferedAmount = amount;
 
-                this.msg(plugin.mLang.tradeOfferOut, amount, you.getDisplayName());
-                vyou.msg(plugin.mLang.tradeOfferIn, me.getDisplayName(), amount);
-                vyou.msg(plugin.mLang.tradeAcceptHelp, "/" + plugin.mConf.getAliasesVampire() + " " + plugin.mConf.getAliasesVampireAccept().get(0));
+                VampireRevamp.sendMessage(me,
+                        MessageType.INFO,
+                        TradingMessageKeys.OFFER_OUT,
+                        "{player}", you.getDisplayName(),
+                        "{amount}", String.format("%.1f", amount));
+
+                VampireRevamp.sendMessage(you,
+                        MessageType.INFO,
+                        TradingMessageKeys.OFFER_IN,
+                        "{player}", me.getDisplayName(),
+                        "{amount}", String.format("%.1f", amount));
+
+                VampireRevamp.sendMessage(you,
+                        MessageType.INFO,
+                        TradingMessageKeys.ACCEPT_HELP);
             }
         }
     }
@@ -971,26 +1166,27 @@ public class UPlayer {
     public void truceBreak() {
         Player player = this.getPlayer();
         if (player != null) {
-            MConf mconf = plugin.mConf;
-
             if (!this.truceIsBroken()) {
-                this.msg(plugin.mLang.truceBroken);
+                VampireRevamp.sendMessage(player,
+                        MessageType.INFO,
+                        VampirismMessageKeys.TRUCE_BROKEN);
             }
-            this.truceBreakMillisLeftSet(mconf.getTruceBreakMillis());
+            this.truceBreakMillisLeftSet(VampireRevamp.getVampireConfig().truce.breakMillis);
         }
     }
 
     public void truceRestore() {
-        this.msg(plugin.mLang.truceRestored);
         this.truceBreakMillisLeftSet(0);
 
         Player me = this.getPlayer();
         if (me != null) {
-            MConf mconf = plugin.mConf;
+            VampireRevamp.sendMessage(me,
+                    MessageType.INFO,
+                    VampirismMessageKeys.TRUCE_RESTORED);
 
             // Untarget the player.
             for (LivingEntity entity : me.getWorld().getLivingEntities()) {
-                if (mconf.getTruceEntityTypes().contains(entity.getType())
+                if (VampireRevamp.getVampireConfig().truce.entityTypes.contains(entity.getType())
                         && entity instanceof Creature) {
                     Creature creature = (Creature) entity;
 
@@ -1027,12 +1223,11 @@ public class UPlayer {
         Player me = this.getPlayer();
 
         if (me != null) {
-            MConf mconf = plugin.mConf;
-
+            PluginConfig conf = VampireRevamp.getVampireConfig();
             if (this.isBloodlusting())
-                damageFactor = mconf.getCombatDamageFactorWithBloodlust();
+                damageFactor = conf.vampire.bloodlust.damageFactor;
             else
-                damageFactor = mconf.getCombatDamageFactorWithoutBloodlust();
+                damageFactor = conf.vampire.damageFactor;
         }
 
         return damageFactor;
@@ -1043,13 +1238,12 @@ public class UPlayer {
 
         Player me = this.getPlayer();
         if (me != null) {
-            MConf mconf = plugin.mConf;
-
             if (this.isVampire()) {
+                PluginConfig conf = VampireRevamp.getVampireConfig();
                 if (this.isIntending())
-                    infectRisk = mconf.getInfectionRiskAtCloseCombatWithIntent();
+                    infectRisk = conf.vampire.intend.infectionChance;
                 else
-                    infectRisk = mconf.getInfectionRiskAtCloseCombatWithoutIntent();
+                    infectRisk = conf.infection.chance;
             }
         }
 

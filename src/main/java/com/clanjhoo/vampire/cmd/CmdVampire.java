@@ -1,18 +1,18 @@
 package com.clanjhoo.vampire.cmd;
 
-import co.aikar.commands.BaseCommand;
-import co.aikar.commands.CommandHelp;
-import co.aikar.commands.RegisteredCommand;
-import co.aikar.commands.RootCommand;
+import co.aikar.commands.*;
 import co.aikar.commands.annotation.*;
 import com.clanjhoo.vampire.BloodFlaskUtil;
 import com.clanjhoo.vampire.InfectionReason;
+import com.clanjhoo.vampire.keyproviders.CommandMessageKeys;
+import com.clanjhoo.vampire.keyproviders.GrammarMessageKeys;
+import com.clanjhoo.vampire.keyproviders.SkillMessageKeys;
+import com.clanjhoo.vampire.keyproviders.VampirismMessageKeys;
 import com.clanjhoo.vampire.Perm;
 import com.clanjhoo.vampire.VampireRevamp;
-import com.clanjhoo.vampire.entity.MConf;
+import com.clanjhoo.vampire.config.PluginConfig;
 import com.clanjhoo.vampire.entity.UPlayer;
 import com.clanjhoo.vampire.util.*;
-import me.libraryaddict.disguise.DisguiseAPI;
 import net.md_5.bungee.api.chat.BaseComponent;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -31,45 +31,59 @@ import java.util.logging.Level;
 @CommandAlias("v|vampire")
 @CommandPermission("vampire.basecommand")
 public class CmdVampire extends BaseCommand {
+	private Map<String, RegisteredCommand> commandMap;
 
-	private final VampireRevamp plugin;
+	public CmdVampire() {
+		commandMap = new HashMap<>();
+	}
 
-	public CmdVampire(VampireRevamp plugin) {
-		this.plugin = plugin;
+	public void initialize() {
+		initializeMap();
+	}
+
+	private void initializeMap() {
+		RootCommand vampireCommand = VampireRevamp.getCommandManager().getRegisteredRootCommands().iterator().next();
+
+		for (Entry<String, RegisteredCommand> entry : vampireCommand.getSubCommands().entries()) {
+			RegisteredCommand command = entry.getValue();
+			String commandName = command.getCommand();
+			if (commandName.length() > 2) {
+				commandName = commandName.substring(2);
+				if (!commandMap.containsKey(commandName)) {
+					commandMap.put(commandName, command);
+					VampireRevamp.debugLog(Level.INFO, "Key: " + commandName);
+				}
+			}
+		}
 	}
 
 	@HelpCommand
 	@Subcommand("help|h|?")
 	@CommandCompletion("@range:1-2")
+	@Description("{@@commands.help.description}")
 	@Syntax("[page=1]")
 	public void onHelp(CommandSender sender, CommandHelp help) {
 		if (help.getSearch() == null || help.getSearch().isEmpty() || !help.getSearch().get(0).equalsIgnoreCase("set")) {
 			int maxPages = 2;
-			Map<String, RegisteredCommand> commandMap = new HashMap<>();
-
-			RootCommand vampireCommand = plugin.pumanager.getRegisteredRootCommands().iterator().next();
 
 			sender.spigot().sendMessage(TextUtil.getHelpHeader(help, maxPages, help.getCommandName()));
-			for (Entry<String, RegisteredCommand> entry : vampireCommand.getSubCommands().entries()) {
-				commandMap.put(entry.getKey(), entry.getValue());
-				//Bukkit.getLogger().log(Level.INFO, "Key: " + entry.getKey());
-			}
 
 			if (help.getPage() == 1) {
-				sender.spigot().sendMessage(TextUtil.getCommandHelp("help", commandMap.get("help"), sender, CollectionUtil.list("?", "h", "help"), 0));
-				sender.spigot().sendMessage(TextUtil.getCommandHelp("show", commandMap.get("show"), sender, plugin.mConf.getAliasesVampireShow(), 0));
-				sender.spigot().sendMessage(TextUtil.getCommandHelp("bloodlust", commandMap.get("bloodlust"), sender, plugin.mConf.getAliasesVampireModeBloodlust(), 1));
-				sender.spigot().sendMessage(TextUtil.getCommandHelp("intend", commandMap.get("intend"), sender, plugin.mConf.getAliasesVampireModeIntend(), 1));
-				sender.spigot().sendMessage(TextUtil.getCommandHelp("nightvision", commandMap.get("nightvision"), sender, plugin.mConf.getAliasesVampireModeNightvision(), 1));
-				sender.spigot().sendMessage(TextUtil.getCommandHelp("offer", commandMap.get("offer"), sender, plugin.mConf.getAliasesVampireOffer(), 0));
-				sender.spigot().sendMessage(TextUtil.getCommandHelp("accept", commandMap.get("accept"), sender, plugin.mConf.getAliasesVampireAccept(), 0));
-				sender.spigot().sendMessage(TextUtil.getCommandHelp("flask", commandMap.get("flask"), sender, plugin.mConf.getAliasesVampireFlask(), 0));
-				sender.spigot().sendMessage(TextUtil.getCommandHelp("shriek", commandMap.get("shriek"), sender, plugin.mConf.getAliasesVampireShriek(), 0));
+				sender.spigot().sendMessage(TextUtil.getCommandHelp("help", commandMap.get("help"), sender,  0));
+				sender.spigot().sendMessage(TextUtil.getCommandHelp("show", commandMap.get("show"), sender, 0));
+				sender.spigot().sendMessage(TextUtil.getCommandHelp("bloodlust", commandMap.get("bloodlust"), sender, 1));
+				sender.spigot().sendMessage(TextUtil.getCommandHelp("intend", commandMap.get("intend"), sender, 1));
+				sender.spigot().sendMessage(TextUtil.getCommandHelp("nightvision", commandMap.get("nightvision"), sender, 1));
+				sender.spigot().sendMessage(TextUtil.getCommandHelp("offer", commandMap.get("offer"), sender, 0));
+				sender.spigot().sendMessage(TextUtil.getCommandHelp("accept", commandMap.get("accept"), sender, 0));
+				sender.spigot().sendMessage(TextUtil.getCommandHelp("flask", commandMap.get("flask"), sender, 0));
+				sender.spigot().sendMessage(TextUtil.getCommandHelp("shriek", commandMap.get("shriek"), sender, 0));
 			} else {
-				sender.spigot().sendMessage(TextUtil.getCommandHelp("batusi", commandMap.get("batusi"), sender, plugin.mConf.getAliasesVampireModeBatusi(), 2));
-				sender.spigot().sendMessage(TextUtil.getCommandHelp("list", commandMap.get("list"), sender, plugin.mConf.getAliasesVampireList(), 0));
-				sender.spigot().sendMessage(TextUtil.getCommandHelp("set", commandMap.get("set"), sender, plugin.mConf.getAliasesVampireSet(), 0));
-				sender.spigot().sendMessage(TextUtil.getCommandHelp("version", commandMap.get("version"), sender, plugin.mConf.getAliasesVampireVersion(), 0));
+				sender.spigot().sendMessage(TextUtil.getCommandHelp("batusi", commandMap.get("batusi"), sender, 2));
+				sender.spigot().sendMessage(TextUtil.getCommandHelp("list", commandMap.get("list"), sender, 0));
+				sender.spigot().sendMessage(TextUtil.getCommandHelp("set", commandMap.get("set"), sender, 0));
+				sender.spigot().sendMessage(TextUtil.getCommandHelp("version", commandMap.get("version"), sender, 0));
+				sender.spigot().sendMessage(TextUtil.getCommandHelp("reload", commandMap.get("reload"), sender, 0));
 			}
 		}
 		else {
@@ -77,10 +91,45 @@ public class CmdVampire extends BaseCommand {
 		}
 	}
 
+	@Subcommand("reload")
+	@CommandCompletion("@reloads")
+	@CommandPermission("vampire.reload")
+	@Description("{@@commands.reload_description}")
+	@Syntax("[locales/config/all]")
+	public void onReload(CommandSender sender, @Optional String reloadType) {
+		boolean result = false;
+		boolean printResult = true;
+		if (reloadType == null || reloadType.equalsIgnoreCase("all"))
+			result = VampireRevamp.getInstance().reloadAll();
+		else if (reloadType.equalsIgnoreCase("locales"))
+			result = VampireRevamp.getInstance().reloadLocales();
+		else if (reloadType.equalsIgnoreCase("config"))
+			result = VampireRevamp.getInstance().reloadVampireConfig();
+		else {
+			VampireRevamp.sendMessage(sender,
+					MessageType.ERROR,
+					CommandMessageKeys.NOT_VALID_VALUE,
+					"{value}", reloadType);
+			sender.sendMessage(getCommandSyntax("reload"));
+			printResult = false;
+		}
+
+		if (printResult) {
+			if (result)
+				VampireRevamp.sendMessage(sender,
+						MessageType.ERROR,
+						CommandMessageKeys.RELOAD_SUCCESS);
+			else
+				VampireRevamp.sendMessage(sender,
+						MessageType.ERROR,
+						CommandMessageKeys.RELOAD_FAIL);
+		}
+	}
+
 	@Subcommand("show")
 	@CommandCompletion("@players")
 	@CommandPermission("vampire.show")
-	@Description("show player info")
+	@Description("{@@commands.show_description}")
 	@Syntax("[player=you]")
 	public void onShow(CommandSender sender, @Optional String targetName) {
 		if (sender instanceof Player || targetName != null) {
@@ -94,85 +143,154 @@ public class CmdVampire extends BaseCommand {
 			}
 			uplayer = UPlayer.get(player);
 
-			MConf mconf = plugin.mConf;
+			PluginConfig conf = VampireRevamp.getVampireConfig();
 			if (player != null && uplayer != null) {
 
 				boolean self = sender instanceof Player && ((Player) sender).getUniqueId().equals(player.getUniqueId());
 
 				// Test permissions
 				if (self || Perm.SHOW_OTHER.has(sender, true)) {
+					String[] youAreWere = VampireRevamp.getYouAreWere(sender, player, self);
+					String you = youAreWere[0];
+					String are = youAreWere[1];
+					String were = youAreWere[2];
+					String vampireType = VampireRevamp.getMessage(sender, GrammarMessageKeys.VAMPIRE_TYPE);
+					String on = VampireRevamp.getMessage(sender, GrammarMessageKeys.ON);
+					String off = VampireRevamp.getMessage(sender, GrammarMessageKeys.OFF);
 
-					String You = "You";
-					String are = "are";
-					if (!self) {
-						You = player.getDisplayName();
-						are = "is";
-					}
-
-					sender.spigot().sendMessage(TextUtil.getPlayerInfoHeader(uplayer.isVampire(),
+					sender.sendMessage(TextUtil.getPlayerInfoHeader(uplayer.isVampire(),
 																			 uplayer.isNosferatu(),
 																			 player.getDisplayName()));
 					if (uplayer.isVampire()) {
-						String vampireType = ChatColor.RED + "vampire";
 						if (uplayer.isNosferatu())
-							vampireType = ChatColor.DARK_RED + "nosferatu";
-						sender.sendMessage(ChatColor.YELLOW + "" +
-											ChatColor.ITALIC + You +
-											ChatColor.RESET + " " +
-											ChatColor.YELLOW + are + " a " + vampireType +
-											ChatColor.YELLOW + ".");
-						msg(sender, uplayer.getReasonDesc(self));
+							vampireType = VampireRevamp.getMessage(sender, GrammarMessageKeys.NOSFERATU_TYPE);
+						VampireRevamp.sendMessage(sender,
+								MessageType.INFO,
+								CommandMessageKeys.SHOW_TYPE,
+								"{player}", you,
+								"{to_be}", are,
+								"{vampire_type}", vampireType);
 
-						msg(sender, uplayer.bloodlustMsg());
-						msg(sender, uplayer.intendMsg());
-						msg(sender, uplayer.usingNightVisionMsg());
+						InfectionReason reason = uplayer.getReason();
+						String parent = null;
+						if (reason.isMaker()) {
+							parent = uplayer.getMakerName();
+						}
+						if (parent == null || parent.isEmpty()) {
+							parent = "someone";
+						}
+						VampireRevamp.sendMessage(sender,
+								MessageType.INFO,
+								reason.getDescKey(),
+								"{player}", you,
+								"{to_be_past}", were,
+								"{parent}", parent);
 
-						msg(sender, "<k>Temperature <v>%d%%", (int) Math.round(uplayer.getTemp() * 100));
+						String bloodlustName = VampireRevamp.getMessage(sender, GrammarMessageKeys.BLOODLUST);
+						bloodlustName = bloodlustName.substring(0, 1).toUpperCase() + bloodlustName.substring(1);
+						VampireRevamp.sendMessage(sender,
+								MessageType.INFO,
+								CommandMessageKeys.SHOW_BLOODLUST,
+								"{bloodlust}", bloodlustName,
+								"{enabled}", uplayer.isBloodlusting() ? on : off,
+								"{percent}",String.format("%.1f%%", uplayer.combatDamageFactor() * 100));
 
-						int rad = percent(uplayer.getRad());
-						int sun = percent(SunUtil.calcSolarRad(player.getWorld(), player));
+						VampireRevamp.sendMessage(sender,
+								MessageType.INFO,
+								CommandMessageKeys.SHOW_INTENT,
+								"{enabled}", uplayer.isIntending() ? on : off,
+								"{percent}", String.format("%.1f%%", uplayer.combatInfectRisk() * 100));
+
+						VampireRevamp.sendMessage(sender,
+								MessageType.INFO,
+								CommandMessageKeys.SHOW_NIGHTVISION,
+								"{enabled}", uplayer.isUsingNightVision() ? on : off);
+
+						VampireRevamp.sendMessage(sender,
+								MessageType.INFO,
+								CommandMessageKeys.SHOW_TEMPERATURE,
+								"{percent}", String.format("%d%%", (int) Math.round(uplayer.getTemp() * 100)));
+
+						int rad = (int) Math.round(100 * uplayer.getRad());
+						int sun = (int) Math.round(100 * SunUtil.calcSolarRad(player.getWorld(), player));
 						double terrain = 1d - SunUtil.calcTerrainOpacity(player.getLocation().getBlock());
 						double armor = 1d - SunUtil.calcArmorOpacity(player);
-						int base = percent(mconf.getBaseRad());
-						msg(sender, "<k>Irradiation <v>X% <k>= <yellow>sun <lime>*terrain <blue>*armor <silver>-base");
-						msg(sender, "<k>Irradiation <v>%+d%% <k>= <yellow>%d <lime>*%.2f <blue>*%.2f <silver>%+d", rad, sun, terrain, armor, base);
+						int base = (int) Math.round(100 * conf.radiation.baseRadiation);
+
+						VampireRevamp.sendMessage(sender,
+								MessageType.INFO,
+								CommandMessageKeys.SHOW_RADIATION_KEYS);
+
+						VampireRevamp.sendMessage(sender,
+								MessageType.INFO,
+								CommandMessageKeys.SHOW_RADIATION_VALUES,
+								"{rads}", String.format("%+d%%", rad),
+								"{sun}", String.format("%d", sun),
+								"{terrain}", String.format("%.2f", terrain),
+								"{armor}", String.format("%.2f", armor),
+								"{base}", String.format("%+d", base));
 					}
 					else if (uplayer.isInfected()) {
-						msg(sender, "<i>" + You + " <i>" + are + " infected at <h>%d%%<i>.", percent(uplayer.getInfection()));
-						msg(sender, uplayer.getReasonDesc(self));
-					} else {
-						msg(sender, "<i>" + You + " <i>" + are + " neither vampire nor infected with the dark disease.");
+						VampireRevamp.sendMessage(sender,
+								MessageType.INFO,
+								CommandMessageKeys.SHOW_INFECTED,
+								"{player}", you,
+								"{to_be}", are,
+								"{percent}", String.format("%d%%", Math.round(uplayer.getInfection())));
+
+						InfectionReason reason = uplayer.getReason();
+						String parent = null;
+						if (reason.isMaker()) {
+							parent = uplayer.getMakerName();
+						}
+						if (parent == null || parent.isEmpty()) {
+							parent = "someone";
+						}
+						VampireRevamp.sendMessage(sender,
+								MessageType.INFO,
+								reason.getDescKey(),
+								"{player}", you,
+								"{to_be_past}", were,
+								"{parent}", parent);
+					}
+					else {
+						VampireRevamp.sendMessage(sender,
+								MessageType.INFO,
+								CommandMessageKeys.SHOW_CURED,
+								"{player}", you,
+								"{to_be}", are,
+								"{vampire_type}", vampireType);
 					}
 				}
 			}
 			else {
-				sender.sendMessage(ChatColor.RED + "No player matches: \"" + ChatColor.LIGHT_PURPLE + targetName + ChatColor.RED + "\"");
+				VampireRevamp.sendMessage(sender,
+						MessageType.INFO,
+						CommandMessageKeys.NO_PLAYER_FOUND,
+						"{player}", targetName);
 			}
 		}
 		else {
-			sender.sendMessage(ChatColor.RED + "Not enough command input. " + ChatColor.YELLOW + "You should use it like this:");
-			sender.sendMessage(ChatColor.AQUA + "/v,vampire show <player>");
+			VampireRevamp.sendMessage(sender,
+					MessageType.INFO,
+					CommandMessageKeys.NOT_ENOUGH_INPUTS);
+			sender.sendMessage(getCommandSyntax("show"));
 		}
-	}
-
-	private static void msg(CommandSender receiver, String message) {
-		receiver.sendMessage(TextUtil.parse(message));
-	}
-
-	private static void msg(CommandSender receiver, String message, Object... objects) {
-		receiver.sendMessage(TextUtil.parse(message, objects));
-	}
-
-	private static int percent(double quota) {
-		return (int)Math.round(quota*100);
 	}
 
 	@Subcommand("bloodlust|modebloodlust|b")
 	@CommandCompletion("@yesno")
 	@CommandPermission("vampire.mode.bloodlust")
-	@Description("use bloodlust")
+	@Description("{@@commands.bloodlust_description}")
 	@Syntax("[yes/no=toggle]")
 	public void onModeBloodlust(Player sender, @Optional String yesno) {
+		if (VampireRevamp.getVampireConfig().general.isBlacklisted(sender.getWorld())) {
+			VampireRevamp.sendMessage(sender,
+					MessageType.ERROR,
+					CommandMessageKeys.BLACKLISTED_WORLD);
+			return;
+		}
+
 		if (yesno == null || yesno.equalsIgnoreCase("yes") || yesno.equalsIgnoreCase("no")) {
 			UPlayer uplayer = UPlayer.get(sender);
 
@@ -187,23 +305,42 @@ public class CmdVampire extends BaseCommand {
 					uplayer.setBloodlusting(!isActive);
 				}
 				else {
-					sender.sendMessage("Only vampires can use bloodlust.");
+					String vampireType = VampireRevamp.getMessage(sender, GrammarMessageKeys.VAMPIRE_TYPE);
+					String bloodlustAction = VampireRevamp.getMessage(sender, GrammarMessageKeys.BLOODLUST);
+					VampireRevamp.sendMessage(sender,
+							MessageType.ERROR,
+							GrammarMessageKeys.ONLY_TYPE_CAN_ACTION,
+							"{vampire_type}", vampireType,
+							"{action}", bloodlustAction);
 				}
 			} else {
-				sender.sendMessage("Couldn't find vampire data for that player. Please contact an administrator.");
+				VampireRevamp.sendMessage(sender,
+						MessageType.ERROR,
+						CommandMessageKeys.DATA_NOT_FOUND);
 			}
 		}
 		else {
-			sender.sendMessage(ChatColor.RED + "\"" + ChatColor.LIGHT_PURPLE + yesno + ChatColor.RED + "\" is not a valid yes/no value.");
+			VampireRevamp.sendMessage(sender,
+					MessageType.ERROR,
+					CommandMessageKeys.NOT_VALID_VALUE,
+					"{value}", yesno);
+			sender.sendMessage(getCommandSyntax("bloodlust"));
 		}
 	}
 
 	@Subcommand("intend|modeintend|i")
 	@CommandCompletion("@yesno")
 	@CommandPermission("vampire.mode.intent")
-	@Description("use intent to infect")
+	@Description("{@@commands.intent_description}")
 	@Syntax("[yes/no=toggle]")
 	public void onModeIntend(Player sender, @Optional String yesno) {
+		if (VampireRevamp.getVampireConfig().general.isBlacklisted(sender.getWorld())) {
+			VampireRevamp.sendMessage(sender,
+					MessageType.ERROR,
+					CommandMessageKeys.BLACKLISTED_WORLD);
+			return;
+		}
+
 		if (yesno == null || yesno.equalsIgnoreCase("yes") || yesno.equalsIgnoreCase("no")) {
 			UPlayer uplayer = UPlayer.get(sender);
 
@@ -218,23 +355,42 @@ public class CmdVampire extends BaseCommand {
 					uplayer.setIntending(!isActive);
 				}
 				else {
-					sender.sendMessage("Only vampires can infect on purpose.");
+					String vampireType = VampireRevamp.getMessage(sender, GrammarMessageKeys.VAMPIRE_TYPE);
+					String intentAction = VampireRevamp.getMessage(sender, GrammarMessageKeys.INTEND);
+					VampireRevamp.sendMessage(sender,
+							MessageType.ERROR,
+							GrammarMessageKeys.ONLY_TYPE_CAN_ACTION,
+							"{vampire_type}", vampireType,
+							"{action}", intentAction);
 				}
 			} else {
-				sender.sendMessage("Couldn't find vampire data for that player. Please contact an administrator.");
+				VampireRevamp.sendMessage(sender,
+						MessageType.ERROR,
+						CommandMessageKeys.DATA_NOT_FOUND);
 			}
 		}
 		else {
-			sender.sendMessage(ChatColor.RED + "\"" + ChatColor.LIGHT_PURPLE + yesno + ChatColor.RED + "\" is not a valid yes/no value.");
+			VampireRevamp.sendMessage(sender,
+					MessageType.ERROR,
+					CommandMessageKeys.NOT_VALID_VALUE,
+					"{value}", yesno);
+			sender.sendMessage(getCommandSyntax("intend"));
 		}
 	}
 
 	@Subcommand("nightvision|modenightvision|nv")
 	@CommandCompletion("@yesno")
 	@CommandPermission("vampire.mode.nightvision")
-	@Description("use nightvision")
+	@Description("{@@commands.nightvision_description}")
 	@Syntax("[yes/no=toggle]")
 	public void onModeNightvision(Player sender, @Optional String yesno) {
+		if (VampireRevamp.getVampireConfig().general.isBlacklisted(sender.getWorld())) {
+			VampireRevamp.sendMessage(sender,
+					MessageType.ERROR,
+					CommandMessageKeys.BLACKLISTED_WORLD);
+			return;
+		}
+
 		if (yesno == null || yesno.equalsIgnoreCase("yes") || yesno.equalsIgnoreCase("no")) {
 			UPlayer uplayer = UPlayer.get(sender);
 
@@ -249,23 +405,42 @@ public class CmdVampire extends BaseCommand {
 					uplayer.setUsingNightVision(!isActive);
 				}
 				else {
-					sender.sendMessage("Only vampires can use nightvision.");
+					String vampireType = VampireRevamp.getMessage(sender, GrammarMessageKeys.VAMPIRE_TYPE);
+					String nvAction = VampireRevamp.getMessage(sender, GrammarMessageKeys.NIGHTVISION);
+					VampireRevamp.sendMessage(sender,
+							MessageType.ERROR,
+							GrammarMessageKeys.ONLY_TYPE_CAN_ACTION,
+							"{vampire_type}", vampireType,
+							"{action}", nvAction);
 				}
 			} else {
-				sender.sendMessage("Couldn't find vampire data for that player. Please contact an administrator.");
+				VampireRevamp.sendMessage(sender,
+						MessageType.ERROR,
+						CommandMessageKeys.DATA_NOT_FOUND);
 			}
 		}
 		else {
-			sender.sendMessage(ChatColor.RED + "\"" + ChatColor.LIGHT_PURPLE + yesno + ChatColor.RED + "\" is not a valid yes/no value.");
+			VampireRevamp.sendMessage(sender,
+					MessageType.ERROR,
+					CommandMessageKeys.NOT_VALID_VALUE,
+					"{value}", yesno);
+			sender.sendMessage(getCommandSyntax("nightvision"));
 		}
 	}
 
 	@Subcommand("offer|o")
 	@CommandCompletion("@players @range:1-20")
 	@CommandPermission("vampire.trade.offer")
-	@Description("offer blood to someone")
+	@Description("{@@commands.offer_description}")
 	@Syntax("<player> [amount=4.0]")
 	public void onOffer(Player sender, String targetName, @Default("4") double rawamount) {
+		if (VampireRevamp.getVampireConfig().general.isBlacklisted(sender.getWorld())) {
+			VampireRevamp.sendMessage(sender,
+					MessageType.ERROR,
+					CommandMessageKeys.BLACKLISTED_WORLD);
+			return;
+		}
+
 		UPlayer vme = UPlayer.get(sender);
 		UPlayer vyou = UPlayer.get(Bukkit.getPlayer(targetName));
 
@@ -274,43 +449,65 @@ public class CmdVampire extends BaseCommand {
 
 			double amount = MathUtil.limitNumber(unlimitedAmount, 0D, 20D);
 			if (amount != unlimitedAmount) {
-				msg(sender, "<b>amount must be between 0.0 and 20.0");
+				VampireRevamp.sendMessage(sender,
+						MessageType.ERROR,
+						CommandMessageKeys.OFFER_INVALID_VALUE);
 				return;
 			}
 
 			vme.tradeOffer(vyou, amount);
 		}
 		else {
-			sender.sendMessage("Couldn't find vampire data for that player. Please contact an administrator.");
+			VampireRevamp.sendMessage(sender,
+					MessageType.ERROR,
+					CommandMessageKeys.DATA_NOT_FOUND);
 		}
 	}
 
 	@Subcommand("accept|a")
 	@CommandPermission("vampire.trade.accept")
-	@Description("accept blood offer")
+	@Description("{@@commands.nightvision_description}")
 	public void onAccept(Player sender) {
+		if (VampireRevamp.getVampireConfig().general.isBlacklisted(sender.getWorld())) {
+			VampireRevamp.sendMessage(sender,
+					MessageType.ERROR,
+					CommandMessageKeys.BLACKLISTED_WORLD);
+			return;
+		}
+
 		UPlayer vme = UPlayer.get(sender);
 
 		if (vme != null) {
 			vme.tradeAccept();
 		}
 		else {
-			sender.sendMessage("Couldn't find  your vampire data. Please contact an administrator.");
+			VampireRevamp.sendMessage(sender,
+					MessageType.ERROR,
+					CommandMessageKeys.DATA_NOT_FOUND);
 		}
 	}
 
 	@Subcommand("flask|f")
 	@CommandCompletion("@range:1-20")
 	@CommandPermission("vampire.flask")
-	@Description("create blood flask")
+	@Description("{@@commands.flask_description}")
 	@Syntax("[amount=4.0]")
 	public void onFlask(Player sender, @Default("4") double amount) {
+		if (VampireRevamp.getVampireConfig().general.isBlacklisted(sender.getWorld())) {
+			VampireRevamp.sendMessage(sender,
+					MessageType.ERROR,
+					CommandMessageKeys.BLACKLISTED_WORLD);
+			return;
+		}
+
 		UPlayer vme = UPlayer.get(sender);
 
 		if (vme != null) {
 			// Does the player have the required amount?
 			if ((vme.isVampire() && amount > vme.getFood().get()) || ( ! vme.isVampire() && amount > sender.getHealth())) {
-				vme.msg(plugin.mLang.flaskInsufficient);
+				VampireRevamp.sendMessage(sender,
+						MessageType.ERROR,
+						SkillMessageKeys.FLASK_INSUFFICIENT);
 			}
 			else {
 				// ... create a blood flask!
@@ -323,35 +520,55 @@ public class CmdVampire extends BaseCommand {
 				BloodFlaskUtil.fillBottle(amount, vme);
 
 				// Inform
-				vme.msg(plugin.mLang.flaskSuccess);
+				VampireRevamp.sendMessage(sender,
+						MessageType.ERROR,
+						SkillMessageKeys.FLASK_SUCCESS);
 			}
 		}
 		else {
-			sender.sendMessage("Couldn't find vampire data for that player. Please contact an administrator.");
+			VampireRevamp.sendMessage(sender,
+					MessageType.ERROR,
+					CommandMessageKeys.DATA_NOT_FOUND);
 		}
 	}
 
 	@Subcommand("shriek")
 	@CommandPermission("vampire.shriek")
-	@Description("shriek")
+	@Description("{@@commands.shriek_description}")
 	public void onShriek(Player sender) {
+		if (VampireRevamp.getVampireConfig().general.isBlacklisted(sender.getWorld())) {
+			VampireRevamp.sendMessage(sender,
+					MessageType.ERROR,
+					CommandMessageKeys.BLACKLISTED_WORLD);
+			return;
+		}
+
 		UPlayer vme = UPlayer.get(sender);
 
 		if (vme != null) {
-			if (vme.isVampire())
+			if (vme.isVampire()) {
 				vme.shriek();
-			else
-				sender.sendMessage("Only vampires can shriek.");
+			} else {
+				String vampireType = VampireRevamp.getMessage(sender, GrammarMessageKeys.VAMPIRE_TYPE);
+				String shriekAction = VampireRevamp.getMessage(sender, GrammarMessageKeys.SHRIEK);
+				VampireRevamp.sendMessage(sender,
+						MessageType.ERROR,
+						GrammarMessageKeys.ONLY_TYPE_CAN_ACTION,
+						"{vampire_type}", vampireType,
+						"{action}", shriekAction);
+			}
 		}
 		else {
-			sender.sendMessage("Couldn't find  your vampire data. Please contact an administrator.");
+			VampireRevamp.sendMessage(sender,
+					MessageType.ERROR,
+					CommandMessageKeys.DATA_NOT_FOUND);
 		}
 	}
 
 	@Subcommand("list")
 	@CommandCompletion("@range:1-5")
 	@CommandPermission("vampire.list")
-	@Description("list vampires and infected")
+	@Description("{@@commands.list_description}")
 	@Syntax("[page=1]")
 	public void onList(CommandSender sender, @Default("1") int page) {
 		List<String> vampiresOnline = new ArrayList<>();
@@ -359,7 +576,7 @@ public class CmdVampire extends BaseCommand {
 		List<String> infectedOnline = new ArrayList<>();
 		List<String> infectedOffline = new ArrayList<>();
 
-		for (UPlayer uplayer : plugin.uPlayerColl.getAll()) {
+		for (UPlayer uplayer : VampireRevamp.getInstance().uPlayerColl.getAll()) {
 			if (uplayer.getOfflinePlayer() != null) {
 				OfflinePlayer p = uplayer.getOfflinePlayer();
 				if (uplayer.isVampire()) {
@@ -381,32 +598,43 @@ public class CmdVampire extends BaseCommand {
 		// Create Messages
 		List<String> lines = new ArrayList<>();
 
+		String vampireType = VampireRevamp.getMessage(sender, GrammarMessageKeys.VAMPIRE_TYPE);
+		vampireType = ("" + vampireType.charAt(0)).toUpperCase() + vampireType.substring(1);
+		String infectedType = VampireRevamp.getMessage(sender, GrammarMessageKeys.INFECTED_TYPE);
+		infectedType = ("" + infectedType.charAt(0)).toUpperCase() + infectedType.substring(1);
+		String onlineStr = VampireRevamp.getMessage(sender, GrammarMessageKeys.ONLINE);
+		String offlineStr = VampireRevamp.getMessage(sender, GrammarMessageKeys.OFFLINE);
+
 		if (vampiresOnline.size() > 0)
 		{
-			lines.add("<h>=== Vampires Online ===");
-			lines.add(TextUtil.implodeCommaAndDot(vampiresOnline, "<i>"));
+			lines.add(ChatColor.LIGHT_PURPLE + "=== " + vampireType + "s " + onlineStr + " ===");
+			//lines.add(TextUtil.implodeCommaAndDot(vampiresOnline, "<i>"));
+			lines.add(ChatColor.YELLOW + String.join(", " + ChatColor.YELLOW, vampiresOnline));
 		}
 
 		if (vampiresOffline.size() > 0)
 		{
-			lines.add("<h>=== Vampires Offline ===");
-			lines.add(TextUtil.implodeCommaAndDot(vampiresOffline, "<i>"));
+			lines.add(ChatColor.LIGHT_PURPLE + "=== " + vampireType + "s " + offlineStr + " ===");
+			//lines.add(TextUtil.implodeCommaAndDot(vampiresOffline, "<i>"));
+			lines.add(ChatColor.YELLOW + String.join(", ", vampiresOffline));
 		}
 
 		if (infectedOnline.size() > 0)
 		{
-			lines.add("<h>=== Infected Online ===");
-			lines.add(TextUtil.implodeCommaAndDot(infectedOnline, "<i>"));
+			lines.add(ChatColor.LIGHT_PURPLE + "=== " + infectedType + "s " + onlineStr + " ===");
+			//lines.add(TextUtil.implodeCommaAndDot(infectedOnline, "<i>"));
+			lines.add(ChatColor.YELLOW + String.join(", ", infectedOnline));
 		}
 
 		if (infectedOffline.size() > 0)
 		{
-			lines.add("<h>=== Infected Offline ===");
-			lines.add(TextUtil.implodeCommaAndDot(infectedOffline, "<i>"));
+			lines.add(ChatColor.LIGHT_PURPLE + "=== " + infectedType + "s " + offlineStr + " ===");
+			//lines.add(TextUtil.implodeCommaAndDot(infectedOffline, "<i>"));
+			lines.add(ChatColor.YELLOW + String.join(", ", infectedOffline));
 		}
 
 		// Send them
-		lines = TextUtil.parseWrap(lines);
+		lines = TextUtil.wrap(lines);
 		for (String line : lines) {
 			sender.sendMessage(line);
 		}
@@ -414,21 +642,29 @@ public class CmdVampire extends BaseCommand {
 
 	@Subcommand("version|v")
 	@CommandPermission("vampire.version")
-	@Description("display plugin version")
+	@Description("{@@commands.version_description}")
 	public void onVersion(CommandSender sender) {
-		List<BaseComponent[]> pd = TextUtil.getPluginDescription(plugin);
+		List<BaseComponent[]> pd = TextUtil.getPluginDescription(VampireRevamp.getInstance());
 		for (BaseComponent[] mess : pd) {
 			sender.spigot().sendMessage(mess);
 		}
 	}
 
-	@Subcommand("batusi")
+	@Subcommand("batusi|bat")
 	@CommandCompletion("@yesno")
 	@CommandPermission("vampire.mode.batusi")
-	@Description("use batcloud")
+	@Description("{@@commands.batusi_description}")
 	@Syntax("[yes/no=toggle]")
 	public void onModeBatusi(Player sender, @Optional String yesno) {
+		if (VampireRevamp.getVampireConfig().general.isBlacklisted(sender.getWorld())) {
+			VampireRevamp.sendMessage(sender,
+					MessageType.ERROR,
+					CommandMessageKeys.BLACKLISTED_WORLD);
+			return;
+		}
+
 		if (yesno == null || yesno.equalsIgnoreCase("yes") || yesno.equalsIgnoreCase("no")) {
+			VampireRevamp plugin = VampireRevamp.getInstance();
 			UPlayer uplayer = UPlayer.get(sender);
 
 			if (uplayer != null) {
@@ -439,80 +675,54 @@ public class CmdVampire extends BaseCommand {
 						activate = yesno.equals("yes");
 					}
 
-					if (activate) {
-						if (!plugin.batEnabled.getOrDefault(sender.getUniqueId(), false)) {
-							EntityUtil.spawnBats(sender, 9);
-							if (plugin.isDisguiseEnabled)
-								DisguiseUtil.disguiseBat(sender);
-							plugin.batEnabled.put(sender.getUniqueId(), true);
-							sender.setAllowFlight(true);
-							sender.setFlying(true);
-							sender.sendMessage("You're now a cloud of bats");
-						} else {
-							if (plugin.isDisguiseEnabled)
-								DisguiseUtil.disguiseBat(sender);
-							sender.setAllowFlight(true);
-							sender.setFlying(true);
-							sender.sendMessage("You already are a cloud of bats!");
-						}
-					}
-					else {
-						try {
-							EntityUtil.despawnBats(sender);
-							if (plugin.isDisguiseEnabled)
-								DisguiseAPI.undisguiseToAll(sender);
-							sender.setAllowFlight(false);
-							sender.setFlying(false);
-							plugin.batEnabled.put(sender.getUniqueId(), false);
-							sender.sendMessage("You're no longer a cloud of bats!");
-						}
-						catch (Exception ex) {
-							sender.sendMessage("Error while removing bat cloud! See the console for the full stacktrace.");
-							plugin.getLogger().log(Level.WARNING, "Error while removing bat cloud!: " + ex.getMessage());
-							ex.printStackTrace();
-						}
-					}
+					uplayer.setBatusi(activate);
 				}
 				else {
-					sender.sendMessage("Only nosferatu can turn into a batcloud.");
+					String nosferatuType = VampireRevamp.getMessage(sender, GrammarMessageKeys.NOSFERATU_TYPE);
+					String batusiAction = VampireRevamp.getMessage(sender, GrammarMessageKeys.BATUSI);
+					VampireRevamp.sendMessage(sender,
+							MessageType.ERROR,
+							GrammarMessageKeys.ONLY_TYPE_CAN_ACTION,
+							"{vampire_type}", nosferatuType,
+							"{action}", batusiAction);
 				}
 			} else {
-				sender.sendMessage("Couldn't find vampire data for that player. Please contact an administrator.");
+				VampireRevamp.sendMessage(sender,
+						MessageType.ERROR,
+						CommandMessageKeys.DATA_NOT_FOUND);
 			}
 		}
 		else {
-			sender.sendMessage(ChatColor.RED + "\"" + ChatColor.LIGHT_PURPLE + yesno + ChatColor.RED + "\" is not a valid yes/no value.");
+			VampireRevamp.sendMessage(sender,
+					MessageType.ERROR,
+					CommandMessageKeys.NOT_VALID_VALUE,
+					"{value}", yesno);
+			sender.sendMessage(getCommandSyntax("batusi"));
 		}
 	}
 
 	@Subcommand("set")
 	@CommandPermission("vampire.set")
-	@Description("set player attributes")
+	@Description("{@@commands.set_description}")
 	public class CmdVampireSet extends BaseCommand {
 		@Subcommand("help|h|?")
 		public void onHelp(CommandSender sender, CommandHelp help) {
 			int maxPages = 1;
-			Map<String, RegisteredCommand> commandMap = new HashMap<>();
-			RootCommand vampireCommand = plugin.pumanager.getRegisteredRootCommands().iterator().next();
 
 			sender.spigot().sendMessage(TextUtil.getHelpHeader(help, maxPages, "set"));
-			for (Entry<String, RegisteredCommand> entry : vampireCommand.getSubCommands().entries()) {
-				commandMap.put(entry.getKey(), entry.getValue());
-				//Bukkit.getLogger().log(Level.INFO, "Key: " + entry.getKey());
-			}
 
 			if (help.getPage() == 1) {
-				sender.spigot().sendMessage(TextUtil.getCommandHelp("vampire", commandMap.get("set vampire"), sender, plugin.mConf.getAliasesVampireSetVampire(), 0));
-				sender.spigot().sendMessage(TextUtil.getCommandHelp("nosferatu", commandMap.get("set nosferatu"), sender, plugin.mConf.getAliasesVampireSetNosferatu(), 0));
-				sender.spigot().sendMessage(TextUtil.getCommandHelp("infection", commandMap.get("set infection"), sender, plugin.mConf.getAliasesVampireSetInfection(), 0));
-				sender.spigot().sendMessage(TextUtil.getCommandHelp("food", commandMap.get("set food"), sender, plugin.mConf.getAliasesVampireSetFood(), 0));
-				sender.spigot().sendMessage(TextUtil.getCommandHelp("health", commandMap.get("set health"), sender, plugin.mConf.getAliasesVampireSetHealth(), 0));
+				sender.spigot().sendMessage(TextUtil.getCommandHelp("vampire", commandMap.get("set vampire"), sender, 0));
+				sender.spigot().sendMessage(TextUtil.getCommandHelp("nosferatu", commandMap.get("set nosferatu"), sender, 0));
+				sender.spigot().sendMessage(TextUtil.getCommandHelp("infection", commandMap.get("set infection"), sender, 0));
+				sender.spigot().sendMessage(TextUtil.getCommandHelp("food", commandMap.get("set food"), sender, 0));
+				sender.spigot().sendMessage(TextUtil.getCommandHelp("health", commandMap.get("set health"), sender, 0));
 			}
 		}
 
 		@Subcommand("vampire|v")
 		@CommandCompletion("@yesno @players")
-		@Description("set vampire (yes or no)")
+		@Description("{@@commands.set_vampire_description}")
 		@Syntax("<yes/no> [player=you]")
 		public void onSetVampire(CommandSender sender, String yesno, @Optional String targetName) {
 			if (yesno.equalsIgnoreCase("yes") || yesno.equalsIgnoreCase("no")) {
@@ -523,11 +733,21 @@ public class CmdVampire extends BaseCommand {
 					Player player = null;
 					if (targetName != null) {
 						player = Bukkit.getPlayer(targetName);
+
+						if (player == null) {
+							VampireRevamp.sendMessage(sender,
+									MessageType.ERROR,
+									CommandMessageKeys.NO_PLAYER_FOUND,
+									"{player}", targetName);
+							return;
+						}
 					} else if (sender instanceof Player) {
 						player = (Player) sender;
 					} else {
-						sender.sendMessage(ChatColor.RED + "Not enough command input. " + ChatColor.YELLOW + "You should use it like this:");
-						sender.sendMessage(ChatColor.AQUA + "/v,vampire set vampire <val> <player>");
+						VampireRevamp.sendMessage(sender,
+								MessageType.ERROR,
+								CommandMessageKeys.NOT_ENOUGH_INPUTS);
+						sender.sendMessage(getCommandSyntax("set vampire"));
 					}
 
 					uplayer = UPlayer.get(player);
@@ -539,21 +759,34 @@ public class CmdVampire extends BaseCommand {
 
 							uplayer.update();
 						}
-						sender.sendMessage(player.getDisplayName() + ChatColor.YELLOW + " now has vampire = " + val);
+						String onOff = val ? VampireRevamp.getMessage(sender, GrammarMessageKeys.ON) : VampireRevamp.getMessage(sender, GrammarMessageKeys.OFF);
+						String attributeName = VampireRevamp.getMessage(sender, CommandMessageKeys.SET_VAMPIRE_ATTRIBUTE);
+						VampireRevamp.sendMessage(sender,
+								MessageType.ERROR,
+								CommandMessageKeys.SET_CHANGED_VALUE,
+								"{player}", player.getDisplayName(),
+								"{attribute}", attributeName,
+								"{value}", onOff);
 					}
-					else if (targetName != null) {
-						sender.sendMessage(ChatColor.RED + "No player matches: \"" + ChatColor.LIGHT_PURPLE + targetName + ChatColor.RED + "\"");
+					else {
+						VampireRevamp.sendMessage(sender,
+								MessageType.ERROR,
+								CommandMessageKeys.DATA_NOT_FOUND);
 					}
 				}
 			}
 			else {
-				sender.sendMessage(ChatColor.RED + "\"" + ChatColor.LIGHT_PURPLE + yesno + ChatColor.RED + "\" is not a valid yes/no value.");
+				VampireRevamp.sendMessage(sender,
+						MessageType.ERROR,
+						CommandMessageKeys.NOT_VALID_VALUE,
+						"{value}", yesno);
+				sender.sendMessage(getCommandSyntax("set vampire"));
 			}
 		}
 
 		@Subcommand("nosferatu|n")
 		@CommandCompletion("@yesno @players")
-		@Description("set nosferatu (yes or no)")
+		@Description("{@@commands.set_nosferatu_description}")
 		@Syntax("<yes/no> [player=you]")
 		public void onSetNosferatu(CommandSender sender, String yesno, @Optional String targetName) {
 			if (yesno.equalsIgnoreCase("yes") || yesno.equalsIgnoreCase("no")) {
@@ -564,11 +797,21 @@ public class CmdVampire extends BaseCommand {
 					Player player = null;
 					if (targetName != null) {
 						player = Bukkit.getPlayer(targetName);
+
+						if (player == null) {
+							VampireRevamp.sendMessage(sender,
+									MessageType.ERROR,
+									CommandMessageKeys.NO_PLAYER_FOUND,
+									"{player}", targetName);
+							return;
+						}
 					} else if (sender instanceof Player) {
 						player = (Player) sender;
 					} else {
-						sender.sendMessage(ChatColor.RED + "Not enough command input. " + ChatColor.YELLOW + "You should use it like this:");
-						sender.sendMessage(ChatColor.AQUA + "/v,vampire set nosferatu <val> <player>");
+						VampireRevamp.sendMessage(sender,
+								MessageType.ERROR,
+								CommandMessageKeys.NOT_ENOUGH_INPUTS);
+						sender.sendMessage(getCommandSyntax("set nosferatu"));
 					}
 
 					uplayer = UPlayer.get(player);
@@ -586,22 +829,35 @@ public class CmdVampire extends BaseCommand {
 							uplayer.update();
 						}
 
-						sender.sendMessage(player.getDisplayName() + ChatColor.YELLOW + " now has nosferatu = " + val);
+						String onOff = val ? VampireRevamp.getMessage(sender, GrammarMessageKeys.ON) : VampireRevamp.getMessage(sender, GrammarMessageKeys.OFF);
+						String attributeName = VampireRevamp.getMessage(sender, CommandMessageKeys.SET_NOSFERATU_ATTRIBUTE);
+						VampireRevamp.sendMessage(sender,
+								MessageType.ERROR,
+								CommandMessageKeys.SET_CHANGED_VALUE,
+								"{player}", player.getDisplayName(),
+								"{attribute}", attributeName,
+								"{value}", onOff);
 					}
-					else if (targetName != null) {
-						sender.sendMessage(ChatColor.RED + "No player matches: \"" + ChatColor.LIGHT_PURPLE + targetName + ChatColor.RED + "\"");
+					else {
+						VampireRevamp.sendMessage(sender,
+								MessageType.ERROR,
+								CommandMessageKeys.DATA_NOT_FOUND);
 					}
 				}
 			}
 			else {
-				sender.sendMessage(ChatColor.RED + "\"" + ChatColor.LIGHT_PURPLE + yesno + ChatColor.RED + "\" is not a valid yes/no value.");
+				VampireRevamp.sendMessage(sender,
+						MessageType.ERROR,
+						CommandMessageKeys.NOT_VALID_VALUE,
+						"{value}", yesno);
+				sender.sendMessage(getCommandSyntax("set nosferatu"));
 			}
 		}
 
 		@Subcommand("infection|i")
 		@CommandPermission("vampire.set.infection")
 		@CommandCompletion("@range:0-1 @players")
-		@Description("set infection (0 to 1)")
+		@Description("{@@commands.set_infection_description}")
 		@Syntax("<val> [player=you]")
 		public void onSetInfection(CommandSender sender, double value, @Optional String targetName) {
 			Double res = MathUtil.limitNumber(value, 0D, 100D);
@@ -610,18 +866,31 @@ public class CmdVampire extends BaseCommand {
 			Player player = null;
 			if (targetName != null) {
 				player = Bukkit.getPlayer(targetName);
+
+				if (player == null) {
+					VampireRevamp.sendMessage(sender,
+							MessageType.ERROR,
+							CommandMessageKeys.NO_PLAYER_FOUND,
+							"{player}", targetName);
+					return;
+				}
 			} else if (sender instanceof Player) {
 				player = (Player) sender;
-			}
-			else {
-				sender.sendMessage(ChatColor.RED + "Not enough command input. " + ChatColor.YELLOW + "You should use it like this:");
-				sender.sendMessage(ChatColor.AQUA + "/v,vampire set infection <val> <player>");
+			} else {
+				VampireRevamp.sendMessage(sender,
+						MessageType.ERROR,
+						CommandMessageKeys.NOT_ENOUGH_INPUTS);
+				sender.sendMessage(getCommandSyntax("set infection"));
+				return;
 			}
 
 			uplayer = UPlayer.get(player);
 			if (uplayer != null) {
 				if (uplayer.isVampire()) {
-					msg(sender, plugin.mLang.xIsAlreadyVamp, uplayer.getPlayer().getDisplayName());
+					VampireRevamp.sendMessage(sender,
+							MessageType.ERROR,
+							VampirismMessageKeys.ALREADY_VAMPIRE,
+							"{player}", player.getDisplayName());
 				}
 				else {
 					uplayer.setReason(InfectionReason.OPERATOR);
@@ -631,68 +900,113 @@ public class CmdVampire extends BaseCommand {
 
 					uplayer.update();
 
-					sender.sendMessage(player.getDisplayName() + ChatColor.YELLOW + " now has infection = " + value);
+					String attributeName = VampireRevamp.getMessage(sender, CommandMessageKeys.SET_INFECTION_ATTRIBUTE);
+					VampireRevamp.sendMessage(sender,
+							MessageType.ERROR,
+							CommandMessageKeys.SET_CHANGED_VALUE,
+							"{player}", player.getDisplayName(),
+							"{attribute}", attributeName,
+							"{value}", String.format("%.2f%%", value * 100));
 				}
 			}
 			else if (targetName != null) {
-				sender.sendMessage(ChatColor.RED + "No player matches: \"" + ChatColor.LIGHT_PURPLE + targetName + ChatColor.RED + "\"");
+				VampireRevamp.sendMessage(sender,
+						MessageType.ERROR,
+						CommandMessageKeys.DATA_NOT_FOUND);
 			}
 		}
 
 		@Subcommand("food|f")
 		@CommandPermission("vampire.set.food")
 		@CommandCompletion("@range:0-20 @players")
-		@Description("set food (0 to 20)")
+		@Description("{@@commands.set_food_description}")
 		@Syntax("<val> [player=you]")
 		public void onSetFood(CommandSender sender, int value, @Optional String targetName) {
 			Player player = null;
 			if (targetName != null) {
 				player = Bukkit.getPlayer(targetName);
+
+				if (player == null) {
+					VampireRevamp.sendMessage(sender,
+							MessageType.ERROR,
+							CommandMessageKeys.NO_PLAYER_FOUND,
+							"{player}", targetName);
+					return;
+				}
 			}
 			else if (sender instanceof Player) {
 				player = (Player) sender;
 			}
 			else {
-				sender.sendMessage(ChatColor.RED + "Not enough command input. " + ChatColor.YELLOW + "You should use it like this:");
-				sender.sendMessage(ChatColor.AQUA + "/v,vampire set food <val> <player>");
+				VampireRevamp.sendMessage(sender,
+						MessageType.ERROR,
+						CommandMessageKeys.NOT_ENOUGH_INPUTS);
+				sender.sendMessage(getCommandSyntax("set food"));
+				return;
 			}
 
-			if (player != null) {
-				Integer res = MathUtil.limitNumber(value, 0, 20);
-				player.setFoodLevel(res);
-				sender.sendMessage(player.getDisplayName() + ChatColor.YELLOW + " now has food = " + value);
-			}
-			else if (targetName != null) {
-				sender.sendMessage(ChatColor.RED + "No player matches: \"" + ChatColor.LIGHT_PURPLE + targetName + ChatColor.RED + "\"");
-			}
+			Integer res = MathUtil.limitNumber(value, 0, 20);
+			player.setFoodLevel(res);
+
+			String attributeName = VampireRevamp.getMessage(sender, CommandMessageKeys.SET_FOOD_ATTRIBUTE);
+			VampireRevamp.sendMessage(sender,
+					MessageType.ERROR,
+					CommandMessageKeys.SET_CHANGED_VALUE,
+					"{player}", player.getDisplayName(),
+					"{attribute}", attributeName,
+					"{value}", String.format("%d", res));
 		}
 
 		@Subcommand("health|h")
 		@CommandPermission("vampire.set.health")
 		@CommandCompletion("@range:0-20 @players")
-		@Description("set health (0 to 20)")
+		@Description("{@@commands.set_health_description}")
 		@Syntax("<val> [player=you]")
 		public void onSetHealth(CommandSender sender, int value, @Optional String targetName) {
 			Player player = null;
 			if (targetName != null) {
 				player = Bukkit.getPlayer(targetName);
+
+				if (player == null) {
+					VampireRevamp.sendMessage(sender,
+							MessageType.ERROR,
+							CommandMessageKeys.NO_PLAYER_FOUND,
+							"{player}", targetName);
+					return;
+				}
 			}
 			else if (sender instanceof Player) {
 				player = (Player) sender;
 			}
 			else {
-				sender.sendMessage(ChatColor.RED + "Not enough command input. " + ChatColor.YELLOW + "You should use it like this:");
-				sender.sendMessage(ChatColor.AQUA + "/v,vampire set health <val> <player>");
+				VampireRevamp.sendMessage(sender,
+						MessageType.ERROR,
+						CommandMessageKeys.NOT_ENOUGH_INPUTS);
+				sender.sendMessage(getCommandSyntax("set health"));
+				return;
 			}
 
-			if (player != null) {
-				Integer res = MathUtil.limitNumber(value, 0, (int) player.getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue());
-				player.setHealth(res);
-				sender.sendMessage(player.getDisplayName() + ChatColor.YELLOW + " now has health = " + value);
-			}
-			else if (targetName != null) {
-				sender.sendMessage(ChatColor.RED + "No player matches: \"" + ChatColor.LIGHT_PURPLE + targetName + ChatColor.RED + "\"");
-			}
+			Integer res = MathUtil.limitNumber(value, 0, (int) player.getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue());
+			player.setHealth(res);
+
+			String attributeName = VampireRevamp.getMessage(sender, CommandMessageKeys.SET_HEALTH_ATTRIBUTE);
+			VampireRevamp.sendMessage(sender,
+					MessageType.ERROR,
+					CommandMessageKeys.SET_CHANGED_VALUE,
+					"{player}", player.getDisplayName(),
+					"{attribute}", attributeName,
+					"{value}", String.format("%d", res));
 		}
+	}
+
+	public String getCommandSyntax(String commandName) {
+		String result = "";
+
+		if (commandMap.containsKey(commandName)) {
+			RegisteredCommand command = commandMap.get(commandName);
+			result = "/" + command.getCommand() + " " +command.getSyntaxText();
+		}
+
+		return result;
 	}
 }

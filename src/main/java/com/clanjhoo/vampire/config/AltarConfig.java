@@ -1,0 +1,114 @@
+package com.clanjhoo.vampire.config;
+
+import com.clanjhoo.vampire.VampireRevamp;
+import com.clanjhoo.vampire.util.CollectionUtil;
+import com.clanjhoo.vampire.util.SemVer;
+import org.bukkit.Material;
+import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.inventory.ItemStack;
+
+import javax.annotation.Nonnull;
+import java.io.BufferedWriter;
+import java.util.Map;
+import java.util.Set;
+
+public class AltarConfig {
+    public final int searchRadius;
+    public final int minRatioForInfo;
+    public final boolean checkIfBlockInHand;
+    public final SingleAltarConfig darkAltar;
+    public final SingleAltarConfig lightAltar;
+
+    public AltarConfig() {
+        searchRadius = 10;
+        minRatioForInfo = 0;
+        checkIfBlockInHand = true;
+        Map<Material, Integer> buildDark = CollectionUtil.map(
+                Material.OBSIDIAN, 30,
+                Material.DEAD_BUSH, 5,
+                Material.DIAMOND_BLOCK, 2,
+                Material.GOLD_BLOCK, 1
+        );
+        Set<ItemStack> activateDark = CollectionUtil.set(
+                PluginConfig.getIngredient(Material.BONE, 10),
+                PluginConfig.getIngredient(Material.REDSTONE, 10)
+        );
+
+        if (new SemVer(1, 13).compareTo(VampireRevamp.getServerVersion()) <= 0) {
+            buildDark.put(Material.COBWEB, 5);
+            activateDark.add(PluginConfig.getIngredient(Material.MUSHROOM_STEW, 1));
+            activateDark.add(PluginConfig.getIngredient(Material.GUNPOWDER, 10));
+        }
+        else {
+            buildDark.put(Material.getMaterial("WEB"), 5);
+            activateDark.add(PluginConfig.getIngredient(Material.getMaterial("MUSHROOM_SOUP"), 1));
+            activateDark.add(PluginConfig.getIngredient(Material.getMaterial("SULPHUR"), 10));
+        }
+
+        darkAltar = new SingleAltarConfig(
+                Material.GOLD_BLOCK,
+                buildDark,
+                activateDark
+
+        );
+
+        Map<Material, Integer> buildLight = CollectionUtil.map(
+                Material.GLOWSTONE, 30,
+                Material.DIAMOND_BLOCK, 2,
+                Material.LAPIS_BLOCK, 1
+        );
+
+        if (new SemVer(1, 13).compareTo(VampireRevamp.getServerVersion()) <= 0) {
+            buildLight.put(Material.POPPY, 5);
+            buildLight.put(Material.DANDELION, 5);
+        }
+        else {
+            buildLight.put(Material.getMaterial("RED_ROSE"), 5);
+            buildLight.put(Material.getMaterial("YELLOW_FLOWER"), 5);
+        }
+
+        lightAltar = new SingleAltarConfig(
+                Material.LAPIS_BLOCK,
+                buildLight,
+                CollectionUtil.set(
+                        PluginConfig.getIngredient(Material.WATER_BUCKET, 1),
+                        PluginConfig.getIngredient(Material.DIAMOND, 1),
+                        PluginConfig.getIngredient(Material.SUGAR, 20),
+                        PluginConfig.getIngredient(Material.WHEAT, 20)
+                )
+        );
+    }
+
+    public AltarConfig(@Nonnull ConfigurationSection cs) {
+        AltarConfig def = new AltarConfig();
+
+        searchRadius = cs.getInt("searchRadius", def.searchRadius);
+        minRatioForInfo = cs.getInt("minRatioForInfo", def.minRatioForInfo);
+        checkIfBlockInHand = cs.getBoolean("checkIfBlockInHand", def.checkIfBlockInHand);
+        darkAltar = def.darkAltar.getSingleAltarConfig(cs.getConfigurationSection("darkAltar"));
+        lightAltar = def.lightAltar.getSingleAltarConfig(cs.getConfigurationSection("lightAltar"));
+    }
+
+    protected boolean saveConfigToFile(BufferedWriter configWriter, String indent, int level) {
+        boolean result = PluginConfig.writeLine(configWriter, "searchRadius: " + this.searchRadius, indent, level);
+        result = result && PluginConfig.writeLine(configWriter, "minRatioForInfo: " + this.minRatioForInfo, indent, level);
+        result = result && PluginConfig.writeLine(configWriter, "checkIfBlockInHand: " + this.checkIfBlockInHand, indent, level);
+        result = result && PluginConfig.writeLine(configWriter, "darkAltar:", indent, level);
+        result = result && this.darkAltar.saveConfigToFile(configWriter, indent, level + 1);
+        result = result && PluginConfig.writeLine(configWriter, "lightAltar:", indent, level);
+        result = result && this.lightAltar.saveConfigToFile(configWriter, indent, level + 1);
+
+        return result;
+    }
+
+    @Override
+    public String toString() {
+        return "AltarConfig{" +
+                "searchRadius=" + searchRadius +
+                ", minRatioForInfo=" + minRatioForInfo +
+                ", checkIfBlockInHand=" + checkIfBlockInHand +
+                ", darkAltar=" + darkAltar +
+                ", lightAltar=" + lightAltar +
+                '}';
+    }
+}
