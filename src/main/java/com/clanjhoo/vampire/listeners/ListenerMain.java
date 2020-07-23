@@ -1,9 +1,7 @@
-package com.clanjhoo.vampire.Listeners;
+package com.clanjhoo.vampire.listener;
 
 import co.aikar.commands.MessageType;
 import com.clanjhoo.vampire.*;
-import com.clanjhoo.vampire.event.InfectionChangeEvent;
-import com.clanjhoo.vampire.event.VampireTypeChangeEvent;
 import com.clanjhoo.vampire.keyproviders.HolyWaterMessageKeys;
 import com.clanjhoo.vampire.keyproviders.SkillMessageKeys;
 import com.clanjhoo.vampire.keyproviders.VampirismMessageKeys;

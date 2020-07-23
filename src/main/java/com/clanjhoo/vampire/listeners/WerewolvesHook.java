@@ -1,4 +1,4 @@
-package com.clanjhoo.vampire.Listeners;
+package com.clanjhoo.vampire.listener;
 
 import com.clanjhoo.vampire.entity.UPlayer;
 import com.clanjhoo.vampire.event.InfectionChangeEvent;
