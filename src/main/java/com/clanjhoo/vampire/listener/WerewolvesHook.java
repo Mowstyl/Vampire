@@ -26,7 +26,7 @@ public class WerewolvesHook implements Listener {
             return;
         }
 
-        if (WerewolfAPI.isWerewolf(player)) {
+        if (WerewolfAPI.isWerewolf(player) && event.getInfection() != 0) {
             event.setCancelled(true);
         }
     }
@@ -45,7 +45,7 @@ public class WerewolvesHook implements Listener {
             return;
         }
 
-        if (WerewolfAPI.isWerewolf(player)) {
+        if (WerewolfAPI.isWerewolf(player) && event.isVampire()) {
             event.setCancelled(true);
         }
     }
