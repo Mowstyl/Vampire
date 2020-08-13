@@ -234,9 +234,9 @@
         <dependency>
             <groupId>us.rfsmassacre</groupId>
             <artifactId>Werewolves</artifactId>
-            <version>1.4.9-SNAPSHOT</version>
+            <version>1.5.0-SNAPSHOT</version>
             <scope>system</scope>
-            <systemPath>F:/Users/Mowser/MineLibs/Werewolf-1.4.9-SNAPSHOT.jar</systemPath>
+            <systemPath>F:/Users/Mowser/MineLibs/Werewolf-1.5.0-SNAPSHOT.jar</systemPath>
         </dependency>
         <!-- NBTAPI -->
         <dependency>

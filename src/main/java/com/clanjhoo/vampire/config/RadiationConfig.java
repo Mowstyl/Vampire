@@ -52,7 +52,7 @@ public class RadiationConfig {
                 new RadiationEffectConfig(PotionEffectType.SLOW, 0, 0.5, 200, false),
                 new RadiationEffectConfig(PotionEffectType.BLINDNESS, 0, 0.8, 200, false)
         );
-        burn = new RadiationEffectConfig(true, 0.2, 60, true);
+        burn = new RadiationEffectConfig(true, 0.9, 60, true);
         smokesPerTempAndMilli = 0.012;
         flamesPerTempAndMilli = 0.0004;
         opacity = CollectionUtil.map(

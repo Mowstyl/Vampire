@@ -220,7 +220,7 @@ public class PluginConfig {
         result = result && PluginConfig.writeLine(configWriter, "trade:", indent, level);
         result = result && this.trade.saveConfigToFile(configWriter, indent, level + 1);
         result = result && writeLine(configWriter, "# Food given by hitting each entity", indent, level);
-        result = result && writeMap(configWriter, "fullFoodQuotient:",  this.fullFoodQuotient, indent, level + 1);
+        result = result && writeMap(configWriter, "fullFoodQuotient:",  this.fullFoodQuotient, indent, level);
         result = result && PluginConfig.writeLine(configWriter, "holyWater:", indent, level);
         result = result && this.holyWater.saveConfigToFile(configWriter, indent, level + 1);
         result = result && PluginConfig.writeLine(configWriter, "altar:", indent, level);
@@ -422,7 +422,7 @@ public class PluginConfig {
             for (Map.Entry<?, ?> entry : auxffq.entrySet()) {
                 try {
                     EntityType ent = EntityType.valueOf(((String) entry.getKey()).toUpperCase());
-                    double quotient = (Integer) entry.getValue();
+                    double quotient = (Double) entry.getValue();
 
                     ffq.put(ent, quotient);
                 }

@@ -369,6 +369,7 @@ public class UPlayer {
         PluginConfig conf = VampireRevamp.getVampireConfig();
 
         String bloodlustAction = VampireRevamp.getMessage(me, GrammarMessageKeys.BLOODLUST);
+        bloodlustAction = bloodlustAction.substring(0, 1).toUpperCase() + bloodlustAction.substring(1);
 
         if (this.bloodlusting == val) {
             // No real change - just view the info.
@@ -1001,7 +1002,6 @@ public class UPlayer {
                 // Buffs
                 if (conf.radiation.burn.enabled &&
                         (!this.isNosferatu() || conf.radiation.burn.affectNosferatu)) {
-                    VampireRevamp.debugLog(Level.INFO, "Love and burn at temperature");
                     if (this.getTemp() > conf.radiation.burn.temperature)
                         FxUtil.ensureBurn(me, conf.radiation.burn.ticks);
                 }

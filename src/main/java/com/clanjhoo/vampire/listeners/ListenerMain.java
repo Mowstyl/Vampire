@@ -416,6 +416,23 @@ public class ListenerMain implements Listener {
         }
     }
 
+    // -------------------------------------------- //
+    // Batusi
+    // -------------------------------------------- //
+
+    @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
+    public void disableBatusiCheck(EntityDamageEvent event) {
+        if (VampireRevamp.getVampireConfig().vampire.batusi.disableOnHit
+                && EntityUtil.isPlayer(event.getEntity())) {
+            Player damagee = (Player) event.getEntity();
+            UPlayer udamagee = UPlayer.get(damagee);
+
+            if (udamagee != null && udamagee.isVampire() && udamagee.isBatusi()) {
+                udamagee.setBatusi(false);
+            }
+        }
+    }
+
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void combatStrength(EntityDamageEvent event) {
         if (VampireRevamp.getVampireConfig().general.isBlacklisted(event.getEntity().getWorld()))
@@ -490,7 +507,7 @@ public class ListenerMain implements Listener {
         // If this is a close combat event ...
         // ... and the vampires can infect horses...
         PluginConfig conf = VampireRevamp.getVampireConfig();
-        if (EventUtil.isCloseCombatEvent(event) && conf.vampire.canInfectHorses) {
+        if (EventUtil.isCloseCombatEvent(event) && conf.infection.canInfectHorses) {
             // ... where there is one vampire ...
             // ... and one is a living horse ...
             Entity damager = EventUtil.getLiableDamager(event);

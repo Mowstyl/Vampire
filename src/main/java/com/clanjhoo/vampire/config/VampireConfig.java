@@ -21,7 +21,6 @@ public class VampireConfig {
     public final ShriekConfig shriek;
     public final IntendConfig intend;
     public final BatusiConfig batusi;
-    public final boolean canInfectHorses;
     public final RegenConfig regen;
     public final RegenConfig regenNosferatu;
     public final double damageFactor;
@@ -47,7 +46,6 @@ public class VampireConfig {
         shriek = new ShriekConfig();
         intend = new IntendConfig();
         batusi = new BatusiConfig();
-        canInfectHorses = true;
         regen = new RegenConfig(false);
         regenNosferatu = new RegenConfig(true);
         damageFactor = 1;
@@ -124,8 +122,6 @@ public class VampireConfig {
         else
             batusi = new BatusiConfig();
 
-        canInfectHorses = cs.getBoolean("canInfectHorses", def.canInfectHorses);
-
         aux = cs.getConfigurationSection("regen");
         if (aux != null)
             regen = new RegenConfig(aux, false);
@@ -168,8 +164,6 @@ public class VampireConfig {
         result = result && this.intend.saveConfigToFile(configWriter, indent, level + 1);
         result = result && PluginConfig.writeLine(configWriter, "batusi:", indent, level);
         result = result && this.batusi.saveConfigToFile(configWriter, indent, level + 1);
-        result = result && PluginConfig.writeLine(configWriter, "# Whether vampires can infect horses (turning them into zombie horses) or not", indent, level);
-        result = result && PluginConfig.writeLine(configWriter, "canInfectHorses: " + this.canInfectHorses, indent, level);
         result = result && PluginConfig.writeLine(configWriter, "regen:", indent, level);
         result = result && this.regen.saveConfigToFile(configWriter, indent, level + 1);
         result = result && PluginConfig.writeLine(configWriter, "regenNosferatu:", indent, level);
@@ -198,7 +192,6 @@ public class VampireConfig {
                 ", shriek=" + shriek +
                 ", intend=" + intend +
                 ", batusi=" + batusi +
-                ", canInfectHorses=" + canInfectHorses +
                 ", regen=" + regen +
                 ", regenNosferatu=" + regenNosferatu +
                 ", damageFactor=" + damageFactor +
