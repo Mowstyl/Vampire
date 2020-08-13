@@ -39,9 +39,13 @@ public class InfectionConfig {
     }
 
     protected boolean saveConfigToFile(BufferedWriter configWriter, String indent, int level) {
-        boolean result = PluginConfig.writeLine(configWriter, "percentInOneHour: " + this.percentInOneHour, indent, level);
+        boolean result = PluginConfig.writeLine(configWriter, "# Each gameplay hour an infected player will have the infection increased by this percentage", indent, level);
+        result = result && PluginConfig.writeLine(configWriter, "percentInOneHour: " + this.percentInOneHour, indent, level);
+        result = result && PluginConfig.writeLine(configWriter, "# Duration of the nausea caused sometimes by the infection", indent, level);
         result = result && PluginConfig.writeLine(configWriter, "progressNauseaTicks: " + this.progressNauseaTicks, indent, level);
+        result = result && PluginConfig.writeLine(configWriter, "# Damage done by the infection to the infected player sometimes", indent, level);
         result = result && PluginConfig.writeLine(configWriter, "progressDamage: " + this.progressDamage, indent, level);
+        result = result && PluginConfig.writeLine(configWriter, "# Chance of being infected by a vampire not intending to infect", indent, level);
         result = result && PluginConfig.writeLine(configWriter, "chance: " + this.chance, indent, level);
 
         return result;

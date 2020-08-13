@@ -22,7 +22,9 @@ public class ShriekConfig {
     }
 
     protected boolean saveConfigToFile(BufferedWriter configWriter, String indent, int level) {
-        boolean result = PluginConfig.writeLine(configWriter, "waitMessageCooldownMillis: " + this.waitMessageCooldownMillis, indent, level);
+        boolean result = PluginConfig.writeLine(configWriter, "# Milliseconds between each message", indent, level);
+        result = result && PluginConfig.writeLine(configWriter, "waitMessageCooldownMillis: " + this.waitMessageCooldownMillis, indent, level);
+        result = result && PluginConfig.writeLine(configWriter, "# Milliseconds between each invocation of shriek", indent, level);
         result = result && PluginConfig.writeLine(configWriter, "cooldownMillis: " + this.cooldownMillis, indent, level);
 
         return result;

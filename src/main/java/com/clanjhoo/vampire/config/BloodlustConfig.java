@@ -34,11 +34,16 @@ public class BloodlustConfig {
     }
 
     protected boolean saveConfigToFile(BufferedWriter configWriter, String indent, int level) {
-        boolean result = PluginConfig.writeLine(configWriter, "enabled: " + this.enabled, indent, level);
+        boolean result = PluginConfig.writeLine(configWriter, "# Whether to enable bloodlust or not", indent, level);
+        result = result && PluginConfig.writeLine(configWriter, "enabled: " + this.enabled, indent, level);
+        result = result && PluginConfig.writeLine(configWriter, "# Whether to avoid Creative players using bloodlust or not", indent, level);
         result = result && PluginConfig.writeLine(configWriter, "checkGamemode: " + this.checkGamemode, indent, level);
+        result = result && PluginConfig.writeLine(configWriter, "# Minimum food level needed to activate bloodlust", indent, level);
         result = result && PluginConfig.writeLine(configWriter, "minFood: " + this.minFood, indent, level);
+        result = result && PluginConfig.writeLine(configWriter, "# Food consumed each ms while bloodlust is active", indent, level);
         result = result && PluginConfig.writeLine(configWriter, "foodPerMilli: " + this.foodPerMilli, indent, level);
         result = result && PluginConfig.writeLine(configWriter, "smokes: " + this.smokes, indent, level);
+        result = result && PluginConfig.writeLine(configWriter, "# Damage multiplier applied to attacks made by a player in bloodlust mode", indent, level);
         result = result && PluginConfig.writeLine(configWriter, "damageFactor: " + this.damageFactor, indent, level);
 
         return result;

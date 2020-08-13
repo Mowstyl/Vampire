@@ -19,7 +19,8 @@ public class NightvisionConfig {
     }
 
     protected boolean saveConfigToFile(BufferedWriter configWriter, String indent, int level) {
-        boolean result = PluginConfig.writeLine(configWriter, "enabled: " + this.enabled, indent, level);
+        boolean result = PluginConfig.writeLine(configWriter, "# Whether to enable nightvision or not", indent, level);
+        result = result && PluginConfig.writeLine(configWriter, "enabled: " + this.enabled, indent, level);
 
         return result;
     }

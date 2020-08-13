@@ -20,6 +20,7 @@ public class VampireConfig {
     public final NightvisionConfig nightvision;
     public final ShriekConfig shriek;
     public final IntendConfig intend;
+    public final BatusiConfig batusi;
     public final boolean canInfectHorses;
     public final RegenConfig regen;
     public final RegenConfig regenNosferatu;
@@ -45,6 +46,7 @@ public class VampireConfig {
         nightvision = new NightvisionConfig();
         shriek = new ShriekConfig();
         intend = new IntendConfig();
+        batusi = new BatusiConfig();
         canInfectHorses = true;
         regen = new RegenConfig(false);
         regenNosferatu = new RegenConfig(true);
@@ -116,6 +118,12 @@ public class VampireConfig {
         else
             intend = new IntendConfig();
 
+        aux = cs.getConfigurationSection("batusi");
+        if (aux != null)
+            batusi = new BatusiConfig(aux);
+        else
+            batusi = new BatusiConfig();
+
         canInfectHorses = cs.getBoolean("canInfectHorses", def.canInfectHorses);
 
         aux = cs.getConfigurationSection("regen");
@@ -146,7 +154,9 @@ public class VampireConfig {
     }
 
     protected boolean saveConfigToFile(BufferedWriter configWriter, String indent, int level) {
-        boolean result = PluginConfig.writeCollection(configWriter, "blockDamageFrom:",  this.blockDamageFrom, indent, level);
+        boolean result = PluginConfig.writeLine(configWriter, "# Damage from this sources will be blocked if the affected entity is a vampire", indent, level);
+        result = result && PluginConfig.writeCollection(configWriter, "blockDamageFrom:",  this.blockDamageFrom, indent, level);
+        result = result && PluginConfig.writeLine(configWriter, "# Healing from this sources will be blocked if the affected entity is a vampire", indent, level);
         result = result && PluginConfig.writeCollection(configWriter, "blockHealthFrom:",  this.blockHealthFrom, indent, level);
         result = result && PluginConfig.writeLine(configWriter, "bloodlust:", indent, level);
         result = result && this.bloodlust.saveConfigToFile(configWriter, indent, level + 1);
@@ -156,16 +166,23 @@ public class VampireConfig {
         result = result && this.shriek.saveConfigToFile(configWriter, indent, level + 1);
         result = result && PluginConfig.writeLine(configWriter, "intend:", indent, level);
         result = result && this.intend.saveConfigToFile(configWriter, indent, level + 1);
+        result = result && PluginConfig.writeLine(configWriter, "batusi:", indent, level);
+        result = result && this.batusi.saveConfigToFile(configWriter, indent, level + 1);
+        result = result && PluginConfig.writeLine(configWriter, "# Whether vampires can infect horses (turning them into zombie horses) or not", indent, level);
         result = result && PluginConfig.writeLine(configWriter, "canInfectHorses: " + this.canInfectHorses, indent, level);
         result = result && PluginConfig.writeLine(configWriter, "regen:", indent, level);
         result = result && this.regen.saveConfigToFile(configWriter, indent, level + 1);
         result = result && PluginConfig.writeLine(configWriter, "regenNosferatu:", indent, level);
         result = result && this.regenNosferatu.saveConfigToFile(configWriter, indent, level + 1);
+        result = result && PluginConfig.writeLine(configWriter, "# Damage multiplier applied to all attacks performed by a vampire player", indent, level);
         result = result && PluginConfig.writeLine(configWriter, "damageFactor: " + this.damageFactor, indent, level);
+        result = result && PluginConfig.writeLine(configWriter, "# Food level when a vampire player is respawned", indent, level);
         result = result && PluginConfig.writeLine(configWriter, "respawnFood: " + this.respawnFood, indent, level);
+        result = result && PluginConfig.writeLine(configWriter, "# Health level when a vampire player is respawned", indent, level);
         result = result && PluginConfig.writeLine(configWriter, "respawnHealth: " + this.respawnHealth, indent, level);
         result = result && PluginConfig.writeLine(configWriter, "holyItem:", indent, level);
         result = result && this.holyItem.saveConfigToFile(configWriter, indent, level + 1);
+        result = result && PluginConfig.writeLine(configWriter, "# Whether vampires can eat cakes or not", indent, level);
         result = result && PluginConfig.writeLine(configWriter, "canEatCake: " + this.canEatCake, indent, level);
 
         return result;
@@ -180,6 +197,7 @@ public class VampireConfig {
                 ", nightvision=" + nightvision +
                 ", shriek=" + shriek +
                 ", intend=" + intend +
+                ", batusi=" + batusi +
                 ", canInfectHorses=" + canInfectHorses +
                 ", regen=" + regen +
                 ", regenNosferatu=" + regenNosferatu +

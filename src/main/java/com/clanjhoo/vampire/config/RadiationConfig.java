@@ -574,11 +574,15 @@ public class RadiationConfig {
     }
 
     protected boolean saveConfigToFile(BufferedWriter configWriter, String indent, int level) {
-        boolean result = PluginConfig.writeLine(configWriter, "opacityPerArmorPiece: " + this.opacityPerArmorPiece, indent, level);
+        boolean result = PluginConfig.writeLine(configWriter, "# Opacity added by each piece of armor worn by a player", indent, level);
+        result = result && PluginConfig.writeLine(configWriter, "opacityPerArmorPiece: " + this.opacityPerArmorPiece, indent, level);
+        result = result && PluginConfig.writeLine(configWriter, "# Radiation value when Sun is totally blocked. Higher negative values make the temperature decrease faster when not under the sun. Positive values is like setting eternal sunlight everywhere", indent, level);
         result = result && PluginConfig.writeLine(configWriter, "baseRadiation: " + this.baseRadiation, indent, level);
+        result = result && PluginConfig.writeLine(configWriter, "# Temperature added per radiation point each millisecond", indent, level);
         result = result && PluginConfig.writeLine(configWriter, "tempPerRadAndMilli: " + this.tempPerRadAndMilli, indent, level);
 
         List<String> auxData = removeBuffs.getData();
+        result = result && PluginConfig.writeLine(configWriter, "# Buffs will be removed from the specified types of vampires when specified temperature is reached", indent, level);
         result = result && PluginConfig.writeLine(configWriter, "removeBuffs:", indent, level);
         for (int i = 0; i < auxData.size(); i++)
             result = result && PluginConfig.writeLine(configWriter, auxData.get(i), indent, level + 1);
@@ -592,6 +596,7 @@ public class RadiationConfig {
         }
 
         auxData = burn.getData();
+        result = result && PluginConfig.writeLine(configWriter, "# Vampires will start burning when specified temperature is reached", indent, level);
         result = result && PluginConfig.writeLine(configWriter, "burn:", indent, level);
         for (int i = 0; i < auxData.size(); i++)
             result = result && PluginConfig.writeLine(configWriter, auxData.get(i), indent, level + 1);

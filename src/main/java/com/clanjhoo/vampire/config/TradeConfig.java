@@ -28,7 +28,8 @@ public class TradeConfig {
     }
 
     protected boolean saveConfigToFile(BufferedWriter configWriter, String indent, int level) {
-        boolean result = PluginConfig.writeLine(configWriter, "offerMaxDistance: " + this.offerMaxDistance, indent, level);
+        boolean result = PluginConfig.writeLine(configWriter, "# Max distance between players trying to trade", indent, level);
+        result = result && PluginConfig.writeLine(configWriter, "offerMaxDistance: " + this.offerMaxDistance, indent, level);
         result = result && PluginConfig.writeLine(configWriter, "offerToleranceMillis: " + this.offerToleranceMillis, indent, level);
         result = result && PluginConfig.writeLine(configWriter, "visualDistance: " + this.visualDistance, indent, level);
         result = result && PluginConfig.writeLine(configWriter, "percentage: " + this.percentage, indent, level);

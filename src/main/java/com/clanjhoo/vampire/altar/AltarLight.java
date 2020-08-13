@@ -20,12 +20,12 @@ public class AltarLight extends Altar
 {
 	public AltarLight()
 	{
-		SingleAltarConfig darkAltar = VampireRevamp.getVampireConfig().altar.darkAltar;
-		this.coreMaterial = darkAltar.coreMaterial;
+		SingleAltarConfig lightAltar = VampireRevamp.getVampireConfig().altar.lightAltar;
+		this.coreMaterial = lightAltar.coreMaterial;
 
-		this.materialCounts = darkAltar.buildMaterials;
+		this.materialCounts = lightAltar.buildMaterials;
 
-		this.resources = darkAltar.activate;
+		this.resources = lightAltar.activate;
 
 		this.isDark = false;
 	}
@@ -47,7 +47,7 @@ public class AltarLight extends Altar
 						HolyWaterMessageKeys.CREATE_FAIL)) {
 					Bukkit.getScheduler().scheduleSyncDelayedTask(VampireRevamp.getInstance(), new Runnable() {
 						public void run() {
-							ResourceUtil.playerAdd(player, HolyWaterUtil.createHolyWater());
+							ResourceUtil.playerAdd(player, HolyWaterUtil.createHolyWater(player));
 							VampireRevamp.sendMessage(player,
 									MessageType.INFO,
 									HolyWaterMessageKeys.CREATE_RESULT);

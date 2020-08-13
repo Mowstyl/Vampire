@@ -11,6 +11,8 @@ trading:
     transferIn: "§eYou drink §d{amount}§r§e of §d{player}§r§d's§e blood."
     seen: "§d{player}§r§e drinks blood from §d{source}§r§e §l:O§r§e !"
 holyWater:
+    name: "§aHoly Water"
+    lore: "Ordinary water infused with lapis.\nVery dangerous to the unholy."
     createSuccess: "§eYou mix these items on the altar:"
     createFail: "§eYou need these items to create holy water:"
     createResult: "§e...the water in the bottle starts to sparkle."
@@ -36,6 +38,7 @@ altars:
     altarLightInfected: "§e...a warm energy flows through you."
     altarLightHealthy: "§e...you feel as one with the light."
 grammar:
+    player: "player"
     you: "you"
     toBeSecond: "are"
     toBeThird: "is"
@@ -65,8 +68,8 @@ skills:
     shriek_wait: "§eYou must wait §d{seconds}§r§ds§e before you can shriek again."
 vampirism:
     alreadyVampire: "§c{player}§r§c is already a vampire."
-    turnedVampire: "§c§kYou are now a vampire!"
-    curedVampire: "§a§kYou were cured from vampirism!"
+    turnedVampire: "§cYou are now a vampire!"
+    curedVampire: "§aYou were cured from vampirism!"
     cantEatItem: "§cVampires can't eat {item}§r§c."
     truceBroken: "§cYou temporarily broke your truce with the monsters."
     truceRestored: "§aYour truce with the monsters has been restored."
@@ -109,6 +112,7 @@ infection:
     hint3: "§eOnly bright light may purge you of this darkness"
     hint4: "§eYou want to touch a lapis lazuli block"
 commands:
+    commandHelpHeader: "Help for command \"{command}\""
     noPlayerFound: "§cNo player matches: §d{player}"
     blacklistedWorld: "§cYou can't use that command in this world"
     notEnoughInputs: "§cNot enough command input. §eYou should use it like this:"
@@ -147,6 +151,7 @@ commands:
     batusi_alreadyUsed: "§eYou already are a cloud of bats!"
     batusi_error: "§cError while removing bat cloud! Please contact an administrator"
     set_description: "set player attributes"
+    set_errorHybrid: "§d{player}§r§c is a werewolf and can't be affected by the dark disease!"
     set_changedValue: "§d{player}§r now has {attribute}§r = {value}"
     set_vampire_description: "set vampire (yes or no)"
     set_vampire_attribute: "vampire"

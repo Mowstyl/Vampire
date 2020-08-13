@@ -4,6 +4,7 @@ import co.aikar.locales.MessageKey;
 import co.aikar.locales.MessageKeyProvider;
 
 public enum GrammarMessageKeys implements MessageKeyProvider {
+    PLAYER("grammar.player"),
     YOU("grammar.you"),
     TO_BE_2ND("grammar.toBeSecond"),
     TO_BE_3RD("grammar.toBeThird"),

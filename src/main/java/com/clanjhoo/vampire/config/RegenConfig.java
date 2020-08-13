@@ -40,10 +40,15 @@ public class RegenConfig {
     }
 
     protected boolean saveConfigToFile(BufferedWriter configWriter, String indent, int level) {
-        boolean result = PluginConfig.writeLine(configWriter, "enabled: " + this.enabled, indent, level);
+        boolean result = PluginConfig.writeLine(configWriter, "# Whether or not to enable regeneration when out of combat", indent, level);
+        result = result && PluginConfig.writeLine(configWriter, "enabled: " + this.enabled, indent, level);
+        result = result && PluginConfig.writeLine(configWriter, "# Minimum food level needed to start regenerating the vampire player", indent, level);
         result = result && PluginConfig.writeLine(configWriter, "minFood: " + this.minFood, indent, level);
+        result = result && PluginConfig.writeLine(configWriter, "# Delay in ms between each health regeneration", indent, level);
         result = result && PluginConfig.writeLine(configWriter, "delayMillis: " + this.delayMillis, indent, level);
+        result = result && PluginConfig.writeLine(configWriter, "# Food consumed each ms when this feature is enabled (if the player is not at full health)", indent, level);
         result = result && PluginConfig.writeLine(configWriter, "foodPerMilli: " + this.foodPerMilli, indent, level);
+        result = result && PluginConfig.writeLine(configWriter, "# Health points gained by each food point", indent, level);
         result = result && PluginConfig.writeLine(configWriter, "healthPerFood: " + this.healthPerFood, indent, level);
 
         return result;

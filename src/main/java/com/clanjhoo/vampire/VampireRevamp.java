@@ -6,9 +6,9 @@ import co.aikar.commands.MessageType;
 import co.aikar.commands.PaperCommandManager;
 import co.aikar.locales.MessageKey;
 import co.aikar.locales.MessageKeyProvider;
-import com.clanjhoo.vampire.Listeners.ListenerMain;
-import com.clanjhoo.vampire.Listeners.PhantomListener;
-import com.clanjhoo.vampire.Listeners.WerewolvesHook;
+import com.clanjhoo.vampire.compat.WerewolfCompat;
+import com.clanjhoo.vampire.listeners.ListenerMain;
+import com.clanjhoo.vampire.listeners.PhantomListener;
 import com.clanjhoo.vampire.keyproviders.GrammarMessageKeys;
 import com.clanjhoo.vampire.altar.AltarDark;
 import com.clanjhoo.vampire.altar.AltarLight;
@@ -38,6 +38,7 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
+import org.bukkit.event.HandlerList;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import com.google.gson.GsonBuilder;
@@ -73,8 +74,9 @@ public class VampireRevamp extends JavaPlugin {
 	private SemVer serverVersion;
 	private boolean disabled = false;
 	private WorldGuardCompat wg;
+	private WerewolfCompat ww;
 	private VampireExpansion expansionPAPI;
-	private boolean isWerewolvesEnabled;
+	private PhantomListener pl;
 	
 	// -------------------------------------------- //
 	// FIELDS
@@ -98,6 +100,10 @@ public class VampireRevamp extends JavaPlugin {
 
 	public static WorldGuardCompat getWorldGuardCompat() {
 		return getInstance().wg;
+	}
+
+	public static WerewolfCompat getWerewolvesCompat() {
+		return getInstance().ww;
 	}
 
 	// -------------------------------------------- //
@@ -207,7 +213,26 @@ public class VampireRevamp extends JavaPlugin {
 	}
 
 	public boolean reloadVampireConfig() {
-		return loadConfig(false);
+		this.reloadConfig();
+		ww.disable();
+		HandlerList.unregisterAll(pl);
+		boolean result = loadConfig(false);
+		loadCompat();
+		return result;
+	}
+
+	public void loadCompat() {
+		// WorldGuard compat
+		wg = new WorldGuardCompat();
+
+		// Werewolves compat
+		ww = new WerewolfCompat();
+
+		// Paper compat
+		if (isPapermc && new SemVer(1, 13).compareTo(serverVersion) < 0 && this.conf.truce.entityTypes.contains(EntityType.PHANTOM)) {
+			pl = new PhantomListener();
+			Bukkit.getPluginManager().registerEvents(pl, this);
+		}
 	}
 
 	public boolean reloadLocales() {
@@ -298,7 +323,7 @@ public class VampireRevamp extends JavaPlugin {
 		if (isDisguiseEnabled)
 			DisguiseUtil.plugin = this;
 
-		isWerewolvesEnabled = conf.general.enableWerewolvesHook && Bukkit.getPluginManager().isPluginEnabled("Werewolf");
+		loadCompat();
 
 		manager = new PaperCommandManager(this);
 
@@ -318,9 +343,6 @@ public class VampireRevamp extends JavaPlugin {
 		altarDark = new AltarDark();
 		altarLight = new AltarLight();
 
-		// WorldGuard compat
-		wg = new WorldGuardCompat();
-
 		// PlaceholderAPI
 		if(Bukkit.getPluginManager().getPlugin("PlaceholderAPI") != null) {
 			expansionPAPI = new VampireExpansion();
@@ -329,10 +351,7 @@ public class VampireRevamp extends JavaPlugin {
 
 		// Listener
 		Bukkit.getPluginManager().registerEvents(new ListenerMain(), this);
-		if (isPapermc && new SemVer(1, 13).compareTo(serverVersion) < 0 && this.conf.truce.entityTypes.contains(EntityType.PHANTOM))
-			Bukkit.getPluginManager().registerEvents(new PhantomListener(), this);
-		if (isWerewolvesEnabled)
-			Bukkit.getPluginManager().registerEvents(new WerewolvesHook(), this);
+
 
 		BukkitScheduler scheduler = getServer().getScheduler();
 

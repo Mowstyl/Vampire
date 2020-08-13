@@ -17,6 +17,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.logging.Level;
 
 public abstract class Altar {
     public boolean isDark;
@@ -28,7 +29,10 @@ public abstract class Altar {
         boolean blockUse = false;
         String message;
 
+        VampireRevamp.debugLog(Level.INFO, "Someone clicked " + coreBlock.getType().name());
+        VampireRevamp.debugLog(Level.INFO, "Core is " + coreMaterial.name());
         if (EntityUtil.isPlayer(player) && coreBlock.getType() == coreMaterial) {
+            VampireRevamp.debugLog(Level.INFO, "Player clicked core!");
             UPlayer uplayer = UPlayer.get(player);
             PluginConfig conf = VampireRevamp.getVampireConfig();
 
@@ -62,7 +66,7 @@ public abstract class Altar {
                         Integer count = entry.getValue();
                         VampireRevamp.sendMessage(player,
                                 MessageType.INFO,
-                                AltarMessageKeys.INCOMPLETE,
+                                AltarMessageKeys.RESOURCE,
                                 "{amount}", count.toString(),
                                 "{item}", material.name());
                     }

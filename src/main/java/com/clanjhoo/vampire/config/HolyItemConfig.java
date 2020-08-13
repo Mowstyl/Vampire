@@ -18,27 +18,33 @@ public class HolyItemConfig {
     public HolyItemConfig() {
         damageFactor = 1.2;
         materials = new HashSet<>();
+        materials.add(Material.STICK);
     }
 
     public HolyItemConfig(@Nonnull ConfigurationSection cs) {
         HolyItemConfig def = new HolyItemConfig();
 
         damageFactor = cs.getDouble("damageFactor", def.damageFactor);
-        List<String> auxLMats = cs.getStringList("materials");
-        Set<Material> auxSMats = new HashSet<>();
-        for (String matName : auxLMats) {
-            Material aux = Material.matchMaterial(matName);
-            if (aux == null)
-                VampireRevamp.log(Level.WARNING, "Material " + matName + " doesn't exist!");
-            else
-                auxSMats.add(aux);
+        Set<Material> auxSMats = null;
+        if (cs.contains("materials")) {
+            List<String> auxLMats = cs.getStringList("materials");
+            auxSMats = new HashSet<>();
+            for (String matName : auxLMats) {
+                Material aux = Material.matchMaterial(matName);
+                if (aux == null)
+                    VampireRevamp.log(Level.WARNING, "Material " + matName + " doesn't exist!");
+                else
+                    auxSMats.add(aux);
+            }
         }
-        materials = auxLMats != null ? auxSMats : def.materials;
+        materials = auxSMats != null ? auxSMats : def.materials;
     }
 
     protected boolean saveConfigToFile(BufferedWriter configWriter, String indent, int level) {
-        boolean result = PluginConfig.writeLine(configWriter, "damageFactor: " + this.damageFactor, indent, level);
-        result = result && PluginConfig.writeCollection(configWriter, "minFood:", this.materials, indent, level);
+        boolean result = PluginConfig.writeLine(configWriter, "# Damage multiplier applied when a vampire is hit by an object in this list (old woodDamageFactor)", indent, level);
+        result = result && PluginConfig.writeLine(configWriter, "damageFactor: " + this.damageFactor, indent, level);
+        result = result && PluginConfig.writeLine(configWriter, "# List of materials considered holy. A damage multiplier will be applied when a Vampire gets hit by any of them", indent, level);
+        result = result && PluginConfig.writeCollection(configWriter, "materials:", this.materials, indent, level);
 
         return result;
     }

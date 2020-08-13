@@ -25,8 +25,10 @@ public class StateEffectConfig implements Comparable<StateEffectConfig>{
     }
 
     protected boolean saveConfigToFile(BufferedWriter configWriter, String indent, int level) {
-        boolean result = PluginConfig.writeLine(configWriter, "priority: " + this.priority, indent, level);
-        result = result && PluginConfig.writeMap(configWriter, "effectToStrength:",  this.effectToStrength, indent, level);
+        boolean result = PluginConfig.writeLine(configWriter, "# The higher the priority, the later this effects will be applied (therefore overriding lower priority effects when sharing any potion effect)", indent, level);
+        result = result && PluginConfig.writeLine(configWriter, "priority: " + this.priority, indent, level);
+        result = result && PluginConfig.writeLine(configWriter, "# Name of an effect: Amplifier", indent, level);
+        result = result && PluginConfig.writeMap(configWriter, "effectToStrength:", this.effectToStrength, indent, level);
 
         return result;
     }

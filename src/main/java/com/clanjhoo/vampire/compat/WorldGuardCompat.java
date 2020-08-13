@@ -25,7 +25,7 @@ public class WorldGuardCompat {
         boolean auxOldWG;
         boolean auxUseWG;
         auxOldWG = true;
-        auxUseWG = VampireRevamp.getVampireConfig().general.useWorldGuardRegions;
+        auxUseWG = VampireRevamp.getVampireConfig().compatibility.useWorldGuardRegions;
         getRegionContainerMethod = null;
         getRegionManagerMethod = null;
         getApplicableRegionsMethod = null;

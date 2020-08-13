@@ -1,5 +1,6 @@
 package com.clanjhoo.vampire.compat;
 
+import com.clanjhoo.vampire.InfectionReason;
 import com.clanjhoo.vampire.VampireRevamp;
 import com.clanjhoo.vampire.entity.UPlayer;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
@@ -114,12 +115,40 @@ public class VampireExpansion extends PlaceholderExpansion {
 
         // %vampire_maker%
         if(identifier.equals("maker")){
-            String name;
-            try {
-                name = uplayer.getMakerName();
-            } catch (Exception ex) {
-                name = "";
+            String name = null;
+
+            if (uplayer.isHuman()) {
+                name = "None";
             }
+            else {
+                try {
+                    name = uplayer.getMakerName();
+                } catch (Exception ignored) {
+
+                }
+
+                if (name == null) {
+                    InfectionReason reason = uplayer.getReason();
+                    switch (reason) {
+                        case UNKNOWN:
+                        case COMBAT_INTENDED:
+                        case COMBAT_MISTAKE:
+                        case TRADE:
+                            name = "Unknown";
+                            break;
+                        case FLASK:
+                            name = "Blood flask";
+                            break;
+                        case OPERATOR:
+                            name = "Dark magic";
+                            break;
+                        case ALTAR:
+                            name = "Altar of darkness";
+                            break;
+                    }
+                }
+            }
+
             return name;
         }
 

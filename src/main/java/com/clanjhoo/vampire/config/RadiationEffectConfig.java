@@ -38,15 +38,25 @@ public class RadiationEffectConfig {
         List<String> data = new ArrayList<>();
 
         if (type == null) {
+            data.add("# Whether or not to enable this feature");
             data.add("enabled: " + this.enabled);
         }
         else {
+            data.add("# PotionEffectType");
             data.add("type: " + this.type.getName());
+            data.add("# Amplifier");
             data.add("strength: " + this.strength);
         }
+        data.add("# Temperature needed to be reached to apply this effect");
         data.add("temperature: " + this.temperature);
-        if (ticks > 0)
+        if (ticks > 0) {
+            data.add("# Duration of the effect in ticks");
             data.add("ticks: " + this.ticks);
+        }
+        if (type == null)
+            data.add("# Whether or not this feature ALSO affects nosferatu vampires or only basic vampires");
+        else
+            data.add("# Whether this feature affects ONLY nosferatu vampires or affects ONLY basic vampires");
         data.add("affectNosferatu: " + this.affectNosferatu);
 
         return data;

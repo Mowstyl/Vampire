@@ -4,6 +4,8 @@ import co.aikar.locales.MessageKey;
 import co.aikar.locales.MessageKeyProvider;
 
 public enum HolyWaterMessageKeys implements MessageKeyProvider {
+    NAME("holyWater.name"),
+    LORE("holyWater.lore"),
     CREATE_SUCCESS("holyWater.createSuccess"),
     CREATE_FAIL("holyWater.createFail"),
     CREATE_RESULT("holyWater.createResult"),

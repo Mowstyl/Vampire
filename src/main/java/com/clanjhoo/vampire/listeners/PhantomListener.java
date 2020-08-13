@@ -1,4 +1,4 @@
-package com.clanjhoo.vampire.listener;
+package com.clanjhoo.vampire.listeners;
 
 import com.clanjhoo.vampire.VampireRevamp;
 import com.clanjhoo.vampire.entity.UPlayer;

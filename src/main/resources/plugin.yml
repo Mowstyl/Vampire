@@ -1,12 +1,13 @@
 name: ${project.name}
-main: ${project.groupId}.${project.name}
-api-version: 1.13
+main: ${project.groupId}.${project.artifactId}.${project.name}
+api-version: "1.13"
 version: ${project.version}
 website: ${project.url}
 description: ${project.description}
 authors: [Cayorion, Mowstyl]
 #depend: [MassiveCore]
 softdepend: [WorldEdit, WorldGuard, LibsDisguises, PlaceholderAPI]
+loadbefore: [Werewolf]
 permissions:
 # -------------------------------------------- #
 # THE REAL NODES

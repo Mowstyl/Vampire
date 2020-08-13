@@ -27,26 +27,24 @@ public enum InfectionMessageKeys implements MessageKeyProvider {
         return key;
     }
 
-    public static InfectionMessageKeys getFeeling(int index) {
+    public static MessageKey getFeeling(int index) {
         InfectionMessageKeys feel = InfectionMessageKeys.FEELING;
         int maxNum = InfectionMessageKeys.getMaxFeeling();
         index += 1;
         if (index > maxNum || index < 1)
             throw new IllegalArgumentException();
 
-        feel.key = MessageKey.of(feel.key.getKey() + index);
-        return feel;
+        return MessageKey.of(feel.key.getKey() + index);
     }
 
-    public static InfectionMessageKeys getHint(int index) {
+    public static MessageKey getHint(int index) {
         InfectionMessageKeys hint = InfectionMessageKeys.HINT;
         int maxNum = InfectionMessageKeys.getMaxHint();
         index += 1;
         if (index > maxNum || index < 1)
             throw new IllegalArgumentException();
 
-        hint.key = MessageKey.of(hint.key.getKey() + index);
-        return hint;
+        return MessageKey.of(hint.key.getKey() + index);
     }
 
     public static int getMaxFeeling() {

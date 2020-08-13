@@ -4,6 +4,7 @@ import co.aikar.locales.MessageKey;
 import co.aikar.locales.MessageKeyProvider;
 
 public enum CommandMessageKeys implements MessageKeyProvider {
+    COMMAND_HELP_HEADER("commands.commandHelpHeader"),
     NO_PLAYER_FOUND("commands.noPlayerFound"),
     BLACKLISTED_WORLD("commands.blacklistedWorld"),
     NOT_ENOUGH_INPUTS("commands.notEnoughInputs"),
@@ -41,6 +42,7 @@ public enum CommandMessageKeys implements MessageKeyProvider {
     BATUSI_ALREADY_USED("commands.batusi_alreadyUsed"),
     BATUSI_ERROR("commands.batusi_error"),
     SET_DESCRIPTION("commands.set_description"),
+    SET_ERROR_HYBRID("commands.set_errorHybrid"),
     SET_CHANGED_VALUE("commands.set_changedValue"),
     SET_VAMPIRE_DESCRIPTION("commands.set_vampire_description"),
     SET_VAMPIRE_ATTRIBUTE("commands.set_vampire_attribute"),

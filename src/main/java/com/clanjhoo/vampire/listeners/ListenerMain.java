@@ -1,4 +1,4 @@
-package com.clanjhoo.vampire.listener;
+package com.clanjhoo.vampire.listeners;
 
 import co.aikar.commands.MessageType;
 import com.clanjhoo.vampire.*;
@@ -29,6 +29,8 @@ import org.bukkit.event.player.*;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.projectiles.ProjectileSource;
+
+import java.util.logging.Level;
 
 public class ListenerMain implements Listener {
     // -------------------------------------------- //
@@ -305,16 +307,19 @@ public class ListenerMain implements Listener {
             return;
         // If a player is targeted...
         if (EntityUtil.isPlayer(event.getTarget())) {
+            VampireRevamp.debugLog(Level.INFO, "Player targeted by " + event.getEntityType().name());
             Player player = (Player) event.getTarget();
             PluginConfig conf = VampireRevamp.getVampireConfig();
 
             // ... by creature that cares about the truce with vampires ...
             if (conf.truce.entityTypes.contains(event.getEntityType())) {
+                VampireRevamp.debugLog(Level.INFO, "Entity in truce list");
                 UPlayer uplayer = UPlayer.get(player);
 
                 // ... and that player is a vampire ...
                 // ... that has not recently done something to break the truce...
                 if (uplayer != null && uplayer.isVampire() && !uplayer.truceIsBroken()) {
+                    VampireRevamp.debugLog(Level.INFO, "Vampire detected, cancelling target");
                     /*
                     // ... then if the player is a ghast target nothing ...
                     if (event.getEntityType() == EntityType.GHAST) {
@@ -343,6 +348,9 @@ public class ListenerMain implements Listener {
                 Entity damager = EventUtil.getLiableDamager(event);
 
                 if (EntityUtil.isPlayer(damager)) {
+                    if (conf.truce.checkGamemode && ((Player) damager).getGameMode() == GameMode.CREATIVE)
+                        return;
+
                     UPlayer vpdamager = UPlayer.get((Player) damager);
 
                     if (vpdamager != null && vpdamager.isVampire()) {
@@ -422,7 +430,7 @@ public class ListenerMain implements Listener {
                 if (vampire != null && vampire.isVampire()) {
                     PluginConfig conf = VampireRevamp.getVampireConfig();
                     // ... and this event isn't a forbidden mcmmo one ...
-                    if (conf.general.damageWithMcmmo
+                    if (conf.compatibility.damageWithMcmmo
                             || !event.getClass().getName().equals("com.gmail.nossr50.events.fake.FakeEntityDamageByEntityEvent")) {
                         // ... Then modify damage!
                         EventUtil.scaleDamage(event, vampire.combatDamageFactor());
@@ -700,6 +708,7 @@ public class ListenerMain implements Listener {
     public void altars(PlayerInteractEvent event) {
         if (VampireRevamp.getVampireConfig().general.isBlacklisted(event.getPlayer().getWorld()))
             return;
+        VampireRevamp.debugLog(Level.INFO, "Interacted with something");
         // If the player right-clicked a block ...
         Action action = event.getAction();
         // ... without a placeable item in hand ...
@@ -707,12 +716,15 @@ public class ListenerMain implements Listener {
         if (action == Action.RIGHT_CLICK_BLOCK &&
                 event.getHand() != EquipmentSlot.OFF_HAND &&
                 (!VampireRevamp.getVampireConfig().altar.checkIfBlockInHand || !event.isBlockInHand())) {
+            VampireRevamp.debugLog(Level.INFO, "Without block in hand");
             // ... run altar logic.
             Player player = event.getPlayer();
             if (EntityUtil.isPlayer(player)) {
                 VampireRevamp plugin = VampireRevamp.getInstance();
+                VampireRevamp.debugLog(Level.INFO, "a real player");
 
                 if (plugin.getAltarDark().evalBlockUse(event.getClickedBlock(), player) || plugin.getAltarLight().evalBlockUse(event.getClickedBlock(), player)) {
+                    VampireRevamp.debugLog(Level.INFO, "and is an altar!");
                     event.setCancelled(true);
                 }
             }

@@ -3,6 +3,7 @@ package com.clanjhoo.vampire.config;
 import com.clanjhoo.vampire.VampireRevamp;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.entity.EntityType;
 import org.bukkit.inventory.ItemStack;
 
 import javax.annotation.Nonnull;
@@ -30,7 +31,6 @@ public class SingleAltarConfig {
 
         if (cs != null) {
             Material core = null;
-            Map<Material, Integer> other = null;
             Set<ItemStack> act = null;
 
             core = Material.matchMaterial(cs.getString("coreMaterial"));
@@ -39,48 +39,57 @@ public class SingleAltarConfig {
                 core = this.coreMaterial;
             }
 
-            if (cs.contains("buildMaterials")) {
-                List<Map<?, ?>> auxLES = cs.getMapList("buildMaterials");
-                other = new HashMap<>();
-                for (Map<?, ?> minimap : auxLES) {
-                    for (Map.Entry<?, ?> entry : minimap.entrySet()) {
+
+            Map<?, ?> auxbm = PluginConfig.getMap(cs, "buildMaterials");
+            Map<Material, Integer> bm = null;
+
+            if (auxbm != null) {
+                bm = new HashMap<>();
+                for (Map.Entry<?, ?> entry : auxbm.entrySet()) {
+                    try {
                         Material mat = Material.matchMaterial((String) entry.getKey());
                         int amount = (Integer) entry.getValue();
 
                         if (mat != null && amount > 0) {
-                            other.put(mat, amount);
+                            bm.put(mat, amount);
                         } else if (amount <= 0) {
                             VampireRevamp.log(Level.WARNING, "Amount can't be less or equal than 0!");
-                            other = null;
+                            bm = null;
                             break;
                         } else {
-                            VampireRevamp.log(Level.WARNING, "PotionEffectType " + entry.getKey() + " doesn't exist!");
-                            other = null;
+                            VampireRevamp.log(Level.WARNING, "Material " + entry.getKey() + " doesn't exist!");
+                            bm = null;
                             break;
                         }
                     }
-                    if (other == null) ;
-                    break;
+                    catch (IllegalArgumentException ex) {
+                        VampireRevamp.log(Level.WARNING, "Material " + entry.getKey() + " doesn't exist!");
+                        bm = null;
+                        break;
+                    }
                 }
             }
-            if (other == null) {
-                other = this.buildMaterials;
-            }
+
+            if (bm == null)
+                bm = this.buildMaterials;
 
             if (cs.contains("activate")) {
                 act = PluginConfig.getResources((List<Map<String, Object>>) cs.getList("activate"));
             }
             act = act != null ? act : this.activate;
 
-            sac = new SingleAltarConfig(core, other, act);
+            sac = new SingleAltarConfig(core, bm, act);
         }
 
         return sac;
     }
 
     protected boolean saveConfigToFile(BufferedWriter configWriter, String indent, int level) {
-        boolean result = PluginConfig.writeLine(configWriter, "coreMaterial: " + this.coreMaterial, indent, level);
+        boolean result = PluginConfig.writeLine(configWriter, "# Core material of the altar", indent, level);
+        result = result && PluginConfig.writeLine(configWriter, "coreMaterial: " + this.coreMaterial, indent, level);
+        result = result && PluginConfig.writeLine(configWriter, "# Block counts needed to build the altar", indent, level);
         result = result && PluginConfig.writeMap(configWriter, "buildMaterials:",  this.buildMaterials, indent, level);
+        result = result && PluginConfig.writeLine(configWriter, "# Item counts needed to activate the altar", indent, level);
         result = result && PluginConfig.writeItemCollection(configWriter, "activate:",  this.activate, indent, level);
 
         return result;

@@ -16,22 +16,16 @@ import java.util.logging.Level;
 public class GeneralConfig {
     public final boolean debug;
     public final int taskDelayMillis;
-    public final boolean damageWithMcmmo;
     public final Set<Material> dropSelfMaterials;
-    public final boolean useWorldGuardRegions;
     public final boolean useOldFoodFormula;
-    public final boolean enableWerewolvesHook;
     private final Set<String> worldBlacklist;
     public final Locale defaultLocale;
 
     public GeneralConfig() {
         debug = false;
         taskDelayMillis = 500;
-        damageWithMcmmo = true;
         dropSelfMaterials = new HashSet<>();
-        useWorldGuardRegions = true;
         useOldFoodFormula = false;
-        enableWerewolvesHook = true;
         worldBlacklist = new HashSet<>();
         defaultLocale = Locale.ENGLISH;
     }
@@ -41,7 +35,6 @@ public class GeneralConfig {
 
         debug = cs.getBoolean("debug", def.debug);
         taskDelayMillis = cs.getInt("taskDelayMillis", def.taskDelayMillis);
-        damageWithMcmmo = cs.getBoolean("damageWithMcmmo", def.damageWithMcmmo);
         List<String> auxLMats = null;
         Set<Material> auxSMats = new HashSet<>();
         if (cs.contains("dropSelfMaterials")) {
@@ -55,9 +48,7 @@ public class GeneralConfig {
             }
         }
         dropSelfMaterials = auxLMats != null ? auxSMats : def.dropSelfMaterials;
-        useWorldGuardRegions = cs.getBoolean("useWorldGuardRegions", def.useWorldGuardRegions);
         useOldFoodFormula = cs.getBoolean("useOldFoodFormula", def.useOldFoodFormula);
-        enableWerewolvesHook = cs.getBoolean("enableWerewolvesHook", def.enableWerewolvesHook);
         Set<String> auxSWorlds = null;
         if (cs.contains("worldBlacklist")) {
             auxSWorlds = new HashSet<>(cs.getStringList("worldBlacklist"));
@@ -73,14 +64,17 @@ public class GeneralConfig {
     }
 
     protected boolean saveConfigToFile(BufferedWriter configWriter, String indent, int level) {
-        boolean result = PluginConfig.writeLine(configWriter, "debug: " + this.debug, indent, level);
+        boolean result = PluginConfig.writeLine(configWriter, "# Whether to spam the console with debug messages only useful when reporting a bug or not", indent, level);
+        result = result && PluginConfig.writeLine(configWriter, "debug: " + this.debug, indent, level);
+        result = result && PluginConfig.writeLine(configWriter, "# Millisecond between each execution of the main task", indent, level);
         result = result && PluginConfig.writeLine(configWriter, "taskDelayMillis: " + this.taskDelayMillis, indent, level);
-        result = result && PluginConfig.writeLine(configWriter, "damageWithMcmmo: " + this.damageWithMcmmo, indent, level);
+        result = result && PluginConfig.writeLine(configWriter, "# List of materials that drop themselves when broken (when breaking glowstone it drops glowstone dust, unless added here)", indent, level);
         result = result && PluginConfig.writeCollection(configWriter, "dropSelfMaterials:",  this.dropSelfMaterials, indent, level);
-        result = result && PluginConfig.writeLine(configWriter, "useWorldGuardRegions: " + this.useWorldGuardRegions, indent, level);
+        result = result && PluginConfig.writeLine(configWriter, "# Whether or not to use the old damage -> food formula (vampires feeding) or not", indent, level);
         result = result && PluginConfig.writeLine(configWriter, "useOldFoodFormula: " + this.useOldFoodFormula, indent, level);
-        result = result && PluginConfig.writeLine(configWriter, "enableWerewolvesHook: " + this.enableWerewolvesHook, indent, level);
+        result = result && PluginConfig.writeLine(configWriter, "# Worlds in which Vampires don't exist. Only humans", indent, level);
         result = result && PluginConfig.writeCollection(configWriter, "worldBlacklist:",  this.worldBlacklist, indent, level);
+        result = result && PluginConfig.writeLine(configWriter, "# The default language to load. It has to exist in locales folder", indent, level);
         result = result && PluginConfig.writeLine(configWriter, "defaultLocale: \"" + this.defaultLocale + "\"", indent, level);
 
         return result;
@@ -91,11 +85,8 @@ public class GeneralConfig {
         return "GeneralConfig{" +
                 "debug=" + debug +
                 ", taskDelayMillis=" + taskDelayMillis +
-                ", damageWithMcmmo=" + damageWithMcmmo +
                 ", dropSelfMaterials=" + dropSelfMaterials +
-                ", useWorldGuardRegions=" + useWorldGuardRegions +
                 ", useOldFoodFormula=" + useOldFoodFormula +
-                ", enableWerewolvesHook=" + enableWerewolvesHook +
                 ", worldBlacklist=" + worldBlacklist +
                 ", defaultLocale=" + defaultLocale +
                 '}';

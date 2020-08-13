@@ -6,6 +6,7 @@ import com.clanjhoo.vampire.keyproviders.CommandMessageKeys;
 import com.clanjhoo.vampire.Perm;
 import com.clanjhoo.vampire.VampireRevamp;
 import com.clanjhoo.vampire.entity.UPlayer;
+import com.clanjhoo.vampire.keyproviders.GrammarMessageKeys;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.ClickEvent;
@@ -41,13 +42,15 @@ public class TextUtil {
         return ret;
     }
 
-    public static BaseComponent[] getPlayerInfoHeader(boolean isVampire, boolean isNosferatu, String playerName) {
+    public static BaseComponent[] getPlayerInfoHeader(boolean isVampire, boolean isNosferatu, String playerName, CommandSender sender) {
         BaseComponent[] comps = new BaseComponent[4];
 
         comps[0] = new TextComponent("_______.[ ");
         comps[0].setColor(ChatColor.GOLD);
 
-        comps[1] = new TextComponent("Player ");
+        String playerStr = VampireRevamp.getMessage(sender, GrammarMessageKeys.PLAYER);
+        playerStr = playerStr.substring(0, 1).toUpperCase() + playerStr.substring(1);
+        comps[1] = new TextComponent(playerStr + " ");
         if (!isVampire)
             comps[1].setColor(ChatColor.DARK_GREEN);
         else if (!isNosferatu)
@@ -210,13 +213,15 @@ public class TextUtil {
         return hovers;
     }
 
-    public static BaseComponent[] getHelpHeader(CommandHelp help, int maxPages, String command) {
+    public static BaseComponent[] getHelpHeader(CommandHelp help, int maxPages, String command, CommandSender sender) {
         BaseComponent[] comps = new BaseComponent[6];
 
         comps[0] = new TextComponent("_______.[ ");
         comps[0].setColor(ChatColor.GOLD);
 
-        comps[1] = new TextComponent("Help for command \"" + command + "\" ");
+        String helpHeader = VampireRevamp.getMessage(sender, CommandMessageKeys.COMMAND_HELP_HEADER);
+        helpHeader = helpHeader.replace("{command}", command);
+        comps[1] = new TextComponent(helpHeader);
         comps[1].setColor(ChatColor.DARK_GREEN);
 
         comps[2] = new TextComponent("[<]");

@@ -90,8 +90,10 @@ public class AltarConfig {
     }
 
     protected boolean saveConfigToFile(BufferedWriter configWriter, String indent, int level) {
-        boolean result = PluginConfig.writeLine(configWriter, "searchRadius: " + this.searchRadius, indent, level);
+        boolean result = PluginConfig.writeLine(configWriter, "# Max range around the coreblock in which other altar blocks can be used to build the altar", indent, level);
+        result = result && PluginConfig.writeLine(configWriter, "searchRadius: " + this.searchRadius, indent, level);
         result = result && PluginConfig.writeLine(configWriter, "minRatioForInfo: " + this.minRatioForInfo, indent, level);
+        result = result && PluginConfig.writeLine(configWriter, "# Whether to check if the player clicking the altar core block has a block in hand or not, to avoid annoying builders", indent, level);
         result = result && PluginConfig.writeLine(configWriter, "checkIfBlockInHand: " + this.checkIfBlockInHand, indent, level);
         result = result && PluginConfig.writeLine(configWriter, "darkAltar:", indent, level);
         result = result && this.darkAltar.saveConfigToFile(configWriter, indent, level + 1);

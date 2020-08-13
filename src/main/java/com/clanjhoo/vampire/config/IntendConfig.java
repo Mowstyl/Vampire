@@ -22,7 +22,9 @@ public class IntendConfig {
     }
 
     protected boolean saveConfigToFile(BufferedWriter configWriter, String indent, int level) {
-        boolean result = PluginConfig.writeLine(configWriter, "enabled: " + this.enabled, indent, level);
+        boolean result = PluginConfig.writeLine(configWriter, "# Whether to enable intend or not", indent, level);
+        result = result && PluginConfig.writeLine(configWriter, "enabled: " + this.enabled, indent, level);
+        result = result && PluginConfig.writeLine(configWriter, "# Chance of being infected by a vampire in intend mode", indent, level);
         result = result && PluginConfig.writeLine(configWriter, "infectionChance: " + this.infectionChance, indent, level);
 
         return result;

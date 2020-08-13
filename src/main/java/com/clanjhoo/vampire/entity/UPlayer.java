@@ -2,6 +2,7 @@ package com.clanjhoo.vampire.entity;
 
 import co.aikar.commands.MessageType;
 import com.clanjhoo.vampire.InfectionReason;
+import com.clanjhoo.vampire.config.VampireConfig;
 import com.clanjhoo.vampire.keyproviders.*;
 import com.clanjhoo.vampire.VampireRevamp;
 import com.clanjhoo.vampire.accumulator.UPlayerFoodAccumulator;
@@ -335,6 +336,15 @@ public class UPlayer {
         Player p = getPlayer();
 
         if (p != null) {
+            if (!VampireRevamp.getVampireConfig().vampire.intend.enabled) {
+                String intendAction = VampireRevamp.getMessage(player, GrammarMessageKeys.INTEND);
+                VampireRevamp.sendMessage(p,
+                        MessageType.ERROR,
+                        CommandMessageKeys.DISABLED_ACTION,
+                        "{action}", intendAction);
+                return;
+            }
+
             String on = VampireRevamp.getMessage(p, GrammarMessageKeys.ON);
             String off = VampireRevamp.getMessage(p, GrammarMessageKeys.OFF);
 
@@ -635,6 +645,15 @@ public class UPlayer {
             return;
         }
 
+        if (!VampireRevamp.getVampireConfig().vampire.intend.enabled) {
+            String shriekAction = VampireRevamp.getMessage(player, GrammarMessageKeys.SHRIEK);
+            VampireRevamp.sendMessage(me,
+                    MessageType.ERROR,
+                    CommandMessageKeys.DISABLED_ACTION,
+                    "{action}", shriekAction);
+            return;
+        }
+
         // You must be a vampire to shriek
         if (this.isVampire()) {
             PluginConfig conf = VampireRevamp.getVampireConfig();
@@ -685,27 +704,37 @@ public class UPlayer {
 
     private void enableBatusi() {
         VampireRevamp plugin = VampireRevamp.getInstance();
-        Player sender = this.getPlayer();
+        PluginConfig conf = VampireRevamp.getVampireConfig();
+        Player me = this.getPlayer();
 
-        if (sender == null)
+        if (me == null)
             return;
 
-        if (!plugin.batEnabled.getOrDefault(sender.getUniqueId(), false)) {
-            EntityUtil.spawnBats(sender, 9);
+        if (!conf.vampire.batusi.enabled) {
+            String batusiAction = VampireRevamp.getMessage(me, GrammarMessageKeys.BATUSI);
+            VampireRevamp.sendMessage(me,
+                    MessageType.ERROR,
+                    CommandMessageKeys.DISABLED_ACTION,
+                    "{action}", batusiAction);
+            return;
+        }
+
+        if (!plugin.batEnabled.getOrDefault(me.getUniqueId(), false)) {
+            EntityUtil.spawnBats(me, conf.vampire.batusi.numberOfBats);
             if (plugin.isDisguiseEnabled)
-                DisguiseUtil.disguiseBat(sender);
-            plugin.batEnabled.put(sender.getUniqueId(), true);
-            sender.setAllowFlight(true);
-            sender.setFlying(true);
-            VampireRevamp.sendMessage(sender,
+                DisguiseUtil.disguiseBat(me);
+            plugin.batEnabled.put(me.getUniqueId(), true);
+            me.setAllowFlight(true);
+            me.setFlying(true);
+            VampireRevamp.sendMessage(me,
                     MessageType.INFO,
                     CommandMessageKeys.BATUSI_TOGGLED_ON);
         } else {
             if (plugin.isDisguiseEnabled)
-                DisguiseUtil.disguiseBat(sender);
-            sender.setAllowFlight(true);
-            sender.setFlying(true);
-            VampireRevamp.sendMessage(sender,
+                DisguiseUtil.disguiseBat(me);
+            me.setAllowFlight(true);
+            me.setFlying(true);
+            VampireRevamp.sendMessage(me,
                     MessageType.INFO,
                     CommandMessageKeys.BATUSI_ALREADY_USED);
         }
@@ -851,7 +880,8 @@ public class UPlayer {
                 this.rad = conf.radiation.baseRadiation + SunUtil.calcPlayerIrradiation(me);
                 double tempDelta = conf.radiation.tempPerRadAndMilli * this.rad * millis;
                 this.addTemp(tempDelta);
-            } else {
+            }
+            else {
                 this.rad = 0;
                 this.temp = 0;
             }
@@ -971,6 +1001,7 @@ public class UPlayer {
                 // Buffs
                 if (conf.radiation.burn.enabled &&
                         (!this.isNosferatu() || conf.radiation.burn.affectNosferatu)) {
+                    VampireRevamp.debugLog(Level.INFO, "Love and burn at temperature");
                     if (this.getTemp() > conf.radiation.burn.temperature)
                         FxUtil.ensureBurn(me, conf.radiation.burn.ticks);
                 }

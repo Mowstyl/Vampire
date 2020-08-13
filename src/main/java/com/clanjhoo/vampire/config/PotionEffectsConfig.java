@@ -47,7 +47,8 @@ public class PotionEffectsConfig {
     }
 
     protected boolean saveConfigToFile(BufferedWriter configWriter, String indent, int level) {
-        boolean result = PluginConfig.writeLine(configWriter, "seconds: " + this.seconds, indent, level);
+        boolean result = PluginConfig.writeLine(configWriter, "# Duration in seconds of the effects", indent, level);
+        result = result && PluginConfig.writeLine(configWriter, "seconds: " + this.seconds, indent, level);
         result = result && PluginConfig.writeLine(configWriter, "bloodlust:", indent, level);
         result = result && this.bloodlust.saveConfigToFile(configWriter, indent, level + 1);
         result = result && PluginConfig.writeLine(configWriter, "nightvision:", indent, level);

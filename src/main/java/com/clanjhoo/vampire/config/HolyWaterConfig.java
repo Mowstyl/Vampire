@@ -48,8 +48,11 @@ public class HolyWaterConfig {
     }
 
     protected boolean saveConfigToFile(BufferedWriter configWriter, String indent, int level) {
-        boolean result = PluginConfig.writeLine(configWriter, "splashRadius: " + this.splashRadius, indent, level);
+        boolean result = PluginConfig.writeLine(configWriter, "# Players located inside a sphere with this radius centered around the place the potion broke will be affected by it", indent, level);
+        result = result && PluginConfig.writeLine(configWriter, "splashRadius: " + this.splashRadius, indent, level);
+        result = result && PluginConfig.writeLine(configWriter, "# Temperature added to vampires hit by the holy water", indent, level);
         result = result && PluginConfig.writeLine(configWriter, "temperature: " + this.temperature, indent, level);
+        result = result && PluginConfig.writeLine(configWriter, "# Ingredients needed to make holy water in a light altar", indent, level);
         result = result && PluginConfig.writeItemCollection(configWriter, "resources:", this.resources, indent, level);
 
         return result;

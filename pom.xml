@@ -2,19 +2,20 @@
     <modelVersion>4.0.0</modelVersion>
 
     <!-- Basics -->
-    <groupId>com.clanjhoo.vampire</groupId>
-    <artifactId>VampireRevamp</artifactId>
+    <groupId>com.clanjhoo</groupId>
+    <artifactId>vampire</artifactId>
     <packaging>jar</packaging>
     <version>1.0.BETA-5</version>
 
     <!-- Info -->
-    <name>${project.artifactId}</name>
+    <name>VampireRevamp</name>
     <description>Anyone can become a vampire, but do you want to? During daytime vampires cower from sunlight. During the night the humans reach for their holy water and wooden stakes as the vampires roam the lands with inhuman strength, speed and levitation-powers. Driven by their endless bloodlust, they devour all living in their way.</description>
     <url>https://clanjhoo.com</url>
 
 
     <!-- Build -->
     <build>
+        <finalName>${project.name}-${project.version}</finalName>
         <resources>
             <resource>
                 <directory>src/main/resources</directory>
@@ -46,12 +47,21 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
+                <version>3.2.4</version>
                 <configuration>
                     <dependencyReducedPomLocation>${project.build.directory}/dependency-reduced-pom.xml</dependencyReducedPomLocation>
                     <relocations>
                         <relocation>
                             <pattern>co.aikar.commands</pattern>
-                            <shadedPattern>co.aikar.acf-paper</shadedPattern> <!-- Replace this -->
+                            <shadedPattern>co.aikar.${project.artifactId}.acf</shadedPattern> <!-- Replace this -->
+                        </relocation>
+                        <relocation>
+                            <pattern>co.aikar.locales</pattern>
+                            <shadedPattern>co.aikar.${project.artifactId}.locales</shadedPattern> <!-- Replace this -->
+                        </relocation>
+                        <relocation>
+                            <pattern>de.tr7zw.nbtapi</pattern>
+                            <shadedPattern>de.tr7zw.${project.artifactId}.nbtapi</shadedPattern>
                         </relocation>
                     </relocations>
                 </configuration>
@@ -62,18 +72,31 @@
                             <goal>shade</goal>
                         </goals>
                         <configuration>
-                            <promoteTransitiveDependencies>true</promoteTransitiveDependencies>
+                            <minimizeJar>true</minimizeJar>
                             <artifactSet>
                                 <includes>
                                     <include>co.aikar:acf-paper</include>
-                                    <include>co.aikar:acf-bukkit</include>
-                                    <include>co.aikar:acf-core</include>
-                                    <include>co.aikar:locales</include>
-                                    <include>co.aikar:Table</include>
-                                    <include>co.aikar:minecraft-timings</include>
-                                    <include>net.jodah:expiringmap</include>
+                                    <include>de.tr7zw:item-nbt-api-plugin</include>
                                 </includes>
                             </artifactSet>
+                            <filters>
+                                <filter>
+                                    <artifact>co.aikar:acf-paper</artifact>
+                                    <excludeDefaults>true</excludeDefaults>
+                                    <includes>
+                                        <include>acf-core_*.properties</include>
+                                        <include>co/aikar/commands/**</include>
+                                        <include>co/aikar/locales/**</include>
+                                    </includes>
+                                </filter>
+                                <filter>
+                                    <artifact>de.tr7zw:item-nbt-api-plugin</artifact>
+                                    <excludeDefaults>true</excludeDefaults>
+                                    <includes>
+                                        <include>de/tr7zw/nbtapi/**</include>
+                                    </includes>
+                                </filter>
+                            </filters>
                         </configuration>
                     </execution>
                 </executions>
@@ -106,6 +129,12 @@
         <repository>
             <id>placeholderapi</id>
             <url>https://repo.extendedclip.com/content/repositories/placeholderapi/</url>
+        </repository>
+        <!-- NBTAPI -->
+        <repository>
+            <id>codemc-repo</id>
+            <url>https://repo.codemc.org/repository/maven-public/</url>
+            <layout>default</layout>
         </repository>
     </repositories>
 
@@ -208,6 +237,12 @@
             <version>1.4.9-SNAPSHOT</version>
             <scope>system</scope>
             <systemPath>F:/Users/Mowser/MineLibs/Werewolf-1.4.9-SNAPSHOT.jar</systemPath>
+        </dependency>
+        <!-- NBTAPI -->
+        <dependency>
+            <groupId>de.tr7zw</groupId>
+            <artifactId>item-nbt-api-plugin</artifactId>
+            <version>2.4.1</version>
         </dependency>
     </dependencies>
 </project>
