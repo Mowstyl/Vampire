@@ -2,7 +2,7 @@ package com.clanjhoo.vampire.entity;
 
 import co.aikar.commands.MessageType;
 import com.clanjhoo.vampire.InfectionReason;
-import com.clanjhoo.vampire.config.VampireConfig;
+import com.clanjhoo.vampire.compat.WorldGuardCompat;
 import com.clanjhoo.vampire.keyproviders.*;
 import com.clanjhoo.vampire.VampireRevamp;
 import com.clanjhoo.vampire.accumulator.UPlayerFoodAccumulator;
@@ -144,6 +144,8 @@ public class UPlayer {
 
         if (uuid != null)
             uPlayer = VampireRevamp.getInstance().uPlayerColl.get(uuid);
+        else
+            VampireRevamp.debugLog(Level.WARNING, "Couldn't get player: Null UUID");
 
         return uPlayer;
     }
@@ -153,6 +155,8 @@ public class UPlayer {
 
         if (player != null)
             uPlayer = get(player.getUniqueId());
+        else
+            VampireRevamp.debugLog(Level.WARNING, "Couldn't get player: Null Player");
 
         return uPlayer;
     }
@@ -846,8 +850,6 @@ public class UPlayer {
                 if (this.getTemp() >= debuffConf.temperature &&
                         ((debuffConf.affectNosferatu && this.isNosferatu()) ||
                         !debuffConf.affectNosferatu && !this.isNosferatu())) {
-                    if (player.hasPotionEffect(debuffConf.type))
-                        player.removePotionEffect(debuffConf.type);
                     player.addPotionEffect(new PotionEffect(debuffConf.type, debuffConf.ticks, debuffConf.strength, true, false));
                 }
             }
@@ -861,7 +863,7 @@ public class UPlayer {
     public void tick(long millis) {
         Player player = this.getPlayer();
         PluginConfig conf = VampireRevamp.getVampireConfig();
-        if (player != null && !conf.general.isBlacklisted(player.getWorld())) {
+        if (player != null && player.getGameMode() != GameMode.SPECTATOR && !conf.general.isBlacklisted(player.getWorld())) {
             this.tickRadTemp(millis);
             this.tickInfection(millis);
             this.tickRegen(millis);
@@ -878,7 +880,20 @@ public class UPlayer {
         if (me != null) {
             PluginConfig conf = VampireRevamp.getVampireConfig();
             if (me.getGameMode() != GameMode.CREATIVE && this.isVampire() && !me.isDead()) {
-                this.rad = conf.radiation.baseRadiation + SunUtil.calcPlayerIrradiation(me);
+                WorldGuardCompat wg = VampireRevamp.getWorldGuardCompat();
+                double irradiation = 0;
+                boolean irradiationEnabled = true;
+
+                if (VampireRevamp.getVampireConfig().compatibility.useWorldGuardRegions && wg.useWG) {
+                    Object flagValue = wg.queryFlag(me, wg.IRRADIATE_VAMPIRES_FLAG);
+                    irradiationEnabled = flagValue.toString().equals("ALLOW");
+                }
+
+                if (irradiationEnabled) {
+                    irradiation = SunUtil.calcPlayerIrradiation(me);
+                }
+
+                this.rad = conf.radiation.baseRadiation + irradiation;
                 double tempDelta = conf.radiation.tempPerRadAndMilli * this.rad * millis;
                 this.addTemp(tempDelta);
             }
@@ -891,10 +906,7 @@ public class UPlayer {
 
     public void tickInfection(long millis) {
         Player me = this.getPlayer();
-        if (this.isInfected() && me != null
-                && me.getGameMode() != GameMode.CREATIVE
-                && me.getGameMode() != GameMode.SPECTATOR) {
-
+        if (this.isInfected() && me != null) {
             int indexOld = this.infectionGetMessageIndex();
             PluginConfig conf = VampireRevamp.getVampireConfig();
             this.addInfection(millis * conf.infection.amountPerMilli);
@@ -937,7 +949,6 @@ public class UPlayer {
                 && enabled
                 && buffsActive
                 && me.getGameMode() != GameMode.CREATIVE
-                && me.getGameMode() != GameMode.SPECTATOR
                 && !me.isDead()
                 && me.getHealth() < me.getAttribute(Attribute.GENERIC_MAX_HEALTH).getBaseValue()
                 && this.getFood().get() >= minFood) {
@@ -959,8 +970,7 @@ public class UPlayer {
         PluginConfig conf = VampireRevamp.getVampireConfig();
         if (this.isVampire() && this.isBloodlusting()
                 && me != null && !me.isDead()
-                && me.getGameMode() != GameMode.CREATIVE
-                && me.getGameMode() != GameMode.SPECTATOR) {
+                && me.getGameMode() != GameMode.CREATIVE) {
             this.getFood().add(millis * conf.vampire.bloodlust.foodPerMilli);
             if (this.getFood().get() < conf.vampire.bloodlust.minFood)
                 this.setBloodlusting(false);
@@ -975,8 +985,7 @@ public class UPlayer {
     public void tickEffects(long millis) {
         Player me = this.getPlayer();
         if (me != null && !me.isDead()
-                && me.getGameMode() != GameMode.CREATIVE
-                && me.getGameMode() != GameMode.SPECTATOR) {
+                && me.getGameMode() != GameMode.CREATIVE) {
             PluginConfig conf = VampireRevamp.getVampireConfig();
 
             // FX: Smoke

@@ -166,6 +166,9 @@ public class VampireRevamp extends JavaPlugin {
 
 		loadConfig(true);
 
+		// WorldGuard compat
+		wg = new WorldGuardCompat();
+
 		try {
 			this.uPlayerColl = new UPlayerColl(this);
 		}
@@ -217,14 +220,12 @@ public class VampireRevamp extends JavaPlugin {
 		ww.disable();
 		HandlerList.unregisterAll(pl);
 		boolean result = loadConfig(false);
+
 		loadCompat();
 		return result;
 	}
 
 	public void loadCompat() {
-		// WorldGuard compat
-		wg = new WorldGuardCompat();
-
 		// Werewolves compat
 		ww = new WerewolfCompat();
 
@@ -356,7 +357,7 @@ public class VampireRevamp extends JavaPlugin {
 		BukkitScheduler scheduler = getServer().getScheduler();
 
 		theTaskId = scheduler.scheduleSyncRepeatingTask(this, new TheTask(), 0L, (this.conf.general.taskDelayMillis * 20) / 1000);
-		batTaskId = scheduler.scheduleSyncRepeatingTask(this, new BatTask(this), 0L, (this.conf.general.taskDelayMillis * 20) / 1000);
+		batTaskId = scheduler.scheduleSyncRepeatingTask(this, new BatTask(), 0L, (this.conf.general.batTaskDelayMillis * 20) / 1000);
 	}
 
 	public static YamlConfiguration fileToYamlConfig (File file) throws IOException, InvalidConfigurationException {

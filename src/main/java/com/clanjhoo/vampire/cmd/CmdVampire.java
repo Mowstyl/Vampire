@@ -158,10 +158,10 @@ public class CmdVampire extends BaseCommand {
 					String on = VampireRevamp.getMessage(sender, GrammarMessageKeys.ON);
 					String off = VampireRevamp.getMessage(sender, GrammarMessageKeys.OFF);
 
-					sender.sendMessage(TextUtil.getPlayerInfoHeader(uplayer.isVampire(),
-																	uplayer.isNosferatu(),
-																	player.getDisplayName(),
-																	sender));
+					sender.spigot().sendMessage(TextUtil.getPlayerInfoHeader(uplayer.isVampire(),
+																			 uplayer.isNosferatu(),
+																			 player.getDisplayName(),
+																			 sender));
 					if (uplayer.isVampire()) {
 						if (uplayer.isNosferatu())
 							vampireType = VampireRevamp.getMessage(sender, GrammarMessageKeys.NOSFERATU_TYPE);

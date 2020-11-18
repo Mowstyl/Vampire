@@ -13,8 +13,8 @@ public class BatTask implements Runnable {
 
     private final VampireRevamp plugin;
 
-    public BatTask(VampireRevamp plugin) {
-        this.plugin = plugin;
+    public BatTask() {
+        this.plugin = VampireRevamp.getInstance();
     }
 
     @Override

@@ -16,6 +16,7 @@ import java.util.logging.Level;
 public class GeneralConfig {
     public final boolean debug;
     public final int taskDelayMillis;
+    public final int batTaskDelayMillis;
     public final Set<Material> dropSelfMaterials;
     public final boolean useOldFoodFormula;
     private final Set<String> worldBlacklist;
@@ -24,6 +25,7 @@ public class GeneralConfig {
     public GeneralConfig() {
         debug = false;
         taskDelayMillis = 500;
+        batTaskDelayMillis = 100;
         dropSelfMaterials = new HashSet<>();
         useOldFoodFormula = false;
         worldBlacklist = new HashSet<>();
@@ -35,6 +37,7 @@ public class GeneralConfig {
 
         debug = cs.getBoolean("debug", def.debug);
         taskDelayMillis = cs.getInt("taskDelayMillis", def.taskDelayMillis);
+        batTaskDelayMillis = cs.getInt("batTaskDelayMillis", def.batTaskDelayMillis);
         List<String> auxLMats = null;
         Set<Material> auxSMats = new HashSet<>();
         if (cs.contains("dropSelfMaterials")) {
@@ -66,8 +69,10 @@ public class GeneralConfig {
     protected boolean saveConfigToFile(BufferedWriter configWriter, String indent, int level) {
         boolean result = PluginConfig.writeLine(configWriter, "# Whether to spam the console with debug messages only useful when reporting a bug or not", indent, level);
         result = result && PluginConfig.writeLine(configWriter, "debug: " + this.debug, indent, level);
-        result = result && PluginConfig.writeLine(configWriter, "# Millisecond between each execution of the main task", indent, level);
+        result = result && PluginConfig.writeLine(configWriter, "# Milliseconds between each execution of the main task", indent, level);
         result = result && PluginConfig.writeLine(configWriter, "taskDelayMillis: " + this.taskDelayMillis, indent, level);
+        result = result && PluginConfig.writeLine(configWriter, "# Milliseconds between each execution of the bat cloud task", indent, level);
+        result = result && PluginConfig.writeLine(configWriter, "batTaskDelayMillis: " + this.batTaskDelayMillis, indent, level);
         result = result && PluginConfig.writeLine(configWriter, "# List of materials that drop themselves when broken (when breaking glowstone it drops glowstone dust, unless added here)", indent, level);
         result = result && PluginConfig.writeCollection(configWriter, "dropSelfMaterials:",  this.dropSelfMaterials, indent, level);
         result = result && PluginConfig.writeLine(configWriter, "# Whether or not to use the old damage -> food formula (vampires feeding) or not", indent, level);
@@ -85,6 +90,7 @@ public class GeneralConfig {
         return "GeneralConfig{" +
                 "debug=" + debug +
                 ", taskDelayMillis=" + taskDelayMillis +
+                ", batTaskDelayMillis=" + batTaskDelayMillis +
                 ", dropSelfMaterials=" + dropSelfMaterials +
                 ", useOldFoodFormula=" + useOldFoodFormula +
                 ", worldBlacklist=" + worldBlacklist +

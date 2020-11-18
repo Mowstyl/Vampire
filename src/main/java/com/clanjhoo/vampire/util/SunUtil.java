@@ -3,22 +3,23 @@ package com.clanjhoo.vampire.util;
 import com.clanjhoo.vampire.VampireRevamp;
 
 import com.clanjhoo.vampire.compat.WorldGuardCompat;
-import com.sk89q.worldguard.protection.flags.Flag;
-import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import org.bukkit.*;
 import org.bukkit.World.Environment;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
-import java.util.Map;
-import java.util.Set;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.logging.Level;
 
 public class SunUtil
 {
 	// -------------------------------------------- //
 	// CONSTANTS
 	// -------------------------------------------- //
+
+	private static boolean failedWG = false;
 	
 	public final static int MID_DAY_TICKS = 6000;
 	public final static int DAY_TICKS = 24000;
@@ -41,27 +42,11 @@ public class SunUtil
 		long rtime = world.getFullTime();
 		WorldGuardCompat wg = VampireRevamp.getWorldGuardCompat();
 
-		if (wg.useWG) {
-			Set<ProtectedRegion> prset = wg.getApplicableRegions(wg.getRegionManager(wg.getRegionContainer(), player.getWorld()), player.getLocation()).getRegions();
-			Flag<?> TIME_LOCK = wg.getFlag("TIME_LOCK");
+		if (VampireRevamp.getVampireConfig().compatibility.useWorldGuardRegions && wg.useWG) {
+			String aux = (String) wg.queryFlag(player, wg.getFlag("TIME_LOCK"));
 
-			if (prset != null && TIME_LOCK != null) {
-				int bestPriority = 0;
-
-				for (ProtectedRegion pr : prset) {
-					Map<Flag<?>, Object> flags = pr.getFlags();
-					if (flags.containsKey(TIME_LOCK)) {
-						try {
-							long auxrtime = Long.parseLong((String) flags.get(TIME_LOCK));
-							if (pr.getPriority() >= bestPriority) {
-								rtime = auxrtime;
-								bestPriority = pr.getPriority();
-							}
-						}
-						catch(NumberFormatException e){	}
-					}
-				}
-			}
+			if (aux != null)
+				rtime = Long.parseLong(aux);
 		}
 
 		int ret = (int) ((rtime - MID_DAY_TICKS) % DAY_TICKS);
@@ -95,29 +80,23 @@ public class SunUtil
 		boolean storming = world.hasStorm();
 		WorldGuardCompat wg = VampireRevamp.getWorldGuardCompat();
 
-		if (wg.useWG) {
-			Set<ProtectedRegion> prset = wg.getApplicableRegions(wg.getRegionManager(wg.getRegionContainer(), player.getWorld()), player.getLocation()).getRegions();
-			Flag<?> WEATHER_LOCK = wg.getFlag("WEATHER_LOCK");
-
-			if (prset != null && WEATHER_LOCK != null) {
-				int bestPriority = 0;
-				for (ProtectedRegion pr : prset) {
-					Map<Flag<?>, Object> flags = pr.getFlags();
-					if (flags.containsKey(WEATHER_LOCK)) {
-						try {
-							boolean auxstorm;
-							if (!wg.oldWG)
-								auxstorm = ((com.sk89q.worldedit.world.weather.WeatherType) flags.get(WEATHER_LOCK)).getName().equals(WeatherType.DOWNFALL.name());
-							else
-								auxstorm = ((WeatherType) flags.get(WEATHER_LOCK)).equals(WeatherType.DOWNFALL);
-
-							if (pr.getPriority() >= bestPriority) {
-								storming = auxstorm;
-								bestPriority = pr.getPriority();
-							}
+		if (VampireRevamp.getVampireConfig().compatibility.useWorldGuardRegions && wg.useWG) {
+			Object qres = wg.queryFlag(player, wg.getFlag("WEATHER_LOCK"));
+			if (qres != null) {
+				if (!wg.oldWG) {
+					try {
+						Class<?> WeatherTypeWG = Class.forName("com.sk89q.worldedit.world.weather.WeatherType");
+						Method getName = WeatherTypeWG.getMethod("getName");
+						storming = getName.invoke(qres).equals(WeatherType.DOWNFALL.name());
+					} catch (ClassNotFoundException | NoSuchMethodException | IllegalAccessException | InvocationTargetException ex) {
+						if (!failedWG) {
+							VampireRevamp.log(Level.WARNING, "Error getting weather from WorldGuard, please report it to the plugin developer.");
+							ex.printStackTrace();
+							failedWG = true;
 						}
-						catch(NumberFormatException ignore){	}
 					}
+				} else {
+					storming = qres.equals(WeatherType.DOWNFALL);
 				}
 			}
 		}

@@ -27,13 +27,16 @@ public abstract class Altar {
 
     public boolean evalBlockUse(Block coreBlock, Player player) {
         boolean blockUse = false;
-        String message;
 
         VampireRevamp.debugLog(Level.INFO, "Someone clicked " + coreBlock.getType().name());
         VampireRevamp.debugLog(Level.INFO, "Core is " + coreMaterial.name());
         if (EntityUtil.isPlayer(player) && coreBlock.getType() == coreMaterial) {
             VampireRevamp.debugLog(Level.INFO, "Player clicked core!");
             UPlayer uplayer = UPlayer.get(player);
+            if (uplayer == null) {
+                VampireRevamp.log(Level.WARNING, "Player " + player.toString() + " is not on Vampire database. Please contact a developer.");
+                return false;
+            }
             PluginConfig conf = VampireRevamp.getVampireConfig();
 
             // Make sure we include the coreBlock material in the wanted ones
@@ -70,7 +73,8 @@ public abstract class Altar {
                                 "{amount}", count.toString(),
                                 "{item}", material.name());
                     }
-                } else {
+                }
+                else {
                     blockUse = this.use(uplayer, player);
                 }
             }

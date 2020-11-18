@@ -19,6 +19,7 @@ import org.bukkit.potion.PotionType;
 
 import javax.annotation.Nonnull;
 import java.util.Collection;
+import java.util.logging.Level;
 
 public class ResourceUtil {
 	public static VampireRevamp plugin;
@@ -85,10 +86,11 @@ public class ResourceUtil {
 	}
 	
 	public static void playerRemove(Player player, Collection<? extends ItemStack> stacks) {
-		playerRemove(player, stacks.toArray(new ItemStack[0]));
+		playerRemove(player, stacks.toArray(new ItemStack[stacks.size()]));
 	}
 	
 	public static void playerRemove(Player player, ItemStack... stacks) {
+		VampireRevamp.debugLog(Level.INFO, "Removing stacks!");
 		player.getInventory().removeItem(stacks);
 		player.updateInventory();
 	}

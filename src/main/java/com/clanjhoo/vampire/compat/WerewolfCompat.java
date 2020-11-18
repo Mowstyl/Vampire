@@ -23,6 +23,7 @@ public class WerewolfCompat {
     private Method isAlphaPlayer = null;
     private Method isWerewolfUUID = null;
     private Method isAlphaUUID = null;
+    private Method getWerewolfItemID = null;
     private Object silverSword = null;
 
     public WerewolfCompat() {
@@ -36,8 +37,10 @@ public class WerewolfCompat {
                 isAlphaPlayer = wwAPI.getMethod("isAlpha", Player.class);
                 isWerewolfUUID = wwAPI.getMethod("isWerewolf", UUID.class);
                 isAlphaUUID = wwAPI.getMethod("isAlpha", UUID.class);
+                getWerewolfItemID = wwAPI.getMethod("getWerewolfItemID", ItemStack.class);
             } catch (Exception ex) {
                 hybridProtEnabled = false;
+                silverEnabled = false;
             }
         }
 
@@ -48,16 +51,7 @@ public class WerewolfCompat {
                 isWerewolfUUID != null &&
                 isAlphaUUID != null;
 
-        if (silverEnabled) {
-            try {
-                Class<?> SilverSword = Class.forName("us.rfsmassacre.Werewolf.Items.Weapons.SilverSword");
-                silverSword = SilverSword.newInstance();
-            } catch (Exception ex) {
-                silverEnabled = false;
-            }
-        }
-
-        isSilverEnabled = silverEnabled && silverSword != null;
+        isSilverEnabled = silverEnabled && getWerewolfItemID != null;
 
         if (isHybridProtEnabled || isSilverEnabled) {
             VampireRevamp.log(Level.INFO, "Werewolves found! Enabling werewolves compatibility...");
@@ -101,7 +95,13 @@ public class WerewolfCompat {
     public boolean isSilverSword(ItemStack item) {
         boolean result = false;
         if (isSilverEnabled) {
-            result = silverSword.equals(item);
+            try {
+                String itemID = (String) getWerewolfItemID.invoke(null, item);
+                result = itemID != null && itemID.equals("SILVER_SWORD");
+            } catch (IllegalAccessException | InvocationTargetException ex) {
+                VampireRevamp.log(Level.WARNING, "Error while calling WerewolfAPI!");
+                disableWWHybridProt();
+            }
         }
         return result;
     }
