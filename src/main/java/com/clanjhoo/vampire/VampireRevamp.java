@@ -57,6 +57,7 @@ public class VampireRevamp extends JavaPlugin {
 	// -------------------------------------------- //
 
 	private static VampireRevamp plugin;
+	private int cleanTaskId = -1;
 	private int theTaskId = -1;
 	private int batTaskId = -1;
 	private GsonBuilder gsonb;
@@ -169,8 +170,9 @@ public class VampireRevamp extends JavaPlugin {
 		// WorldGuard compat
 		wg = new WorldGuardCompat();
 
+
 		try {
-			this.uPlayerColl = new UPlayerColl(this);
+			UPlayerColl.getOnlinePlayers();
 		}
 		catch (Exception ex) {
 			log(Level.SEVERE, "Error found while initializing internal database!");
@@ -356,6 +358,7 @@ public class VampireRevamp extends JavaPlugin {
 
 		BukkitScheduler scheduler = getServer().getScheduler();
 
+		cleanTaskId = scheduler.scheduleSyncRepeatingTask(this, UPlayerColl::clearOfflinePlayers, 0L, 5 * 60 * 20L);
 		theTaskId = scheduler.scheduleSyncRepeatingTask(this, new TheTask(), 0L, (this.conf.general.taskDelayMillis * 20) / 1000);
 		batTaskId = scheduler.scheduleSyncRepeatingTask(this, new BatTask(), 0L, (this.conf.general.batTaskDelayMillis * 20) / 1000);
 	}
@@ -436,13 +439,14 @@ public class VampireRevamp extends JavaPlugin {
 		if (disabled) {
 			return;
 		}
-
-		this.getLogger().log(Level.INFO, "Saving player data...");
-		uPlayerColl.saveAll();
-		this.getLogger().log(Level.INFO, "Saved!");
 		BukkitScheduler scheduler = getServer().getScheduler();
+		scheduler.cancelTask(cleanTaskId);
 		scheduler.cancelTask(theTaskId);
 		scheduler.cancelTask(batTaskId);
+
+		this.getLogger().log(Level.INFO, "Saving player data...");
+		UPlayerColl.saveAllPlayers();
+		this.getLogger().log(Level.INFO, "Saved!");
 	}
 
 	public void setFormatting(CommandManager manager) {

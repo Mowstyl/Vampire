@@ -2,6 +2,7 @@ package com.clanjhoo.vampire.listeners;
 
 import com.clanjhoo.vampire.VampireRevamp;
 import com.clanjhoo.vampire.entity.UPlayer;
+import com.clanjhoo.vampire.entity.UPlayerColl;
 import com.clanjhoo.vampire.event.InfectionChangeEvent;
 import com.clanjhoo.vampire.event.VampireTypeChangeEvent;
 import org.bukkit.Bukkit;
@@ -102,11 +103,7 @@ public class WerewolvesHybridHook implements Listener {
             return;
         }
 
-        UPlayer uplayer = UPlayer.get(player);
-        if (uplayer == null) {
-            return;
-        }
-
+        UPlayer uplayer = UPlayerColl.get(player.getUniqueId());
         if (uplayer.isUnhealthy()) {
             event.setCancelled(true);
         }

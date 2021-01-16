@@ -2,6 +2,7 @@ package com.clanjhoo.vampire.listeners;
 
 import com.clanjhoo.vampire.VampireRevamp;
 import com.clanjhoo.vampire.entity.UPlayer;
+import com.clanjhoo.vampire.entity.UPlayerColl;
 import com.clanjhoo.vampire.event.InfectionChangeEvent;
 import com.clanjhoo.vampire.event.VampireTypeChangeEvent;
 import com.clanjhoo.vampire.util.EntityUtil;
@@ -48,9 +49,8 @@ public class WerewolvesSilverHook implements Listener {
         if (!EntityUtil.isPlayer(event.getEntity()))
             return;
 
-        Player player = (Player) event.getEntity();
-        UPlayer uplayer = UPlayer.get(player);
-        if (uplayer == null)
+        UPlayer uplayer = UPlayerColl.get(event.getEntity().getUniqueId());
+        if (!uplayer.isVampire())
             return;
 
         Entity rawDamager = EventUtil.getLiableDamager(event);
@@ -100,11 +100,7 @@ public class WerewolvesSilverHook implements Listener {
             return;
         }
 
-        UPlayer uplayer = UPlayer.get(player);
-        if (uplayer == null) {
-            return;
-        }
-
+        UPlayer uplayer = UPlayerColl.get(player.getUniqueId());
         if (uplayer.isUnhealthy()) {
             event.setCancelled(true);
         }

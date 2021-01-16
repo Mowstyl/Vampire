@@ -4,6 +4,7 @@ import com.clanjhoo.vampire.VampireRevamp;
 import com.clanjhoo.vampire.listeners.WerewolvesHybridHook;
 import com.clanjhoo.vampire.listeners.WerewolvesSilverHook;
 import org.bukkit.Bukkit;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.HandlerList;
 import org.bukkit.inventory.ItemStack;
@@ -96,11 +97,14 @@ public class WerewolfCompat {
         boolean result = false;
         if (isSilverEnabled) {
             try {
-                String itemID = (String) getWerewolfItemID.invoke(null, item);
-                result = itemID != null && itemID.equals("SILVER_SWORD");
+                if (item != null && item.getType() != Material.AIR) {
+                    String itemID = (String) getWerewolfItemID.invoke(null, item);
+                    result = itemID != null && itemID.equals("SILVER_SWORD");
+                }
             } catch (IllegalAccessException | InvocationTargetException ex) {
                 VampireRevamp.log(Level.WARNING, "Error while calling WerewolfAPI!");
-                disableWWHybridProt();
+                ex.printStackTrace();
+                disableSilverHook();
             }
         }
         return result;
@@ -113,6 +117,7 @@ public class WerewolfCompat {
                 result = (boolean) isHumanPlayer.invoke(null, var0);
             } catch (IllegalAccessException | InvocationTargetException ex) {
                 VampireRevamp.log(Level.WARNING, "Error while calling WerewolfAPI!");
+                ex.printStackTrace();
                 disableWWHybridProt();
             }
         }
@@ -126,6 +131,7 @@ public class WerewolfCompat {
                 result = (boolean) isWerewolfPlayer.invoke(null, var0);
             } catch (IllegalAccessException | InvocationTargetException ex) {
                 VampireRevamp.log(Level.WARNING, "Error while calling WerewolfAPI!");
+                ex.printStackTrace();
                 disableWWHybridProt();
             }
         }
@@ -138,6 +144,8 @@ public class WerewolfCompat {
             try {
                 result = (boolean) isAlphaPlayer.invoke(null, var0);
             } catch (IllegalAccessException | InvocationTargetException ex) {
+                VampireRevamp.log(Level.WARNING, "Error while calling WerewolfAPI!");
+                ex.printStackTrace();
                 disableWWHybridProt();
             }
         }
@@ -151,6 +159,7 @@ public class WerewolfCompat {
                 result = (boolean) isWerewolfUUID.invoke(null, var0);
             } catch (IllegalAccessException | InvocationTargetException ex) {
                 VampireRevamp.log(Level.WARNING, "Error while calling WerewolfAPI!");
+                ex.printStackTrace();
                 disableWWHybridProt();
             }
         }
@@ -164,6 +173,7 @@ public class WerewolfCompat {
                 result = (boolean) isAlphaUUID.invoke(null, var0);
             } catch (IllegalAccessException | InvocationTargetException ex) {
                 VampireRevamp.log(Level.WARNING, "Error while calling WerewolfAPI!");
+                ex.printStackTrace();
                 disableWWHybridProt();
             }
         }

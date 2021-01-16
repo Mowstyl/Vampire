@@ -62,12 +62,13 @@ public class UPlayer {
      * PERSISTENT: whether or not to apply night vision effects to a vampire
      */
     private boolean usingNightVision = false;
+
     /**
      * TRANSIENT: UUID of the player
      */
     private transient UUID playerUUID = null;
     /**
-     * TRANSIENT: UUID of the player
+     * TRANSIENT: Reference to the online player
      */
     private transient Player player = null;
     /**
@@ -133,32 +134,6 @@ public class UPlayer {
         this.makerUUID = makerUUID;
         this.intending = vampire && intending;
         this.usingNightVision = vampire && usingNightVision;
-    }
-
-    // -------------------------------------------- //
-    // META
-    // -------------------------------------------- //
-
-    public static UPlayer get(UUID uuid) {
-        UPlayer uPlayer = null;
-
-        if (uuid != null)
-            uPlayer = VampireRevamp.getInstance().uPlayerColl.get(uuid);
-        else
-            VampireRevamp.debugLog(Level.WARNING, "Couldn't get player: Null UUID");
-
-        return uPlayer;
-    }
-
-    public static UPlayer get(Player player) {
-        UPlayer uPlayer = null;
-
-        if (player != null)
-            uPlayer = get(player.getUniqueId());
-        else
-            VampireRevamp.debugLog(Level.WARNING, "Couldn't get player: Null Player");
-
-        return uPlayer;
     }
 
     // -------------------------------------------- //
@@ -320,7 +295,7 @@ public class UPlayer {
     }
 
     public UPlayer getMaker() {
-        return VampireRevamp.getInstance().uPlayerColl.get(this.makerUUID);
+        return UPlayerColl.get(this.makerUUID);
     }
 
     public String getMakerName() {
@@ -493,15 +468,7 @@ public class UPlayer {
     }
 
     public Player getPlayer() {
-        Player p = null;
-
-        if (this.player != null) {
-            p = this.player;
-        } else {
-            p = Bukkit.getPlayer(this.playerUUID);
-        }
-
-        return p;
+        return this.player;
     }
 
     public OfflinePlayer getOfflinePlayer() {
@@ -516,13 +483,8 @@ public class UPlayer {
         return p;
     }
 
-    public void setPlayer(Player player) {
+    protected void setPlayer(Player player) {
         this.player = player;
-        if (player != null) {
-            this.playerUUID = player.getUniqueId();
-        } else {
-            this.playerUUID = null;
-        }
     }
 
     public double getRad() {
@@ -1132,7 +1094,7 @@ public class UPlayer {
         }
     }
 
-    public void tradeOffer(UPlayer vyou, double amount) {
+    public void tradeOffer(Player sender, UPlayer vyou, double amount) {
         Player you = vyou.getPlayer();
         Player me = this.getPlayer();
         if (you != null && me != null) {
@@ -1168,6 +1130,11 @@ public class UPlayer {
                         MessageType.INFO,
                         TradingMessageKeys.ACCEPT_HELP);
             }
+        }
+        else {
+            VampireRevamp.sendMessage(sender,
+                    MessageType.ERROR,
+                    CommandMessageKeys.DATA_NOT_FOUND);
         }
     }
 

@@ -35,7 +35,7 @@ public class EntityUtil {
     public static boolean isNpc(Object object) {
         boolean buliano = false;
 
-        if (object != null && object instanceof Metadatable) {
+        if (object instanceof Metadatable) {
             Metadatable metadatable = (Metadatable) object;
             try {
                 buliano = metadatable.hasMetadata("NPC");
@@ -61,7 +61,7 @@ public class EntityUtil {
     public static boolean isPlayer(Object object) {
         boolean buliano = false;
 
-        if (object != null && object instanceof Player) {
+        if (object instanceof Player) {
             buliano = !isNpc(object);
         }
 

@@ -2,6 +2,7 @@ package com.clanjhoo.vampire.util;
 
 import co.aikar.commands.CommandHelp;
 import co.aikar.commands.RegisteredCommand;
+import com.clanjhoo.vampire.entity.UPlayerColl;
 import com.clanjhoo.vampire.keyproviders.CommandMessageKeys;
 import com.clanjhoo.vampire.Perm;
 import com.clanjhoo.vampire.VampireRevamp;
@@ -151,8 +152,8 @@ public class TextUtil {
 
         comps[1] = new TextComponent(" " + command);
         if (sender instanceof Player) {
-            UPlayer uplayer = UPlayer.get(((Player) sender).getUniqueId());
-            boolean hasRequiredVLevel = requireVampire == 0 || (uplayer != null && (uplayer.isNosferatu() || (uplayer.isVampire() && requireVampire == 1)));
+            UPlayer uplayer = UPlayerColl.get(((Player) sender).getUniqueId());
+            boolean hasRequiredVLevel = requireVampire == 0 || uplayer.isNosferatu() || (uplayer.isVampire() && requireVampire == 1);
             if (!command.equals("vampire") && !command.equals("nosferatu")) {
                 Perm permission = Perm.getPermFromString(command);
                 if (permission == null) {

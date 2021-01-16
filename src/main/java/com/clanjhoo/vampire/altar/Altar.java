@@ -1,6 +1,7 @@
 package com.clanjhoo.vampire.altar;
 
 import co.aikar.commands.MessageType;
+import com.clanjhoo.vampire.entity.UPlayerColl;
 import com.clanjhoo.vampire.keyproviders.AltarMessageKeys;
 import com.clanjhoo.vampire.VampireRevamp;
 import com.clanjhoo.vampire.config.PluginConfig;
@@ -32,11 +33,7 @@ public abstract class Altar {
         VampireRevamp.debugLog(Level.INFO, "Core is " + coreMaterial.name());
         if (EntityUtil.isPlayer(player) && coreBlock.getType() == coreMaterial) {
             VampireRevamp.debugLog(Level.INFO, "Player clicked core!");
-            UPlayer uplayer = UPlayer.get(player);
-            if (uplayer == null) {
-                VampireRevamp.log(Level.WARNING, "Player " + player.toString() + " is not on Vampire database. Please contact a developer.");
-                return false;
-            }
+            UPlayer uplayer = UPlayerColl.get(player.getUniqueId());
             PluginConfig conf = VampireRevamp.getVampireConfig();
 
             // Make sure we include the coreBlock material in the wanted ones

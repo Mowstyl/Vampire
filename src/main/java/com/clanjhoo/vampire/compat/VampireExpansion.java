@@ -3,8 +3,10 @@ package com.clanjhoo.vampire.compat;
 import com.clanjhoo.vampire.InfectionReason;
 import com.clanjhoo.vampire.VampireRevamp;
 import com.clanjhoo.vampire.entity.UPlayer;
+import com.clanjhoo.vampire.entity.UPlayerColl;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.NotNull;
 
 public class VampireExpansion extends PlaceholderExpansion {
     private final VampireRevamp plugin;
@@ -42,7 +44,7 @@ public class VampireExpansion extends PlaceholderExpansion {
      * @return The name of the author as a String.
      */
     @Override
-    public String getAuthor(){
+    public @NotNull String getAuthor(){
         return plugin.getDescription().getAuthors().toString();
     }
 
@@ -56,7 +58,7 @@ public class VampireExpansion extends PlaceholderExpansion {
      * @return The identifier in {@code %<identifier>_<value>%} as String.
      */
     @Override
-    public String getIdentifier() {
+    public @NotNull String getIdentifier() {
         return "vampire";
     }
 
@@ -69,7 +71,7 @@ public class VampireExpansion extends PlaceholderExpansion {
      * @return The version as a String.
      */
     @Override
-    public String getVersion(){
+    public @NotNull String getVersion(){
         return plugin.getDescription().getVersion();
     }
 
@@ -87,16 +89,12 @@ public class VampireExpansion extends PlaceholderExpansion {
      * @return possibly-null String of the requested identifier.
      */
     @Override
-    public String onPlaceholderRequest(Player player, String identifier) {
+    public String onPlaceholderRequest(Player player, @NotNull String identifier) {
         if (player == null){
             return "";
         }
 
-        UPlayer uplayer = UPlayer.get(player);
-
-        if (uplayer == null){
-            return "";
-        }
+        UPlayer uplayer = UPlayerColl.get(player.getUniqueId());
 
         // %vampire_temperature%
         if(identifier.equals("temperature")){
