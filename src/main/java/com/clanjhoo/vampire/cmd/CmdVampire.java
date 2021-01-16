@@ -474,7 +474,7 @@ public class CmdVampire extends BaseCommand {
 
 		UPlayer vme = UPlayerColl.get(sender.getUniqueId());
 		// Does the player have the required amount?
-		if ((vme.isVampire() && amount > vme.getFood().get()) || ( ! vme.isVampire() && amount > sender.getHealth())) {
+		if ((vme.isVampire() && amount > vme.getFood()) || ( ! vme.isVampire() && amount > sender.getHealth())) {
 			VampireRevamp.sendMessage(sender,
 					MessageType.ERROR,
 					SkillMessageKeys.FLASK_INSUFFICIENT);
@@ -482,7 +482,7 @@ public class CmdVampire extends BaseCommand {
 		else {
 			// ... create a blood flask!
 			if (vme.isVampire()) {
-				vme.getFood().add(-amount);
+				vme.addFood(-amount);
 			}
 			else {
 				sender.setHealth(sender.getHealth() - amount);

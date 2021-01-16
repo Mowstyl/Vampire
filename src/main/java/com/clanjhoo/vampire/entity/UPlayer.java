@@ -5,7 +5,6 @@ import com.clanjhoo.vampire.InfectionReason;
 import com.clanjhoo.vampire.compat.WorldGuardCompat;
 import com.clanjhoo.vampire.keyproviders.*;
 import com.clanjhoo.vampire.VampireRevamp;
-import com.clanjhoo.vampire.accumulator.UPlayerFoodAccumulator;
 import com.clanjhoo.vampire.config.PluginConfig;
 import com.clanjhoo.vampire.config.RadiationEffectConfig;
 import com.clanjhoo.vampire.config.StateEffectConfig;
@@ -82,7 +81,7 @@ public class UPlayer {
     /**
      * TRANSIENT: the food accumulator
      */
-    private transient UPlayerFoodAccumulator food = new UPlayerFoodAccumulator(this);
+    private transient double foodRem = 0;
     /**
      * TRANSIENT: timestamp of the last time the player received damage
      */
@@ -371,7 +370,7 @@ public class UPlayer {
                         GrammarMessageKeys.ONLY_TYPE_CAN_ACTION,
                         "{vampire_type}", vampireType,
                         "{action}", bloodlustAction);
-            } else if (this.getFood() != null && this.getFood().get() < conf.vampire.bloodlust.minFood) {
+            } else if (this.getFood() != null && this.getFood() < conf.vampire.bloodlust.minFood) {
                 VampireRevamp.sendMessage(me,
                         MessageType.ERROR,
                         SkillMessageKeys.BLOODLUST_LOW_FOOD);
@@ -507,10 +506,26 @@ public class UPlayer {
         this.setTemp(this.getTemp() + val);
     }
 
-    public UPlayerFoodAccumulator getFood() {
-        if (this.food == null)
-            this.food = new UPlayerFoodAccumulator(this);
-        return this.food;
+    public Double getFood() {
+        Double food = null;
+        if (this.player != null) {
+            food = this.foodRem + this.player.getFoodLevel();
+        }
+        return food;
+    }
+
+    public int addFood(double amount) {
+        Integer added = null;
+        if (this.player != null) {
+            this.foodRem += amount;
+            int diff = (int) this.foodRem;
+            this.foodRem -= diff;
+            int current = this.player.getFoodLevel();
+            int next = current + diff;
+            this.player.setFoodLevel(next);
+            added = next - current;
+        }
+        return added;
     }
 
     public long getLastDamageMillis() {
@@ -907,19 +922,18 @@ public class UPlayer {
         double foodPerMilli = this.isNosferatu() ? conf.vampire.regenNosferatu.foodPerMilli : conf.vampire.regen.foodPerMilli;
         double healthPerFood = this.isNosferatu() ? conf.vampire.regenNosferatu.healthPerFood : conf.vampire.regen.healthPerFood;
 
-        if (me != null
-                && enabled
+        if (enabled
                 && buffsActive
                 && me.getGameMode() != GameMode.CREATIVE
                 && !me.isDead()
-                && me.getHealth() < me.getAttribute(Attribute.GENERIC_MAX_HEALTH).getBaseValue()
-                && this.getFood().get() >= minFood) {
+                && me.getHealth() < (int) me.getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue()
+                && this.getFood() >= minFood) {
             long millisSinceLastDamage = System.currentTimeMillis() - this.lastDamageMillis;
             if (millisSinceLastDamage >= delayMillis) {
-                double foodDiff = this.getFood().add(-foodPerMilli * millis);
+                double foodDiff = this.addFood(-foodPerMilli * millis);
                 double healthTarget = me.getHealth() - foodDiff * healthPerFood;
 
-                healthTarget = Math.min(healthTarget, me.getAttribute(Attribute.GENERIC_MAX_HEALTH).getBaseValue());
+                healthTarget = Math.min(healthTarget, me.getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue());
                 healthTarget = Math.max(healthTarget, 0D);
 
                 me.setHealth(healthTarget);
@@ -933,8 +947,8 @@ public class UPlayer {
         if (this.isVampire() && this.isBloodlusting()
                 && me != null && !me.isDead()
                 && me.getGameMode() != GameMode.CREATIVE) {
-            this.getFood().add(millis * conf.vampire.bloodlust.foodPerMilli);
-            if (this.getFood().get() < conf.vampire.bloodlust.minFood)
+            this.addFood(millis * conf.vampire.bloodlust.foodPerMilli);
+            if (this.getFood() < conf.vampire.bloodlust.minFood)
                 this.setBloodlusting(false);
         }
     }
@@ -1021,7 +1035,7 @@ public class UPlayer {
                 double enough = 0;
                 if (vyou.isVampire()) {
                     // blood is only food for vampires
-                    enough = vyou.getFood().get();
+                    enough = vyou.getFood();
                 } else {
                     // but blood is health for humans
                     enough = you.getHealth();
@@ -1038,12 +1052,12 @@ public class UPlayer {
                 } else {
                     // Transfer blood (food for vampires, life for humans)
                     if (vyou.isVampire()) {
-                        vyou.getFood().add(-amount);
+                        vyou.addFood(-amount);
                     } else {
                         vyou.getPlayer().damage(amount);
                     }
 
-                    this.getFood().add(amount * conf.trade.percentage);
+                    this.addFood(amount * conf.trade.percentage);
 
                     // Risk infection/boost infection
                     if (vyou.isVampire() && !this.isVampire()) {

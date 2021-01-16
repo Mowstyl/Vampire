@@ -600,7 +600,7 @@ public class ListenerMain implements Listener {
                             if (conf.general.useOldFoodFormula)
                                 food = damage / damagee.getAttribute(Attribute.GENERIC_MAX_HEALTH).getBaseValue() * fullFoodQuotient * vampire.getPlayer().getAttribute(Attribute.GENERIC_MAX_HEALTH).getBaseValue();
 
-                            vampire.getFood().add(food);
+                            vampire.addFood(food);
                         }
                     }
                 }
@@ -636,9 +636,9 @@ public class ListenerMain implements Listener {
                 double lacking;
                 if (uplayer.isVampire()) {
                     // Vampires drink blood to replenish food.
-                    lacking = (20 - uplayer.getFood().get());
+                    lacking = (20 - uplayer.getFood());
                     if (amount > lacking) amount = lacking;
-                    uplayer.getFood().add(amount);
+                    uplayer.addFood(amount);
                 } else if (isVampiric) {
                     // ... finally, if the player is human did they contract the dark disease from vampiric blood?
                     if (uplayer.isInfected()) {
