@@ -5,7 +5,7 @@
     <groupId>com.clanjhoo</groupId>
     <artifactId>vampire</artifactId>
     <packaging>jar</packaging>
-    <version>1.0.BETA-9-HOTFIX</version>
+    <version>1.0.BETA-10</version>
 
     <!-- Info -->
     <name>VampireRevamp</name>
@@ -136,6 +136,13 @@
             <url>https://repo.codemc.org/repository/maven-public/</url>
             <layout>default</layout>
         </repository>
+        <!-- SkinsRestorer API -->
+        <!--
+        <repository>
+            <id>codemc-snapshots</id>
+            <url>https://repo.codemc.org/repository/maven-snapshots/</url>
+        </repository>
+        -->
     </repositories>
 
     <!-- Dependencies -->
@@ -236,5 +243,13 @@
             <artifactId>item-nbt-api-plugin</artifactId>
             <version>2.7.1</version>
         </dependency>
+        <!-- SkinsRestorer API -->
+        <!--
+        <dependency>
+            <groupId>com</groupId>
+            <artifactId>skinsrestorer</artifactId>
+            <version>13.8.7-SNAPSHOT</version>
+        </dependency>
+        -->
     </dependencies>
 </project>

@@ -1064,7 +1064,8 @@ public class UPlayer {
                         if (this.isInfected()) {
                             this.addInfection(0.01D);
                         }
-                        else if (MathUtil.random.nextDouble() * 20 < amount) {
+                        else if (me.hasPermission("vampire.trade.contract")
+                                && MathUtil.random.nextDouble() * 20 < amount) {
                             this.addInfection(0.05D, InfectionReason.TRADE, vyou);
                         }
                     }

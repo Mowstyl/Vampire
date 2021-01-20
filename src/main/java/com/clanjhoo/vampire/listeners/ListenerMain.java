@@ -643,7 +643,8 @@ public class ListenerMain implements Listener {
                     // ... finally, if the player is human did they contract the dark disease from vampiric blood?
                     if (uplayer.isInfected()) {
                         uplayer.addInfection(0.01D);
-                    } else if (MathUtil.random.nextDouble() * 20 < amount) {
+                    } else if (event.getPlayer().hasPermission("vampire.flask.contract")
+                            && MathUtil.random.nextDouble() * 20 < amount) {
                         uplayer.addInfection(0.05D, InfectionReason.FLASK, uplayer);
                     }
                 }
