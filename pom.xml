@@ -5,7 +5,7 @@
     <groupId>com.clanjhoo</groupId>
     <artifactId>vampire</artifactId>
     <packaging>jar</packaging>
-    <version>1.0.BETA-10</version>
+    <version>1.0.BETA-11</version>
 
     <!-- Info -->
     <name>VampireRevamp</name>
@@ -153,7 +153,7 @@
         <dependency>
             <groupId>com.destroystokyo.paper</groupId>
             <artifactId>paper-api</artifactId>
-            <version>1.16.4-R0.1-SNAPSHOT</version>
+            <version>1.16.5-R0.1-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
         <!-- Spigot -->
