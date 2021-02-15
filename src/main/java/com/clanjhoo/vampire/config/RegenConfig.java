@@ -1,8 +1,8 @@
 package com.clanjhoo.vampire.config;
 
 import org.bukkit.configuration.ConfigurationSection;
+import org.jetbrains.annotations.NotNull;
 
-import javax.annotation.Nonnull;
 import java.io.BufferedWriter;
 
 public class RegenConfig {
@@ -29,7 +29,7 @@ public class RegenConfig {
         }
     }
 
-    public RegenConfig(@Nonnull ConfigurationSection cs, boolean isNosferatu) {
+    public RegenConfig(@NotNull ConfigurationSection cs, boolean isNosferatu) {
         RegenConfig def = new RegenConfig(isNosferatu);
 
         enabled = cs.getBoolean("enabled", def.enabled);

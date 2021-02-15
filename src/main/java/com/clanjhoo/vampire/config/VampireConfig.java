@@ -5,8 +5,8 @@ import com.clanjhoo.vampire.util.CollectionUtil;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
 import org.bukkit.event.entity.EntityRegainHealthEvent.RegainReason;
+import org.jetbrains.annotations.NotNull;
 
-import javax.annotation.Nonnull;
 import java.io.BufferedWriter;
 import java.util.HashSet;
 import java.util.List;
@@ -55,7 +55,7 @@ public class VampireConfig {
         canEatCake = false;
     }
 
-    public VampireConfig(@Nonnull ConfigurationSection cs) {
+    public VampireConfig(@NotNull ConfigurationSection cs) {
         VampireConfig def = new VampireConfig();
 
         List<String> auxLDC = null;

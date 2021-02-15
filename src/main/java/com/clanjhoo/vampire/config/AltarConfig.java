@@ -6,8 +6,8 @@ import com.clanjhoo.vampire.util.SemVer;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.inventory.ItemStack;
+import org.jetbrains.annotations.NotNull;
 
-import javax.annotation.Nonnull;
 import java.io.BufferedWriter;
 import java.util.Map;
 import java.util.Set;
@@ -79,7 +79,7 @@ public class AltarConfig {
         );
     }
 
-    public AltarConfig(@Nonnull ConfigurationSection cs) {
+    public AltarConfig(@NotNull ConfigurationSection cs) {
         AltarConfig def = new AltarConfig();
 
         searchRadius = cs.getInt("searchRadius", def.searchRadius);

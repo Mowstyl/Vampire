@@ -1,6 +1,5 @@
 package com.clanjhoo.vampire.altar;
 
-import com.clanjhoo.vampire.util.TextUtil;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;

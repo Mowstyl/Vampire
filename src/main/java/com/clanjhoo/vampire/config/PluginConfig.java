@@ -12,8 +12,8 @@ import org.bukkit.inventory.meta.PotionMeta;
 import org.bukkit.potion.PotionData;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.potion.PotionType;
+import org.jetbrains.annotations.NotNull;
 
-import javax.annotation.Nonnull;
 import java.io.*;
 import java.util.*;
 import java.util.logging.Level;
@@ -518,7 +518,7 @@ public class PluginConfig {
         return ingredient;
     }
 
-    public static Set<ItemStack> getResources(@Nonnull List<Map<String, Object>> rawsources) {
+    public static Set<ItemStack> getResources(@NotNull List<Map<String, Object>> rawsources) {
         return getResources(rawsources, false);
     }
 

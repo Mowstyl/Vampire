@@ -3,8 +3,8 @@ package com.clanjhoo.vampire.config;
 import com.clanjhoo.vampire.VampireRevamp;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
+import org.jetbrains.annotations.NotNull;
 
-import javax.annotation.Nonnull;
 import java.io.BufferedWriter;
 import java.util.HashSet;
 import java.util.List;
@@ -21,7 +21,7 @@ public class HolyItemConfig {
         materials.add(Material.STICK);
     }
 
-    public HolyItemConfig(@Nonnull ConfigurationSection cs) {
+    public HolyItemConfig(@NotNull ConfigurationSection cs) {
         HolyItemConfig def = new HolyItemConfig();
 
         damageFactor = cs.getDouble("damageFactor", def.damageFactor);

@@ -3,8 +3,8 @@ package com.clanjhoo.vampire.config;
 import com.clanjhoo.vampire.VampireRevamp;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.EntityType;
+import org.jetbrains.annotations.NotNull;
 
-import javax.annotation.Nonnull;
 import java.io.BufferedWriter;
 import java.util.HashSet;
 import java.util.List;
@@ -23,7 +23,7 @@ public class TruceConfig {
         entityTypes.remove(EntityType.WITHER);
     }
 
-    public TruceConfig(@Nonnull ConfigurationSection cs) {
+    public TruceConfig(@NotNull ConfigurationSection cs) {
         TruceConfig def = new TruceConfig();
 
         breakMillis = cs.getInt("breakMillis", def.breakMillis);

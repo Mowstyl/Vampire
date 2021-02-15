@@ -1,8 +1,8 @@
 package com.clanjhoo.vampire.config;
 
 import org.bukkit.configuration.ConfigurationSection;
+import org.jetbrains.annotations.NotNull;
 
-import javax.annotation.Nonnull;
 import java.io.BufferedWriter;
 
 public class ShriekConfig {
@@ -14,7 +14,7 @@ public class ShriekConfig {
         cooldownMillis = 30000;
     }
 
-    public ShriekConfig(@Nonnull ConfigurationSection cs) {
+    public ShriekConfig(@NotNull ConfigurationSection cs) {
         ShriekConfig def = new ShriekConfig();
 
         waitMessageCooldownMillis = cs.getInt("waitMessageCooldownMillis", def.waitMessageCooldownMillis);

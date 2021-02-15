@@ -3,9 +3,6 @@ package com.clanjhoo.vampire.tasks;
 import com.clanjhoo.vampire.VampireRevamp;
 import com.clanjhoo.vampire.entity.UPlayer;
 import com.clanjhoo.vampire.entity.UPlayerColl;
-import com.clanjhoo.vampire.util.EntityUtil;
-import org.bukkit.Bukkit;
-import org.bukkit.entity.Player;
 
 import java.time.ZonedDateTime;
 import java.util.logging.Level;

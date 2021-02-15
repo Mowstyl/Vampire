@@ -7,8 +7,8 @@ import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionType;
+import org.jetbrains.annotations.NotNull;
 
-import javax.annotation.Nonnull;
 import java.io.BufferedWriter;
 import java.util.List;
 import java.util.Map;
@@ -34,7 +34,7 @@ public class HolyWaterConfig {
         }
     }
 
-    public HolyWaterConfig(@Nonnull ConfigurationSection cs) {
+    public HolyWaterConfig(@NotNull ConfigurationSection cs) {
         HolyWaterConfig def = new HolyWaterConfig();
 
         splashRadius = cs.getInt("splashRadius", def.splashRadius);

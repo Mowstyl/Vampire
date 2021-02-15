@@ -1,8 +1,8 @@
 package com.clanjhoo.vampire.config;
 
 import org.bukkit.configuration.ConfigurationSection;
+import org.jetbrains.annotations.NotNull;
 
-import javax.annotation.Nonnull;
 import java.io.BufferedWriter;
 
 public class FXConfig {
@@ -22,7 +22,7 @@ public class FXConfig {
         enderBurstCount = 3;
     }
 
-    public FXConfig(@Nonnull ConfigurationSection cs) {
+    public FXConfig(@NotNull ConfigurationSection cs) {
         FXConfig def = new FXConfig();
 
         smokePerMilli = cs.getDouble("smokePerMilli", def.smokePerMilli);

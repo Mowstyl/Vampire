@@ -11,6 +11,7 @@ public enum CommandMessageKeys implements MessageKeyProvider {
     NOT_ENOUGH_PERMS("commands.notEnoughPerms"),
     NOT_VALID_VALUE("commands.notValidValue"),
     DATA_NOT_FOUND("commands.dataNotFound"),
+    FULL_INVENTORY("commands.fullInventory"),
     DISABLED_ACTION("commands.disabledAction"),
     HELP_DESCRIPTION("commands.help_description"),
     RELOAD_DESCRIPTION("commands.reload_description"),
@@ -41,6 +42,7 @@ public enum CommandMessageKeys implements MessageKeyProvider {
     BATUSI_TOGGLED_OFF("commands.batusi_toggledOff"),
     BATUSI_ALREADY_USED("commands.batusi_alreadyUsed"),
     BATUSI_ERROR("commands.batusi_error"),
+    RING_DESCRIPTION("commands.ring_description"),
     SET_DESCRIPTION("commands.set_description"),
     SET_ERROR_HYBRID("commands.set_errorHybrid"),
     SET_CHANGED_VALUE("commands.set_changedValue"),
@@ -110,6 +112,9 @@ public enum CommandMessageKeys implements MessageKeyProvider {
                 break;
             case "batusi":
                 result = BATUSI_DESCRIPTION;
+                break;
+            case "ring":
+                result = RING_DESCRIPTION;
                 break;
             case "set help":
                 result = SET_DESCRIPTION;

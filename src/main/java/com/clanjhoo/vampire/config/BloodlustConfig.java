@@ -1,8 +1,8 @@
 package com.clanjhoo.vampire.config;
 
 import org.bukkit.configuration.ConfigurationSection;
+import org.jetbrains.annotations.NotNull;
 
-import javax.annotation.Nonnull;
 import java.io.BufferedWriter;
 
 public class BloodlustConfig {
@@ -22,7 +22,7 @@ public class BloodlustConfig {
         damageFactor = 1.2;
     }
 
-    public BloodlustConfig(@Nonnull ConfigurationSection cs) {
+    public BloodlustConfig(@NotNull ConfigurationSection cs) {
         BloodlustConfig def = new BloodlustConfig();
 
         enabled = cs.getBoolean("enabled", def.enabled);

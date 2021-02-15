@@ -1,8 +1,8 @@
 package com.clanjhoo.vampire.config;
 
 import org.bukkit.configuration.ConfigurationSection;
+import org.jetbrains.annotations.NotNull;
 
-import javax.annotation.Nonnull;
 import java.io.BufferedWriter;
 
 public class CompatConfig {
@@ -20,7 +20,7 @@ public class CompatConfig {
         silverDamageFactor = 1.2;
     }
 
-    public CompatConfig(@Nonnull ConfigurationSection cs) {
+    public CompatConfig(@NotNull ConfigurationSection cs) {
         CompatConfig def = new CompatConfig();
 
         useWorldGuardRegions = cs.getBoolean("useWorldGuardRegions", def.useWorldGuardRegions);

@@ -1,10 +1,8 @@
 package com.clanjhoo.vampire;
 
 import com.clanjhoo.vampire.keyproviders.HolyWaterMessageKeys;
-import com.clanjhoo.vampire.util.CollectionUtil;
 import de.tr7zw.nbtapi.NBTCompound;
 import de.tr7zw.nbtapi.NBTItem;
-import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.ThrownPotion;
@@ -15,7 +13,6 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.potion.PotionType;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 

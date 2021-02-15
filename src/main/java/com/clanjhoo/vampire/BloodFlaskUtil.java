@@ -11,8 +11,8 @@ import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.inventory.meta.PotionMeta;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
+import org.jetbrains.annotations.NotNull;
 
-import javax.annotation.Nonnull;
 import java.util.List;
 
 public class BloodFlaskUtil {
@@ -83,7 +83,7 @@ public class BloodFlaskUtil {
                 && item.getItemMeta().getDisplayName().equals(BLOOD_FLASK_NAME);
     }
 
-    public static void playerConsumeGlassBottle(@Nonnull Player player) {
+    public static void playerConsumeGlassBottle(@NotNull Player player) {
         ItemStack item = player.getInventory().getItemInMainHand();
         if (item != null && item.getType() == Material.GLASS_BOTTLE) {
 

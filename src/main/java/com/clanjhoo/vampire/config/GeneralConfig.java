@@ -4,8 +4,8 @@ import com.clanjhoo.vampire.VampireRevamp;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.configuration.ConfigurationSection;
+import org.jetbrains.annotations.NotNull;
 
-import javax.annotation.Nonnull;
 import java.io.BufferedWriter;
 import java.util.HashSet;
 import java.util.List;
@@ -32,7 +32,7 @@ public class GeneralConfig {
         defaultLocale = Locale.ENGLISH;
     }
 
-    public GeneralConfig(@Nonnull ConfigurationSection cs) {
+    public GeneralConfig(@NotNull ConfigurationSection cs) {
         GeneralConfig def = new GeneralConfig();
 
         debug = cs.getBoolean("debug", def.debug);

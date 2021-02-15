@@ -5,6 +5,7 @@ import com.clanjhoo.vampire.util.CollectionUtil;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.event.EventPriority;
 import org.bukkit.potion.PotionEffectType;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.BufferedWriter;
 import java.util.HashMap;
@@ -34,7 +35,7 @@ public class PotionEffectsConfig {
         human.passesChecks = UPlayer::isHuman;
     }
 
-    public PotionEffectsConfig(ConfigurationSection cs) {
+    public PotionEffectsConfig(@NotNull ConfigurationSection cs) {
         PotionEffectsConfig def = new PotionEffectsConfig();
 
         seconds = cs.getInt("seconds", def.seconds);

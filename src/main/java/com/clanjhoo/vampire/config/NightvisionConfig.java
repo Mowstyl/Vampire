@@ -1,8 +1,8 @@
 package com.clanjhoo.vampire.config;
 
 import org.bukkit.configuration.ConfigurationSection;
+import org.jetbrains.annotations.NotNull;
 
-import javax.annotation.Nonnull;
 import java.io.BufferedWriter;
 
 public class NightvisionConfig {
@@ -12,7 +12,7 @@ public class NightvisionConfig {
         enabled = true;
     }
 
-    public NightvisionConfig(@Nonnull ConfigurationSection cs) {
+    public NightvisionConfig(@NotNull ConfigurationSection cs) {
         NightvisionConfig def = new NightvisionConfig();
 
         enabled = cs.getBoolean("enabled", def.enabled);

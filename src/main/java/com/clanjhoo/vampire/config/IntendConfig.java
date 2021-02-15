@@ -1,8 +1,8 @@
 package com.clanjhoo.vampire.config;
 
 import org.bukkit.configuration.ConfigurationSection;
+import org.jetbrains.annotations.NotNull;
 
-import javax.annotation.Nonnull;
 import java.io.BufferedWriter;
 
 public class IntendConfig {
@@ -14,7 +14,7 @@ public class IntendConfig {
         infectionChance = 0.05;
     }
 
-    public IntendConfig(@Nonnull ConfigurationSection cs) {
+    public IntendConfig(@NotNull ConfigurationSection cs) {
         IntendConfig def = new IntendConfig();
 
         enabled = cs.getBoolean("enabled", def.enabled);

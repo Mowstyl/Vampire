@@ -3,11 +3,10 @@ package com.clanjhoo.vampire.config;
 import com.clanjhoo.vampire.VampireRevamp;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.entity.EntityType;
 import org.bukkit.inventory.ItemStack;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.io.BufferedWriter;
 import java.util.HashMap;
 import java.util.List;
@@ -20,7 +19,7 @@ public class SingleAltarConfig {
     public final Map<Material, Integer> buildMaterials;
     public final Set<ItemStack> activate;
 
-    public SingleAltarConfig(@Nonnull Material coreMaterial, @Nonnull Map<Material, Integer> buildMaterials, @Nonnull Set<ItemStack> activate) {
+    public SingleAltarConfig(@NotNull Material coreMaterial, @NotNull Map<Material, Integer> buildMaterials, @NotNull Set<ItemStack> activate) {
         this.coreMaterial = coreMaterial;
         this.buildMaterials = buildMaterials;
         this.activate = activate;

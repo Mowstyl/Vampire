@@ -14,13 +14,15 @@ import com.clanjhoo.vampire.VampireRevamp;
 import com.clanjhoo.vampire.config.PluginConfig;
 import com.clanjhoo.vampire.entity.UPlayer;
 import com.clanjhoo.vampire.util.*;
+import de.tr7zw.nbtapi.NBTItem;
 import net.md_5.bungee.api.chat.BaseComponent;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
-import org.bukkit.OfflinePlayer;
+import org.bukkit.Material;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -664,6 +666,22 @@ public class CmdVampire extends BaseCommand {
 					CommandMessageKeys.NOT_VALID_VALUE,
 					"{value}", yesno);
 			sender.sendMessage(getCommandSyntax("batusi"));
+		}
+	}
+
+	@Subcommand("ring")
+	@CommandPermission("vampire.give.ring")
+	@Description("{@@commands.ring_description}")
+	public void onRing(Player sender) {
+		ItemStack ring = new ItemStack(Material.IRON_NUGGET, 1);
+		NBTItem nbtRing = new NBTItem(ring);
+		nbtRing.addCompound("VampireRevamp");
+		nbtRing.getCompound("VampireRevamp").setBoolean("IgnoreRadiation", true);
+		Map<Integer, ItemStack> result = sender.getInventory().addItem(nbtRing.getItem());
+		if (!result.isEmpty()) {
+			VampireRevamp.sendMessage(sender,
+					MessageType.ERROR,
+					CommandMessageKeys.FULL_INVENTORY);
 		}
 	}
 

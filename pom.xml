@@ -168,6 +168,7 @@
         -->
         <!-- WorldEdit + WorldGuard -->
         <!--
+        -->
         <dependency>
             <groupId>com.sk89q.worldedit</groupId>
             <artifactId>worldedit-core</artifactId>
@@ -188,9 +189,7 @@
             <artifactId>worldguard-bukkit</artifactId>
             <version>7.0.5-SNAPSHOT</version>
         </dependency>
-        -->
         <!--
-        -->
         <dependency>
             <groupId>com.sk89q.worldedit</groupId>
             <artifactId>worldedit-core</artifactId>
@@ -206,6 +205,7 @@
             <artifactId>worldguard-legacy</artifactId>
             <version>6.2</version>
         </dependency>
+        -->
         <!--Aikar-->
         <dependency>
             <groupId>co.aikar</groupId>

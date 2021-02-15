@@ -2,8 +2,8 @@ package com.clanjhoo.vampire.config;
 
 import com.clanjhoo.vampire.VampireRevamp;
 import org.bukkit.configuration.ConfigurationSection;
+import org.jetbrains.annotations.NotNull;
 
-import javax.annotation.Nonnull;
 import java.io.BufferedWriter;
 import java.util.logging.Level;
 
@@ -24,7 +24,7 @@ public class InfectionConfig {
         chance = 0.003;
     }
 
-    public InfectionConfig(@Nonnull ConfigurationSection cs) {
+    public InfectionConfig(@NotNull ConfigurationSection cs) {
         InfectionConfig def = new InfectionConfig();
 
         canInfectHorses = cs.getBoolean("canInfectHorses", def.canInfectHorses);

@@ -4,7 +4,7 @@ import com.clanjhoo.vampire.VampireRevamp;
 import com.google.gson.Gson;
 import org.bukkit.entity.Player;
 
-import javax.annotation.Nonnull;
+import org.jetbrains.annotations.NotNull;
 import java.io.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -22,8 +22,7 @@ public class UPlayerColl {
 	// INSTANCE & CONSTRUCT
 	// -------------------------------------------- //
 
-	@Nonnull
-	private static UPlayer load(@Nonnull UUID uuid) {
+	private static @NotNull UPlayer load(@NotNull UUID uuid) {
 		UPlayer uPlayer = null;
 		boolean loaded = false;
 
@@ -50,8 +49,7 @@ public class UPlayerColl {
 	}
 
 
-	@Nonnull
-	public static UPlayer get(@Nonnull UUID uuid) {
+	public static @NotNull UPlayer get(@NotNull UUID uuid) {
 		UPlayer uPlayer = null;
 
 		if (onlinePlayers.containsKey(uuid)) {
@@ -68,7 +66,7 @@ public class UPlayerColl {
 		return uPlayer;
 	}
 
-	public static boolean savePlayerData(@Nonnull UPlayer uPlayer) {
+	public static boolean savePlayerData(@NotNull UPlayer uPlayer) {
 		boolean result = false;
 		File playerFolder = VampireRevamp.getInstance().getPlayerFolder();
 
@@ -138,7 +136,7 @@ public class UPlayerColl {
 		return onlinePlayers.values();
 	}
 
-	public static void toOfflinePlayer(@Nonnull UUID uuid) {
+	public static void toOfflinePlayer(@NotNull UUID uuid) {
 		UPlayer uPlayer = null;
 		if (onlinePlayers.containsKey(uuid)) {
 			uPlayer = onlinePlayers.get(uuid);
@@ -148,10 +146,10 @@ public class UPlayerColl {
 			uPlayer = get(uuid);
 		}
 		uPlayer.setPlayer(null);
-		offlinePlayers.put(uuid, onlinePlayers.get(uuid));
+		offlinePlayers.put(uuid, uPlayer);
 	}
 
-	public static void toOnlinePlayer(@Nonnull UUID uuid, @Nonnull Player player) {
+	public static void toOnlinePlayer(@NotNull UUID uuid, @NotNull Player player) {
 		UPlayer uPlayer = null;
 		if (offlinePlayers.containsKey(uuid)) {
 			uPlayer = offlinePlayers.get(uuid);

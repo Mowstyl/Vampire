@@ -6,8 +6,8 @@ import com.clanjhoo.vampire.util.SemVer;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.potion.PotionEffectType;
+import org.jetbrains.annotations.NotNull;
 
-import javax.annotation.Nonnull;
 import java.io.BufferedWriter;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -25,6 +25,7 @@ public class RadiationConfig {
     public final double smokesPerTempAndMilli;
     public final double flamesPerTempAndMilli;
     public final Map<Material, Double> opacity;
+    public final boolean radiationRingEnabled;
 
     private final transient Double AIR = 0D;
     private final transient Double ALMOST_AIR = 0.1D;
@@ -456,9 +457,11 @@ public class RadiationConfig {
             opacity.put(Material.POLISHED_BLACKSTONE_PRESSURE_PLATE, ALMOST_BLOCK);
             opacity.put(Material.WARPED_PRESSURE_PLATE, ALMOST_BLOCK);
         }
+
+        radiationRingEnabled = false;
     }
 
-    public RadiationConfig(@Nonnull ConfigurationSection cs) {
+    public RadiationConfig(@NotNull ConfigurationSection cs) {
         RadiationConfig def = new RadiationConfig();
 
         opacityPerArmorPiece = cs.getDouble("opacityPerArmorPiece", def.opacityPerArmorPiece);
@@ -468,6 +471,7 @@ public class RadiationConfig {
         double remTemp = cs.getDouble("removeBuffs.temperature", def.removeBuffs.temperature);
         boolean remNosf = cs.getBoolean("removeBuffs.affectNosferatu", def.removeBuffs.affectNosferatu);
         removeBuffs = new RadiationEffectConfig(remEnabled, remTemp, remNosf);
+        radiationRingEnabled = cs.getBoolean("radiationRingEnabled", def.radiationRingEnabled);
 
         List<Map<?, ?>> auxLEff;
         List<RadiationEffectConfig> effs = null;
@@ -604,6 +608,8 @@ public class RadiationConfig {
         result = result && PluginConfig.writeLine(configWriter, "smokesPerTempAndMilli: " + this.smokesPerTempAndMilli, indent, level);
         result = result && PluginConfig.writeLine(configWriter, "flamesPerTempAndMilli: " + this.flamesPerTempAndMilli, indent, level);
         result = result && PluginConfig.writeMap(configWriter, "opacity:",  this.opacity, indent, level);
+        result = result && PluginConfig.writeLine(configWriter, "# Whether or not to enable anti-radiation rings", indent, level);
+        result = result && PluginConfig.writeLine(configWriter, "radiationRingEnabled: " + this.radiationRingEnabled, indent, level);
 
         return result;
     }
@@ -620,6 +626,7 @@ public class RadiationConfig {
                 ", smokesPerTempAndMilli=" + smokesPerTempAndMilli +
                 ", flamesPerTempAndMilli=" + flamesPerTempAndMilli +
                 ", opacity=" + opacity +
+                ", radiationRingEnabled=" + radiationRingEnabled +
                 '}';
     }
 }

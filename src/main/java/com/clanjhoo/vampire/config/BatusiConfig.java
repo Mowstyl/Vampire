@@ -1,8 +1,8 @@
 package com.clanjhoo.vampire.config;
 
 import org.bukkit.configuration.ConfigurationSection;
+import org.jetbrains.annotations.NotNull;
 
-import javax.annotation.Nonnull;
 import java.io.BufferedWriter;
 
 public class BatusiConfig {
@@ -16,7 +16,7 @@ public class BatusiConfig {
         disableOnHit = true;
     }
 
-    public BatusiConfig(@Nonnull ConfigurationSection cs) {
+    public BatusiConfig(@NotNull ConfigurationSection cs) {
         BatusiConfig def = new BatusiConfig();
 
         enabled = cs.getBoolean("enabled", def.enabled);

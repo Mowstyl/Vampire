@@ -1,8 +1,8 @@
 package com.clanjhoo.vampire.config;
 
 import org.bukkit.configuration.ConfigurationSection;
+import org.jetbrains.annotations.NotNull;
 
-import javax.annotation.Nonnull;
 import java.io.BufferedWriter;
 
 public class TradeConfig {
@@ -18,7 +18,7 @@ public class TradeConfig {
         percentage = 1;
     }
 
-    public TradeConfig(@Nonnull ConfigurationSection cs) {
+    public TradeConfig(@NotNull ConfigurationSection cs) {
         TradeConfig def = new TradeConfig();
 
         offerMaxDistance = cs.getInt("offerMaxDistance", def.offerMaxDistance);

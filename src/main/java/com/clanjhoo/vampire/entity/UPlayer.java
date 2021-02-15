@@ -11,6 +11,8 @@ import com.clanjhoo.vampire.config.StateEffectConfig;
 import com.clanjhoo.vampire.event.InfectionChangeEvent;
 import com.clanjhoo.vampire.event.VampireTypeChangeEvent;
 import com.clanjhoo.vampire.util.*;
+import de.tr7zw.nbtapi.NBTCompound;
+import de.tr7zw.nbtapi.NBTItem;
 import me.libraryaddict.disguise.DisguiseAPI;
 import org.bukkit.*;
 import org.bukkit.attribute.Attribute;
@@ -20,6 +22,7 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 import java.util.logging.Level;
@@ -837,11 +840,24 @@ public class UPlayer {
     // TICK
     // -------------------------------------------- //
 
+    public boolean isWearingRing(@NotNull Player player) {
+        if (player.getInventory().getItemInOffHand().getType() == Material.IRON_NUGGET) {
+            NBTItem item = new NBTItem(player.getInventory().getItemInOffHand());
+            if (item.hasKey("VampireRevamp")) {
+                NBTCompound vampCompound = item.getCompound("VampireRevamp");
+                return vampCompound.hasKey("IgnoreRadiation") && vampCompound.getBoolean("IgnoreRadiation");
+            }
+        }
+        return false;
+    }
+
     public void tick(long millis) {
         Player player = this.getPlayer();
         PluginConfig conf = VampireRevamp.getVampireConfig();
         if (player != null && player.getGameMode() != GameMode.SPECTATOR && !conf.general.isBlacklisted(player.getWorld())) {
-            this.tickRadTemp(millis);
+            if (!conf.radiation.radiationRingEnabled || !isWearingRing(player)) {
+                this.tickRadTemp(millis);
+            }
             this.tickInfection(millis);
             this.tickRegen(millis);
             this.tickBloodlust(millis);
