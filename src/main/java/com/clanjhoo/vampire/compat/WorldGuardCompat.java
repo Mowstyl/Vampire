@@ -17,7 +17,9 @@ public class WorldGuardCompat {
     private Method getRegionManagerMethod;
     private Method getApplicableRegionsMethod;
     private Method queryValue;
+    private Method wrapPlayer;
     private Class<?> WorldGuard;
+    private Class<?> WorldGuardPlugin;
     private Class<?> FlagField;
     private Class<?> RegionContainer;
     private Class<?> RegionManager;
@@ -30,6 +32,7 @@ public class WorldGuardCompat {
     Class<?> RegionAssociable;
     Class<?> ApplicableRegionSet;
     private Object worldGuardInstance;
+    private Object worldGuardPluginInstance;
 
     public WorldGuardCompat() {
         boolean auxOldWG;
@@ -45,18 +48,22 @@ public class WorldGuardCompat {
 
         if (auxUseWG) {
             try {
+                WorldGuardPlugin = Class.forName("com.sk89q.worldguard.bukkit.WorldGuardPlugin");
+                worldGuardPluginInstance = WorldGuardPlugin.getMethod("inst").invoke(null);
+                wrapPlayer = WorldGuardPlugin.getMethod("wrapPlayer", Player.class);
+            } catch (ClassNotFoundException | NoSuchMethodException | IllegalAccessException | InvocationTargetException ignore) {}
+
+            try {
                 WorldGuard = Class.forName("com.sk89q.worldguard.WorldGuard");
             } catch (ClassNotFoundException ex) {
                 auxOldWG = true;
             }
 
             if (auxOldWG) {
-                try {
-                    WorldGuard = Class.forName("com.sk89q.worldguard.bukkit.WorldGuardPlugin");
-                } catch (ClassNotFoundException ignore) {    }
+                    WorldGuard = WorldGuardPlugin;
             }
 
-            auxUseWG = WorldGuard != null;
+            auxUseWG = WorldGuard != null && WorldGuardPlugin != null;
         }
 
         oldWG = auxOldWG;
@@ -196,13 +203,18 @@ public class WorldGuardCompat {
                 Object data = world;
 
                 if (!oldWG) {
-                    Class<?> BukkitAdapter = Class.forName("com.sk89q.worldedit.bukkit.BukkitAdapter");
-                    Method adapt = BukkitAdapter.getMethod("adapt", org.bukkit.World.class);
-                    data = adapt.invoke(null, world);
+                    try {
+                        Class<?> BukkitAdapter = Class.forName("com.sk89q.worldedit.bukkit.BukkitAdapter");
+                        Method adapt = BukkitAdapter.getMethod("adapt", org.bukkit.World.class);
+                        data = adapt.invoke(null, world);
+                    }
+                    catch (ClassNotFoundException | NoSuchMethodException | IllegalAccessException | InvocationTargetException ex) {
+                        VampireRevamp.log(Level.WARNING, "Error while using BukkitAdapter. Please send the plugin developers a message with the current WorldGuard and WorldEdit version.");
+                    }
                 }
 
                 rm = getRegionManagerMethod.invoke(rc, data);
-            } catch (Exception ex) {
+            } catch (IllegalAccessException | InvocationTargetException ex) {
                 ex.printStackTrace();
             }
         }
@@ -251,11 +263,23 @@ public class WorldGuardCompat {
             try {
                 Object rm = getRegionManager(getRegionContainer(), player.getWorld());
                 Object ars = getApplicableRegions(rm, player.getLocation());
-                result = queryValue.invoke(ars, com.sk89q.worldguard.bukkit.WorldGuardPlugin.inst().wrapPlayer(player), flag);
+                result = queryValue.invoke(ars, wrapPlayer(player), flag);
             } catch (InvocationTargetException | IllegalAccessException ex) {
                 VampireRevamp.log(Level.WARNING, "Error querying flags");
                 ex.printStackTrace();
             }
+        }
+
+        return result;
+    }
+
+    public Object wrapPlayer(Player player) {
+        Object result = null;
+
+        if (useWG) {
+            try {
+                result = wrapPlayer.invoke(worldGuardPluginInstance, player);
+            } catch (InvocationTargetException | IllegalAccessException ignore) {}
         }
 
         return result;

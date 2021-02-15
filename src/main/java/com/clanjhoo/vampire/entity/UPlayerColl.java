@@ -139,17 +139,29 @@ public class UPlayerColl {
 	}
 
 	public static void toOfflinePlayer(@Nonnull UUID uuid) {
-		UPlayer uPlayer = onlinePlayers.get(uuid);
+		UPlayer uPlayer = null;
+		if (onlinePlayers.containsKey(uuid)) {
+			uPlayer = onlinePlayers.get(uuid);
+			onlinePlayers.remove(uuid);
+		}
+		if (uPlayer == null) {
+			uPlayer = get(uuid);
+		}
 		uPlayer.setPlayer(null);
 		offlinePlayers.put(uuid, onlinePlayers.get(uuid));
-		onlinePlayers.remove(uuid);
 	}
 
 	public static void toOnlinePlayer(@Nonnull UUID uuid, @Nonnull Player player) {
-		UPlayer uPlayer = offlinePlayers.get(uuid);
+		UPlayer uPlayer = null;
+		if (offlinePlayers.containsKey(uuid)) {
+			uPlayer = offlinePlayers.get(uuid);
+			offlinePlayers.remove(uuid);
+		}
+		if (uPlayer == null) {
+			uPlayer = get(uuid);
+		}
 		uPlayer.setPlayer(player);
 		onlinePlayers.put(uuid, uPlayer);
-		offlinePlayers.remove(uuid);
 	}
 
 	public static void clearOfflinePlayers() {

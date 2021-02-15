@@ -739,7 +739,8 @@ public class ListenerMain implements Listener {
         // ... and the event isn't fired with the off-hand ...
         if (action == Action.RIGHT_CLICK_BLOCK &&
                 event.getHand() != EquipmentSlot.OFF_HAND &&
-                (!VampireRevamp.getVampireConfig().altar.checkIfBlockInHand || !event.isBlockInHand())) {
+                (!VampireRevamp.getVampireConfig().altar.checkIfBlockInHand
+                        || (!event.isBlockInHand() && !(event.getItem() != null && event.getItem().getType() == Material.REDSTONE)))) {
             VampireRevamp.debugLog(Level.INFO, "Without block in hand");
             // ... run altar logic.
             Player player = event.getPlayer();
