@@ -5,7 +5,7 @@
     <groupId>com.clanjhoo</groupId>
     <artifactId>vampire</artifactId>
     <packaging>jar</packaging>
-    <version>1.0.BETA-11</version>
+    <version>1.0.BETA-13</version>
 
     <!-- Info -->
     <name>VampireRevamp</name>
@@ -153,10 +153,17 @@
         <!--
         -->
         <dependency>
-            <groupId>com.destroystokyo.paper</groupId>
+            <groupId>io.papermc.paper</groupId>
             <artifactId>paper-api</artifactId>
-            <version>1.16.5-R0.1-SNAPSHOT</version>
+            <version>1.18.1-R0.1-SNAPSHOT</version>
             <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.papermc.paper</groupId>
+            <artifactId>paper-api</artifactId>
+            <version>1.18.1-R0.1-SNAPSHOT</version>
+            <scope>provided</scope>
+            <classifier>javadoc</classifier>
         </dependency>
         <!-- Spigot -->
         <!--
@@ -216,8 +223,9 @@
         <dependency>
             <groupId>LibsDisguises</groupId>
             <artifactId>LibsDisguises</artifactId>
-            <version>10.0.18</version>
-            <scope>provided</scope>
+            <version>10.0.26-SNAPSHOT</version>
+            <scope>system</scope>
+            <systemPath>F:/Users/Mowser/MineLibs/LibsDisguises-10.0.26-SNAPSHOT-1032.jar</systemPath>
         </dependency>
         <!--PlaceholderAPI-->
         <dependency>
@@ -230,15 +238,15 @@
         <dependency>
             <groupId>us.rfsmassacre</groupId>
             <artifactId>Werewolves</artifactId>
-            <version>1.5.3-SNAPSHOT</version>
+            <version>1.5.9-SNAPSHOT</version>
             <scope>system</scope>
-            <systemPath>F:/Users/Mowser/MineLibs/Werewolf-1.5.3-SNAPSHOT.jar</systemPath>
+            <systemPath>F:/Users/Mowser/MineLibs/Werewolf-1.5.9-SNAPSHOT.jar</systemPath>
         </dependency>
         <!-- NBTAPI -->
         <dependency>
             <groupId>de.tr7zw</groupId>
             <artifactId>item-nbt-api-plugin</artifactId>
-            <version>2.7.1</version>
+            <version>2.9.0-SNAPSHOT</version>
         </dependency>
         <!-- SkinsRestorer API -->
         <!--

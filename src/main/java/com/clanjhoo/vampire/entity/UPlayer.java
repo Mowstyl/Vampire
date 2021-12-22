@@ -74,6 +74,10 @@ public class UPlayer {
      */
     private transient Player player = null;
     /**
+     * TRANSIENT: Had enabled flight
+     */
+    private transient boolean hadFlight = false;
+    /**
      * TRANSIENT: the irradiation for the player.
      */
     private transient double rad = 0;
@@ -297,7 +301,11 @@ public class UPlayer {
     }
 
     public UPlayer getMaker() {
-        return UPlayerColl.get(this.makerUUID);
+        UPlayer maker = null;
+        if (this.makerUUID != null) {
+            maker = UPlayerColl.get(this.makerUUID);
+        }
+        return maker;
     }
 
     public String getMakerName() {
@@ -704,40 +712,37 @@ public class UPlayer {
             return;
         }
 
+        CommandMessageKeys messageKey = CommandMessageKeys.BATUSI_ALREADY_USED;
         if (!plugin.batEnabled.getOrDefault(me.getUniqueId(), false)) {
             EntityUtil.spawnBats(me, conf.vampire.batusi.numberOfBats);
-            if (plugin.isDisguiseEnabled)
-                DisguiseUtil.disguiseBat(me);
+            messageKey = CommandMessageKeys.BATUSI_TOGGLED_ON;
+            this.hadFlight = me.getAllowFlight();
             plugin.batEnabled.put(me.getUniqueId(), true);
-            me.setAllowFlight(true);
-            me.setFlying(true);
-            VampireRevamp.sendMessage(me,
-                    MessageType.INFO,
-                    CommandMessageKeys.BATUSI_TOGGLED_ON);
-        } else {
-            if (plugin.isDisguiseEnabled)
-                DisguiseUtil.disguiseBat(me);
-            me.setAllowFlight(true);
-            me.setFlying(true);
-            VampireRevamp.sendMessage(me,
-                    MessageType.INFO,
-                    CommandMessageKeys.BATUSI_ALREADY_USED);
         }
+        if (plugin.isDisguiseEnabled)
+            DisguiseUtil.disguiseBat(me);
+        if (conf.vampire.batusi.enableFlight) {
+            me.setAllowFlight(true);
+            me.setFlying(true);
+        }
+        VampireRevamp.sendMessage(me, MessageType.INFO, messageKey);
     }
 
     private void disableBatusi() {
         VampireRevamp plugin = VampireRevamp.getInstance();
         Player sender = this.getPlayer();
 
-        if (sender == null)
+        if (sender == null || plugin.batEnabled.getOrDefault(sender.getUniqueId(), false))
             return;
 
         try {
             EntityUtil.despawnBats(sender);
             if (plugin.isDisguiseEnabled)
                 DisguiseAPI.undisguiseToAll(sender);
-            sender.setAllowFlight(false);
-            sender.setFlying(false);
+            if (VampireRevamp.getVampireConfig().vampire.batusi.enableFlight) {
+                sender.setAllowFlight(this.hadFlight && sender.getAllowFlight());
+                sender.setFlying(sender.getAllowFlight() && sender.isFlying());
+            }
             plugin.batEnabled.put(sender.getUniqueId(), false);
             VampireRevamp.sendMessage(sender,
                     MessageType.INFO,

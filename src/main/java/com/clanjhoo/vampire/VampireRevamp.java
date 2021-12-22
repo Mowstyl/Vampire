@@ -116,7 +116,8 @@ public class VampireRevamp extends JavaPlugin {
 
 		isPapermc = false;
 		try {
-			isPapermc = Class.forName("com.destroystokyo.paper.VersionHistoryManager$VersionData") != null;
+			Class.forName("com.destroystokyo.paper.VersionHistoryManager$VersionData");
+			isPapermc = true;
 		} catch (ClassNotFoundException e) {
 			this.getLogger().info("Use Paper for more features like Phantom related ones!");
 		}
@@ -127,7 +128,7 @@ public class VampireRevamp extends JavaPlugin {
 
 		String versionString = this.getServer().getVersion();
 		try {
-			String versionRegex = "([0-9]+)\\.([0-9]+)\\.([0-9]+)";
+			String versionRegex = "^(?:.*MC: )?([0-9]+)\\.([0-9]+)(?:\\.([0-9]+))?(?:.*)?$";
 			Pattern versionPattern = Pattern.compile(versionRegex);
 
 			Matcher versionMatcher = versionPattern.matcher(versionString);
@@ -135,7 +136,11 @@ public class VampireRevamp extends JavaPlugin {
 				//log(Level.INFO, "Found " + versionMatcher.groupCount() + " groups!");
 				int major = Integer.parseInt(versionMatcher.group(1));
 				int minor = Integer.parseInt(versionMatcher.group(2));
-				int patch = Integer.parseInt(versionMatcher.group(3));
+				int patch = 0;
+				try {
+					patch = Integer.parseInt(versionMatcher.group(3));
+				}
+				catch (NumberFormatException ignored) {}
 				serverVersion = new SemVer(major, minor, patch);
 				log(Level.INFO, "Detected server version: " + serverVersion);
 				log(Level.INFO, "If this is not the version you are running please contact the plugin developer.");
