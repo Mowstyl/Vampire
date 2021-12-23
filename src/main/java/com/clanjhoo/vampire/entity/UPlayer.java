@@ -732,7 +732,7 @@ public class UPlayer {
         VampireRevamp plugin = VampireRevamp.getInstance();
         Player sender = this.getPlayer();
 
-        if (sender == null || plugin.batEnabled.getOrDefault(sender.getUniqueId(), false))
+        if (sender == null || !plugin.batEnabled.getOrDefault(sender.getUniqueId(), false))
             return;
 
         try {
