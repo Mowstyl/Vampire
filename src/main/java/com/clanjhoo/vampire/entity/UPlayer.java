@@ -1,6 +1,9 @@
 package com.clanjhoo.vampire.entity;
 
 import co.aikar.commands.MessageType;
+import com.clanjhoo.dbhandler.data.DBObject;
+import com.clanjhoo.dbhandler.data.TableData;
+import com.clanjhoo.dbhandler.utils.Pair;
 import com.clanjhoo.vampire.InfectionReason;
 import com.clanjhoo.vampire.compat.WorldGuardCompat;
 import com.clanjhoo.vampire.keyproviders.*;
@@ -24,10 +27,11 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.Serializable;
 import java.util.*;
 import java.util.logging.Level;
 
-public class UPlayer {
+public class UPlayer implements DBObject {
     // -------------------------------------------- //
     // PERSISTENT FIELDS
     // -------------------------------------------- //
@@ -64,15 +68,10 @@ public class UPlayer {
      * PERSISTENT: whether or not to apply night vision effects to a vampire
      */
     private boolean usingNightVision = false;
-
-    /**
-     * TRANSIENT: UUID of the player
-     */
-    private transient UUID playerUUID = null;
     /**
      * TRANSIENT: Reference to the online player
      */
-    private transient Player player = null;
+    private transient OfflinePlayer offlinePlayer = null;
     /**
      * TRANSIENT: Had enabled flight
      */
@@ -131,6 +130,31 @@ public class UPlayer {
     // CONSTRUCTORS
     // -------------------------------------------- //
 
+    public UPlayer(Serializable rawUUID) {
+        UUID uuid;
+        offlinePlayer = null;
+        if (rawUUID != null) {
+            if (rawUUID instanceof String) {
+                uuid = UUID.fromString((String) rawUUID);
+            }
+            else if (rawUUID instanceof UUID) {
+                uuid = (UUID) rawUUID;
+            }
+            else {
+                throw new IllegalArgumentException("rawUUID must be a String or a Java UUID");
+            }
+            offlinePlayer = Bukkit.getServer().getOfflinePlayer(uuid);
+        }
+        this.vampire = false;
+        this.nosferatu = false; // You can't be nosferatu without being vampire
+        this.infection = 0;
+        this.reason = null;
+        this.makerUUID = null;
+        this.intending = false;
+        this.usingNightVision = false;
+    }
+
+    /*
     public UPlayer(boolean vampire, boolean nosferatu, double infection, InfectionReason reason,
                    UUID makerUUID, boolean intending, boolean usingNightVision) {
         this.vampire = vampire || nosferatu;
@@ -141,6 +165,7 @@ public class UPlayer {
         this.intending = vampire && intending;
         this.usingNightVision = vampire && usingNightVision;
     }
+     */
 
     // -------------------------------------------- //
     // Getters and setters
@@ -163,11 +188,18 @@ public class UPlayer {
             Bukkit.getPluginManager().callEvent(event);
             if (!event.isCancelled()) {
                 this.vampire = val;
-                Player player = this.getPlayer();
+                this.setNosferatu(false);
+                this.setMaker(null);
+                this.setReason(null);
+                this.setBloodlusting(false);
+                this.setIntending(false);
+                this.setUsingNightVision(false);
+
+                Player player = offlinePlayer.getPlayer();
                 if (player != null) {
                     PluginConfig conf = VampireRevamp.getVampireConfig();
                     if (this.vampire) {
-                        VampireRevamp.sendMessage(this.getPlayer(),
+                        VampireRevamp.sendMessage(player,
                                 MessageType.INFO,
                                 VampirismMessageKeys.TURNED_VAMPIRE);
                         this.runFxShriek();
@@ -177,16 +209,10 @@ public class UPlayer {
                         conf.potionEffects.human.removePotionEffects(player);
                         // player.setSleepingIgnored(true);
                     } else {
-                        VampireRevamp.sendMessage(this.getPlayer(),
+                        VampireRevamp.sendMessage(player,
                                 MessageType.INFO,
                                 VampirismMessageKeys.CURED_VAMPIRE);
                         this.runFxEnder();
-                        this.setNosferatu(false);
-                        this.setMaker(null);
-                        this.setReason(null);
-                        this.setBloodlusting(false);
-                        this.setIntending(false);
-                        this.setUsingNightVision(false);
 
                         // player.setSleepingIgnored(false);
                         conf.potionEffects.nosferatu.removePotionEffects(player);
@@ -226,15 +252,14 @@ public class UPlayer {
                 if (val >= 1D) {
                     this.setVampire(true);
                 } else if (val <= 0D) {
-                    if (this.infection > 0D && !this.isVampire()) {
-                        VampireRevamp.sendMessage(this.getPlayer(),
-                                MessageType.INFO,
-                                InfectionMessageKeys.CURED);
-                    }
-                    this.infection = 0D;
-
-                    Player player = this.getPlayer();
+                    Player player = offlinePlayer.getPlayer();
                     if (player != null) {
+                        if (this.infection > 0D && !this.isVampire()) {
+                            VampireRevamp.sendMessage(player,
+                                    MessageType.INFO,
+                                    InfectionMessageKeys.CURED);
+                        }
+                        this.infection = 0D;
                         VampireRevamp.getVampireConfig().potionEffects.infected.removePotionEffects(player);
                     }
                 } else {
@@ -250,10 +275,10 @@ public class UPlayer {
     }
 
     public void addInfection(double val, InfectionReason reason, UPlayer maker) {
-        Player player = getPlayer();
+        Player player = offlinePlayer.getPlayer();
         if (!vampire) {
             this.setReason(reason);
-            this.setMakerUUID(maker == null ? null : maker.getPlayerUUID());
+            this.setMakerUUID(maker == null ? null : maker.getUuid());
 
             String parent = null;
             if (reason.isMaker()) {
@@ -300,20 +325,12 @@ public class UPlayer {
         this.makerUUID = makerUUID;
     }
 
-    public UPlayer getMaker() {
-        UPlayer maker = null;
-        if (this.makerUUID != null) {
-            maker = UPlayerColl.get(this.makerUUID);
-        }
-        return maker;
-    }
-
     public String getMakerName() {
         return Bukkit.getOfflinePlayer(this.makerUUID).getName();
     }
 
     public void setMaker(UPlayer val) {
-        this.setMakerUUID(val == null ? null : val.getPlayerUUID());
+        this.setMakerUUID(val == null ? null : val.getUuid());
     }
 
     public boolean isIntending() {
@@ -322,11 +339,11 @@ public class UPlayer {
 
     public void setIntending(boolean val) {
         this.intending = val;
-        Player p = getPlayer();
+        Player p = offlinePlayer.getPlayer();
 
         if (p != null) {
             if (!VampireRevamp.getVampireConfig().vampire.intend.enabled) {
-                String intendAction = VampireRevamp.getMessage(player, GrammarMessageKeys.INTEND);
+                String intendAction = VampireRevamp.getMessage(p, GrammarMessageKeys.INTEND);
                 VampireRevamp.sendMessage(p,
                         MessageType.ERROR,
                         CommandMessageKeys.DISABLED_ACTION,
@@ -350,7 +367,7 @@ public class UPlayer {
     }
 
     public void setBloodlusting(boolean val) {
-        Player me = this.getPlayer();
+        Player me = offlinePlayer.getPlayer();
         if (me == null) {
             VampireRevamp.log(Level.WARNING, "Error getting player in UPlayer!");
             return;
@@ -427,7 +444,7 @@ public class UPlayer {
     }
 
     public void setUsingNightVision(boolean val) {
-        Player me = this.getPlayer();
+        Player me = offlinePlayer.getPlayer();
         if (me == null)
             return;
 
@@ -463,38 +480,22 @@ public class UPlayer {
         }
     }
 
-    public UUID getPlayerUUID() {
-        return this.playerUUID;
+    public void setUUID(UUID uuid) {
+        this.offlinePlayer = Bukkit.getOfflinePlayer(uuid);
     }
 
-    public void setPlayerUUID(UUID playerUUID) {
-        this.playerUUID = playerUUID;
-
-        if (playerUUID != null) {
-            this.player = Bukkit.getPlayer(playerUUID);
-        } else {
-            this.player = null;
+    public UUID getUuid() {
+        if (offlinePlayer == null) {
+            return null;
         }
+        return offlinePlayer.getUniqueId();
     }
 
     public Player getPlayer() {
-        return this.player;
-    }
-
-    public OfflinePlayer getOfflinePlayer() {
-        OfflinePlayer p = null;
-
-        if (this.player != null) {
-            p = this.player;
-        } else {
-            p = Bukkit.getOfflinePlayer(this.playerUUID);
+        if (offlinePlayer == null) {
+            return null;
         }
-
-        return p;
-    }
-
-    protected void setPlayer(Player player) {
-        this.player = player;
+        return offlinePlayer.getPlayer();
     }
 
     public double getRad() {
@@ -519,21 +520,23 @@ public class UPlayer {
 
     public Double getFood() {
         Double food = null;
-        if (this.player != null) {
-            food = this.foodRem + this.player.getFoodLevel();
+        Player player = offlinePlayer.getPlayer();
+        if (player != null) {
+            food = this.foodRem + player.getFoodLevel();
         }
         return food;
     }
 
     public int addFood(double amount) {
         Integer added = null;
-        if (this.player != null) {
+        Player player = offlinePlayer.getPlayer();
+        if (player != null) {
             this.foodRem += amount;
             int diff = (int) this.foodRem;
             this.foodRem -= diff;
-            int current = this.player.getFoodLevel();
+            int current = player.getFoodLevel();
             int next = current + diff;
-            this.player.setFoodLevel(next);
+            player.setFoodLevel(next);
             added = next - current;
         }
         return added;
@@ -589,7 +592,7 @@ public class UPlayer {
 
     // FX: Shriek
     public void runFxShriek() {
-        Player me = this.getPlayer();
+        Player me = offlinePlayer.getPlayer();
         if (me != null) {
             Location location = me.getLocation();
             World world = location.getWorld();
@@ -599,7 +602,7 @@ public class UPlayer {
 
     // FX: SmokeBurst
     public void runFxSmokeBurst() {
-        Player me = this.getPlayer();
+        Player me = offlinePlayer.getPlayer();
         if (me != null) {
             double dcount = VampireRevamp.getVampireConfig().specialEffects.smokeBurstCount;
             long lcount = MathUtil.probabilityRound(dcount);
@@ -609,7 +612,7 @@ public class UPlayer {
 
     // FX: EnderBurst
     public void runFxEnderBurst() {
-        Player me = this.getPlayer();
+        Player me = offlinePlayer.getPlayer();
         if (me != null) {
             double dcount = VampireRevamp.getVampireConfig().specialEffects.enderBurstCount;
             long lcount = MathUtil.probabilityRound(dcount);
@@ -619,7 +622,7 @@ public class UPlayer {
 
     // FX: FlameBurst
     public void runFxFlameBurst() {
-        Player me = this.getPlayer();
+        Player me = offlinePlayer.getPlayer();
         if (me != null) {
             double dcount = VampireRevamp.getVampireConfig().specialEffects.flameBurstCount;
             long lcount = MathUtil.probabilityRound(dcount);
@@ -633,13 +636,13 @@ public class UPlayer {
 
     public void shriek() {
         // You must be online to shriek
-        Player me = this.getPlayer();
+        Player me = offlinePlayer.getPlayer();
         if (me == null) {
             return;
         }
 
         if (!VampireRevamp.getVampireConfig().vampire.intend.enabled) {
-            String shriekAction = VampireRevamp.getMessage(player, GrammarMessageKeys.SHRIEK);
+            String shriekAction = VampireRevamp.getMessage(me, GrammarMessageKeys.SHRIEK);
             VampireRevamp.sendMessage(me,
                     MessageType.ERROR,
                     CommandMessageKeys.DISABLED_ACTION,
@@ -689,19 +692,19 @@ public class UPlayer {
     }
 
     public boolean isBatusi() {
-        Player player = this.getPlayer();
+        Player player = offlinePlayer.getPlayer();
         if (player == null)
             return false;
         return VampireRevamp.getInstance().batEnabled.getOrDefault(player.getUniqueId(), false);
     }
 
     private void enableBatusi() {
-        VampireRevamp plugin = VampireRevamp.getInstance();
-        PluginConfig conf = VampireRevamp.getVampireConfig();
-        Player me = this.getPlayer();
-
+        Player me = offlinePlayer.getPlayer();
         if (me == null)
             return;
+
+        VampireRevamp plugin = VampireRevamp.getInstance();
+        PluginConfig conf = VampireRevamp.getVampireConfig();
 
         if (!conf.vampire.batusi.enabled) {
             String batusiAction = VampireRevamp.getMessage(me, GrammarMessageKeys.BATUSI);
@@ -730,7 +733,7 @@ public class UPlayer {
 
     private void disableBatusi() {
         VampireRevamp plugin = VampireRevamp.getInstance();
-        Player sender = this.getPlayer();
+        Player sender = offlinePlayer.getPlayer();
 
         if (sender == null || !plugin.batEnabled.getOrDefault(sender.getUniqueId(), false))
             return;
@@ -762,7 +765,7 @@ public class UPlayer {
     // -------------------------------------------- //
 
     public void update() {
-        Player player = this.getPlayer();
+        Player player = offlinePlayer.getPlayer();
         PluginConfig conf = VampireRevamp.getVampireConfig();
 
         if (player != null) {
@@ -802,7 +805,7 @@ public class UPlayer {
 
     public void updatePotionEffects() {
         // Find the player and their conf
-        Player player = this.getPlayer();
+        Player player = offlinePlayer.getPlayer();
         if (player == null || player.isDead())
             return;
         PluginConfig conf = VampireRevamp.getVampireConfig();
@@ -857,7 +860,7 @@ public class UPlayer {
     }
 
     public void tick(long millis) {
-        Player player = this.getPlayer();
+        Player player = offlinePlayer.getPlayer();
         PluginConfig conf = VampireRevamp.getVampireConfig();
         if (player != null && player.getGameMode() != GameMode.SPECTATOR && !conf.general.isBlacklisted(player.getWorld())) {
             if (!conf.radiation.radiationRingEnabled || !isWearingRing(player)) {
@@ -874,7 +877,7 @@ public class UPlayer {
 
     public void tickRadTemp(long millis) {
         // Update rad and temp
-        Player me = this.getPlayer();
+        Player me = offlinePlayer.getPlayer();
         if (me != null) {
             PluginConfig conf = VampireRevamp.getVampireConfig();
             if (me.getGameMode() != GameMode.CREATIVE && this.isVampire() && !me.isDead()) {
@@ -903,7 +906,7 @@ public class UPlayer {
     }
 
     public void tickInfection(long millis) {
-        Player me = this.getPlayer();
+        Player me = offlinePlayer.getPlayer();
         if (this.isInfected() && me != null) {
             int indexOld = this.infectionGetMessageIndex();
             PluginConfig conf = VampireRevamp.getVampireConfig();
@@ -931,7 +934,10 @@ public class UPlayer {
     }
 
     public void tickRegen(long millis) {
-        Player me = this.getPlayer();
+        Player me = offlinePlayer.getPlayer();
+        if (me == null) {
+            return;
+        }
         PluginConfig conf = VampireRevamp.getVampireConfig();
         boolean enabled = (this.isVampire() && conf.vampire.regen.enabled) ||
                           (this.isNosferatu() && conf.vampire.regenNosferatu.enabled);
@@ -963,10 +969,13 @@ public class UPlayer {
     }
 
     public void tickBloodlust(long millis) {
-        Player me = this.getPlayer();
+        Player me = offlinePlayer.getPlayer();
+        if (me == null) {
+            return;
+        }
         PluginConfig conf = VampireRevamp.getVampireConfig();
         if (this.isVampire() && this.isBloodlusting()
-                && me != null && !me.isDead()
+                && !me.isDead()
                 && me.getGameMode() != GameMode.CREATIVE) {
             this.addFood(millis * conf.vampire.bloodlust.foodPerMilli);
             if (this.getFood() < conf.vampire.bloodlust.minFood)
@@ -980,7 +989,7 @@ public class UPlayer {
     }
 
     public void tickEffects(long millis) {
-        Player me = this.getPlayer();
+        Player me = offlinePlayer.getPlayer();
         if (me != null && !me.isDead()
                 && me.getGameMode() != GameMode.CREATIVE) {
             PluginConfig conf = VampireRevamp.getVampireConfig();
@@ -1032,10 +1041,10 @@ public class UPlayer {
 
     @SuppressWarnings("deprecation")
     public void tradeAccept() {
-        Player me = this.getPlayer();
+        Player me = offlinePlayer.getPlayer();
         if (me != null) {
             UPlayer vyou = this.tradeOfferedFrom;
-            Player you = vyou == null ? null : vyou.getPlayer();
+            Player you = vyou == null ? null : vyou.offlinePlayer.getPlayer();
             PluginConfig conf = VampireRevamp.getVampireConfig();
 
             // Any offer available?
@@ -1075,7 +1084,7 @@ public class UPlayer {
                     if (vyou.isVampire()) {
                         vyou.addFood(-amount);
                     } else {
-                        vyou.getPlayer().damage(amount);
+                        you.damage(amount);
                     }
 
                     this.addFood(amount * conf.trade.percentage);
@@ -1131,8 +1140,8 @@ public class UPlayer {
     }
 
     public void tradeOffer(Player sender, UPlayer vyou, double amount) {
-        Player you = vyou.getPlayer();
-        Player me = this.getPlayer();
+        Player you = vyou.offlinePlayer.getPlayer();
+        Player me = offlinePlayer.getPlayer();
         if (you != null && me != null) {
             PluginConfig conf = VampireRevamp.getVampireConfig();
             if (!this.withinDistanceOf(vyou, conf.trade.offerMaxDistance)) {
@@ -1176,8 +1185,8 @@ public class UPlayer {
 
     public boolean withinDistanceOf(UPlayer vyou, double maxDistance) {
         boolean res = false;
-        Player me = this.getPlayer();
-        Player you = vyou.getPlayer();
+        Player me = offlinePlayer.getPlayer();
+        Player you = vyou.offlinePlayer.getPlayer();
         if (you != null && me != null && !me.isDead() && !you.isDead()) {
             Location l1 = me.getLocation();
             Location l2 = you.getLocation();
@@ -1207,7 +1216,7 @@ public class UPlayer {
     }
 
     public void truceBreak() {
-        Player player = this.getPlayer();
+        Player player = offlinePlayer.getPlayer();
         if (player != null) {
             if (!this.truceIsBroken()) {
                 VampireRevamp.sendMessage(player,
@@ -1221,7 +1230,7 @@ public class UPlayer {
     public void truceRestore() {
         this.truceBreakMillisLeftSet(0);
 
-        Player me = this.getPlayer();
+        Player me = offlinePlayer.getPlayer();
         if (me != null) {
             VampireRevamp.sendMessage(me,
                     MessageType.INFO,
@@ -1263,7 +1272,7 @@ public class UPlayer {
 
     public double combatDamageFactor() {
         double damageFactor = 0D;
-        Player me = this.getPlayer();
+        Player me = offlinePlayer.getPlayer();
 
         if (me != null) {
             PluginConfig conf = VampireRevamp.getVampireConfig();
@@ -1279,7 +1288,7 @@ public class UPlayer {
     public double combatInfectRisk() {
         double infectRisk = 0D;
 
-        Player me = this.getPlayer();
+        Player me = offlinePlayer.getPlayer();
         if (me != null) {
             if (this.isVampire()) {
                 PluginConfig conf = VampireRevamp.getVampireConfig();
@@ -1291,5 +1300,183 @@ public class UPlayer {
         }
 
         return infectRisk;
+    }
+
+    @Override
+    public @NotNull String getTableName() {
+        return "vampire_data";
+    }
+
+    @Override
+    public @NotNull String[] getPrimaryKeyName() {
+        return new String[]{"uuid"};
+    }
+
+    @Override
+    public @NotNull Set<String> getFields() {
+        Set<String> fields = new HashSet<>();
+        fields.add("uuid");
+        fields.add("vampire");
+        fields.add("nosferatu");
+        fields.add("infection");
+        fields.add("reason");
+        fields.add("makerUUID");
+        fields.add("intending");
+        fields.add("usingNightVision");
+        return fields;
+    }
+
+    @Override
+    public Serializable getFieldValue(@NotNull String field) throws IllegalArgumentException {
+        switch (field) {
+            case "uuid":
+                return this.getUuid();
+            case "vampire":
+                return this.isVampire();
+            case "nosferatu":
+                return this.isNosferatu();
+            case "infection":
+                return this.isInfected();
+            case "reason":
+                return this.reason != null ? this.reason.name() : null;
+            case "makerUUID":
+                return this.makerUUID;
+            case "intending":
+                return this.isIntending();
+            case "usingNightVision":
+                return this.isUsingNightVision();
+            default:
+                throw new IllegalArgumentException("The specified field does not exist");
+        }
+    }
+
+    @Override
+    public boolean isFieldNullable(@NotNull String field) throws IllegalArgumentException {
+        switch (field) {
+            case "uuid":
+            case "vampire":
+            case "nosferatu":
+            case "infection":
+            case "intending":
+            case "usingNightVision":
+                return false;
+            case "reason":
+            case "makerUUID":
+                return true;
+            default:
+                throw new IllegalArgumentException("The specified field does not exist");
+        }
+    }
+
+    @Override
+    public @NotNull List<Set<String>> getUniqueFields() {
+        return new ArrayList<>();
+    }
+
+    @Override
+    public @NotNull Map<String, Pair<String, TableData>> getForeignFields() {
+        return new HashMap<>();
+    }
+
+    @Override
+    public @NotNull String getFieldType(@NotNull String field) throws IllegalArgumentException {
+        switch (field) {
+            case "uuid":
+            case "makerUUID":
+                return "VARCHAR(36)";
+            case "vampire":
+            case "nosferatu":
+            case "intending":
+            case "usingNightVision":
+                return "BOOL";
+            case "infection":
+                return "DOUBLE";
+            case "reason":
+                return "VARCHAR(16)";
+            default:
+                throw new IllegalArgumentException("The specified field does not exist");
+        }
+    }
+
+    @Override
+    public void setFieldValue(@NotNull String field, Serializable value) throws IllegalArgumentException {
+        switch (field) {
+            case "uuid":
+                if (value instanceof String) {
+                    value = UUID.fromString((String) value);
+                }
+                if (!(value instanceof UUID)) {
+                    throw new IllegalArgumentException("uuid field must be a valid UUID");
+                }
+                this.setUUID((UUID) value);
+                break;
+            case "makerUUID":
+                UUID uuid = null;
+                if (value != null) {
+                    if (value instanceof String) {
+                        value = UUID.fromString((String) value);
+                    }
+                    if (!(value instanceof UUID)) {
+                        throw new IllegalArgumentException("makerUUID field must be a valid UUID");
+                    }
+                    uuid = (UUID) value;
+                }
+                this.setMakerUUID(uuid);
+                break;
+            case "infection":
+                if (value instanceof Boolean) {
+                    value = 0.0;
+                }
+                if (!(value instanceof Number)) {
+                    throw new IllegalArgumentException("infection field must be a Number");
+                }
+                double infectionVal = ((Number) value).doubleValue();
+                if (infection > 0) {
+                    if (infection < 1) {
+                        this.infection = infectionVal;
+                    }
+                    else {
+                        this.vampire = true;
+                    }
+                }
+                break;
+            case "reason":
+                if (value == null) {
+                    this.reason = null;
+                }
+                else {
+                    if (!(value instanceof String)) {
+                        throw new IllegalArgumentException("reason field must be a valid String");
+                    }
+                    this.reason = InfectionReason.fromName((String) value);
+                }
+                break;
+            case "vampire":
+                if (!(value instanceof Boolean)) {
+                    throw new IllegalArgumentException("vampire field must be a Boolean");
+                }
+                this.vampire = (Boolean) value;
+                break;
+            case "nosferatu":
+                if (!(value instanceof Boolean)) {
+                    throw new IllegalArgumentException("nosferatu field must be a Boolean");
+                }
+                this.nosferatu = (Boolean) value;
+                break;
+            case "intending":
+                if (!(value instanceof Boolean)) {
+                    throw new IllegalArgumentException("intending field must be a Boolean");
+                }
+                this.intending = (Boolean) value;
+                break;
+            case "usingNightVision":
+                if (!(value instanceof Boolean)) {
+                    throw new IllegalArgumentException("usingNightVision field must be a Boolean");
+                }
+                this.usingNightVision = (Boolean) value;
+                break;
+            default:
+                throw new IllegalArgumentException("The specified field does not exist");
+        }
     }
 }

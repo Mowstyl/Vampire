@@ -6,6 +6,8 @@ import co.aikar.commands.MessageType;
 import co.aikar.commands.PaperCommandManager;
 import co.aikar.locales.MessageKey;
 import co.aikar.locales.MessageKeyProvider;
+import com.clanjhoo.dbhandler.collections.DBObjectManager;
+import com.clanjhoo.dbhandler.drivers.StorageType;
 import com.clanjhoo.vampire.compat.WerewolfCompat;
 import com.clanjhoo.vampire.listeners.ListenerMain;
 import com.clanjhoo.vampire.listeners.PhantomListener;
@@ -17,10 +19,7 @@ import com.clanjhoo.vampire.compat.VampireExpansion;
 import com.clanjhoo.vampire.compat.WorldGuardCompat;
 import com.clanjhoo.vampire.config.PluginConfig;
 import com.clanjhoo.vampire.entity.UPlayer;
-import com.clanjhoo.vampire.entity.UPlayerColl;
 
-import com.clanjhoo.vampire.json.UPlayerDeserializer;
-import com.clanjhoo.vampire.json.UPlayerSerializer;
 import com.clanjhoo.vampire.tasks.BatTask;
 import com.clanjhoo.vampire.tasks.TheTask;
 import com.clanjhoo.vampire.util.CollectionUtil;
@@ -68,7 +67,6 @@ public class VampireRevamp extends JavaPlugin {
 	public Map<UUID, List<LivingEntity>> batmap = new ConcurrentHashMap<>();
 	public boolean isDisguiseEnabled = false;
 	private PluginConfig conf = null;
-	public UPlayerColl uPlayerColl;
 	private static boolean isPapermc = false;
 	private AltarDark altarDark;
 	private AltarLight altarLight;
@@ -78,6 +76,8 @@ public class VampireRevamp extends JavaPlugin {
 	private WerewolfCompat ww;
 	private VampireExpansion expansionPAPI;
 	private PhantomListener pl;
+
+	private DBObjectManager<UPlayer> uPlayerColl;
 	
 	// -------------------------------------------- //
 	// FIELDS
@@ -156,12 +156,6 @@ public class VampireRevamp extends JavaPlugin {
 			return;
 		}
 
-		// Create Gson
-		gsonb = new GsonBuilder();
-		gsonb.registerTypeAdapter(UPlayer.class, new UPlayerSerializer());
-		gsonb.registerTypeAdapter(UPlayer.class, new UPlayerDeserializer());
-		gson = gsonb.setPrettyPrinting().create();
-
 		try {
 			this.saveDefaultConfig();
 		}
@@ -174,18 +168,6 @@ public class VampireRevamp extends JavaPlugin {
 
 		// WorldGuard compat
 		wg = new WorldGuardCompat();
-
-
-		try {
-			UPlayerColl.getOnlinePlayers();
-		}
-		catch (Exception ex) {
-			log(Level.SEVERE, "Error found while initializing internal database!");
-			ex.printStackTrace();
-			this.getPluginLoader().disablePlugin(this);
-			disabled = true;
-			return;
-		}
 
 		try {
 			File localesFolder = new File(this.getDataFolder() + "/locales");
@@ -251,6 +233,20 @@ public class VampireRevamp extends JavaPlugin {
 		return reloadVampireConfig() && reloadLocales();
 	}
 
+	public static DBObjectManager<UPlayer> getPlayerCollection() {
+		return getInstance().uPlayerColl;
+	}
+
+	public static void loadPlayerFromDB(Player p) {
+		boolean result = VampireRevamp.getPlayerCollection().getDataAsynchronous(
+				new Serializable[]{p.getUniqueId()},
+				(hstPlayer) -> {},
+				() -> VampireRevamp.log(Level.SEVERE, "Couldn't load player " + p.getName() + " from DB."));
+		if (!result) {
+			VampireRevamp.log(Level.SEVERE, "Error preparing load for player " + p.getName() + ".");
+		}
+	}
+
 	private boolean loadConfig(boolean loadDefaults) {
 		boolean result = false;
 		try {
@@ -268,6 +264,30 @@ public class VampireRevamp extends JavaPlugin {
 				this.conf = new PluginConfig();
 			}
 		}
+		boolean reloadPlayers = false;
+
+		if (uPlayerColl != null) {
+			reloadPlayers = true;
+			this.getLogger().log(Level.INFO, "Saving player data...");
+			uPlayerColl.saveAll();
+			this.getLogger().log(Level.INFO, "Saved!");
+		}
+		try {
+			uPlayerColl = new DBObjectManager<>(this, null, StorageType.JSON, (keys) -> new UPlayer(keys != null ? keys[0] : null), "store");
+		}
+		catch (IOException ex) {
+			this.getLogger().log(Level.SEVERE, "Couldn't create storage! Disabling plugin!");
+			ex.printStackTrace();
+			this.getPluginLoader().disablePlugin(this);
+			disabled = true;
+			return false;
+		}
+		if (reloadPlayers) {
+			for (Player p : Bukkit.getOnlinePlayers()) {
+				VampireRevamp.loadPlayerFromDB(p);
+			}
+		}
+
 		return result;
 	}
 
@@ -363,7 +383,7 @@ public class VampireRevamp extends JavaPlugin {
 
 		BukkitScheduler scheduler = getServer().getScheduler();
 
-		cleanTaskId = scheduler.scheduleSyncRepeatingTask(this, UPlayerColl::clearOfflinePlayers, 0L, 5 * 60 * 20L);
+		cleanTaskId = scheduler.scheduleSyncRepeatingTask(this, uPlayerColl::saveAndRemoveUnactive, 0L, 5 * 60 * 20L);
 		theTaskId = scheduler.scheduleSyncRepeatingTask(this, new TheTask(), 0L, (this.conf.general.taskDelayMillis * 20) / 1000);
 		batTaskId = scheduler.scheduleSyncRepeatingTask(this, new BatTask(), 0L, (this.conf.general.batTaskDelayMillis * 20) / 1000);
 	}
@@ -449,9 +469,11 @@ public class VampireRevamp extends JavaPlugin {
 		scheduler.cancelTask(theTaskId);
 		scheduler.cancelTask(batTaskId);
 
-		this.getLogger().log(Level.INFO, "Saving player data...");
-		UPlayerColl.saveAllPlayers();
-		this.getLogger().log(Level.INFO, "Saved!");
+		if (uPlayerColl != null) {
+			this.getLogger().log(Level.INFO, "Saving player data...");
+			uPlayerColl.saveAndRemoveAllSync();
+			this.getLogger().log(Level.INFO, "Saved!");
+		}
 	}
 
 	public void setFormatting(CommandManager manager) {

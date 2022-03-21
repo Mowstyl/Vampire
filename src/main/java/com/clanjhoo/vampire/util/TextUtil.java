@@ -2,7 +2,6 @@ package com.clanjhoo.vampire.util;
 
 import co.aikar.commands.CommandHelp;
 import co.aikar.commands.RegisteredCommand;
-import com.clanjhoo.vampire.entity.UPlayerColl;
 import com.clanjhoo.vampire.keyproviders.CommandMessageKeys;
 import com.clanjhoo.vampire.Perm;
 import com.clanjhoo.vampire.VampireRevamp;
@@ -17,6 +16,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -152,7 +152,7 @@ public class TextUtil {
 
         comps[1] = new TextComponent(" " + command);
         if (sender instanceof Player) {
-            UPlayer uplayer = UPlayerColl.get(((Player) sender).getUniqueId());
+            UPlayer uplayer = VampireRevamp.getPlayerCollection().getDataNow(new Serializable[]{((Player) sender).getUniqueId()});
             boolean hasRequiredVLevel = requireVampire == 0 || uplayer.isNosferatu() || (uplayer.isVampire() && requireVampire == 1);
             if (!command.equals("vampire") && !command.equals("nosferatu")) {
                 Perm permission = Perm.getPermFromString(command);

@@ -1,17 +1,18 @@
 package com.clanjhoo.vampire.altar;
 
 import co.aikar.commands.MessageType;
-import com.clanjhoo.vampire.entity.UPlayerColl;
 import com.clanjhoo.vampire.keyproviders.AltarMessageKeys;
 import com.clanjhoo.vampire.VampireRevamp;
 import com.clanjhoo.vampire.config.PluginConfig;
 import com.clanjhoo.vampire.entity.UPlayer;
+import com.clanjhoo.vampire.keyproviders.CommandMessageKeys;
 import com.clanjhoo.vampire.util.EntityUtil;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -33,7 +34,6 @@ public abstract class Altar {
         VampireRevamp.debugLog(Level.INFO, "Core is " + coreMaterial.name());
         if (EntityUtil.isPlayer(player) && coreBlock.getType() == coreMaterial) {
             VampireRevamp.debugLog(Level.INFO, "Player clicked core!");
-            UPlayer uplayer = UPlayerColl.get(player.getUniqueId());
             PluginConfig conf = VampireRevamp.getVampireConfig();
 
             // Make sure we include the coreBlock material in the wanted ones
@@ -72,7 +72,16 @@ public abstract class Altar {
                     }
                 }
                 else {
-                    blockUse = this.use(uplayer, player);
+                    try {
+                        UPlayer uPlayer = VampireRevamp.getPlayerCollection().getDataNow(new Serializable[]{player.getUniqueId()});
+                        blockUse = this.use(uPlayer, player);
+                    }
+                    catch (AssertionError ex) {
+                        VampireRevamp.log(Level.WARNING, "Couldn't find data for player " + player.getName() + " on altar click.");
+                        VampireRevamp.sendMessage(player,
+                                MessageType.ERROR,
+                                CommandMessageKeys.DATA_NOT_FOUND);
+                    }
                 }
             }
         }

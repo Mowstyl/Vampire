@@ -2,7 +2,6 @@ package com.clanjhoo.vampire.listeners;
 
 import co.aikar.commands.MessageType;
 import com.clanjhoo.vampire.*;
-import com.clanjhoo.vampire.entity.UPlayerColl;
 import com.clanjhoo.vampire.keyproviders.HolyWaterMessageKeys;
 import com.clanjhoo.vampire.keyproviders.SkillMessageKeys;
 import com.clanjhoo.vampire.keyproviders.VampirismMessageKeys;
@@ -32,6 +31,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.projectiles.ProjectileSource;
 import org.bukkit.scheduler.BukkitScheduler;
 
+import java.io.Serializable;
 import java.util.logging.Level;
 
 public class ListenerMain implements Listener {
@@ -49,14 +49,14 @@ public class ListenerMain implements Listener {
             return;
         // If a vampire dies ...
         if (EntityUtil.isPlayer(event.getEntity())) {
-            UPlayer uplayer = UPlayerColl.get(event.getEntity().getUniqueId());
-
-            if (uplayer.isVampire()) {
-                // ... burns up with a violent scream ;,,;
-                uplayer.runFxShriek();
-                uplayer.runFxFlameBurst();
-                uplayer.runFxSmokeBurst();
-            }
+            VampireRevamp.getPlayerCollection().getDataSynchronous(new Serializable[]{event.getEntity().getUniqueId()}, (uplayer) -> {
+                if (uplayer.isVampire()) {
+                    // ... burns up with a violent scream ;,,;
+                    uplayer.runFxShriek();
+                    uplayer.runFxFlameBurst();
+                    uplayer.runFxSmokeBurst();
+                }
+            }, () -> {} , true);
         }
     }
 
@@ -73,11 +73,13 @@ public class ListenerMain implements Listener {
 
         if (conf.vampire.blockDamageFrom.contains(event.getCause())) {
             if (EntityUtil.isPlayer(entity)) {
-                UPlayer uplayer = UPlayerColl.get(entity.getUniqueId());
-
-                if (uplayer.isVampire()) {
-                    event.setCancelled(true);
+                try {
+                    UPlayer uplayer = VampireRevamp.getPlayerCollection().getDataNow(new Serializable[]{entity.getUniqueId()});
+                    if (uplayer.isVampire()) {
+                        event.setCancelled(true);
+                    }
                 }
+                catch (AssertionError ignore) {}
             }
         }
     }
@@ -91,11 +93,13 @@ public class ListenerMain implements Listener {
 
         if (conf.vampire.blockHealthFrom.contains(event.getRegainReason())) {
             if (EntityUtil.isPlayer(entity)) {
-                UPlayer uplayer = UPlayerColl.get(entity.getUniqueId());
-
-                if (uplayer.isVampire()) {
-                    event.setCancelled(true);
+                try {
+                    UPlayer uplayer = VampireRevamp.getPlayerCollection().getDataNow(new Serializable[]{entity.getUniqueId()});
+                    if (uplayer.isVampire()) {
+                        event.setCancelled(true);
+                    }
                 }
+                catch (AssertionError ignore) {}
             }
         }
     }
@@ -106,12 +110,14 @@ public class ListenerMain implements Listener {
             return;
         Entity entity = event.getEntity();
         if (EntityUtil.isPlayer(entity)) {
-            UPlayer uplayer = UPlayerColl.get(entity.getUniqueId());
-
-            if (uplayer.isVampire()) {
-                event.setCancelled(true);
-                EntityUtil.sendHealthFoodUpdatePacket((Player) entity);
+            try {
+                UPlayer uplayer = VampireRevamp.getPlayerCollection().getDataNow(new Serializable[]{entity.getUniqueId()});
+                if (uplayer.isVampire()) {
+                    event.setCancelled(true);
+                    EntityUtil.sendHealthFoodUpdatePacket((Player) entity);
+                }
             }
+            catch (AssertionError ignore) {}
         }
     }
 
@@ -122,38 +128,22 @@ public class ListenerMain implements Listener {
     @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
     public void updateOnJoin(PlayerJoinEvent event) {
         final Player player = event.getPlayer();
-        if (EntityUtil.isPlayer(player)) {
-            Runnable loadPlayerTask = () -> {
-                UPlayer uPlayer = UPlayerColl.get(player.getUniqueId());
-                UPlayerColl.toOnlinePlayer(player.getUniqueId(), player);
-                uPlayer.update();
-            };
-
-            BukkitScheduler scheduler = Bukkit.getServer().getScheduler();
-            scheduler.runTaskLater(VampireRevamp.getInstance(), loadPlayerTask, 1L);
-        }
+        VampireRevamp.loadPlayerFromDB(player);
     }
 
     @EventHandler(priority = EventPriority.NORMAL)
     public void updateOnQuit(PlayerQuitEvent event) {
         final Player player = event.getPlayer();
-        if (EntityUtil.isPlayer(player)) {
-            UPlayer uPlayer = UPlayerColl.get(player.getUniqueId());
-            UPlayerColl.toOfflinePlayer(player.getUniqueId());
-            UPlayerColl.savePlayerData(uPlayer);
-        }
+        VampireRevamp.getPlayerCollection().save(new Serializable[]{player.getUniqueId()});
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void updateOnTeleport(PlayerTeleportEvent event) {
         final Player player = event.getPlayer();
         if (EntityUtil.isPlayer(player)) {
-            Bukkit.getScheduler().scheduleSyncDelayedTask(VampireRevamp.getInstance(), new Runnable() {
-                @Override
-                public void run() {
-                    UPlayer uplayer = UPlayerColl.get(player.getUniqueId());
-                    uplayer.update();
-                }
+            Bukkit.getScheduler().scheduleSyncDelayedTask(VampireRevamp.getInstance(), () -> {
+                UPlayer uplayer = VampireRevamp.getPlayerCollection().getDataNow(new Serializable[]{player.getUniqueId()});
+                uplayer.update();
             });
         }
     }
@@ -166,13 +156,13 @@ public class ListenerMain implements Listener {
         LivingEntity entity = event.getEntity();
 
         if (EntityUtil.isPlayer(entity)) {
-            UPlayer uplayer = UPlayerColl.get(entity.getUniqueId());
-
-            if (uplayer.isVampire()) {
-                // Close down bloodlust.
-                uplayer.setRad(0);
-                uplayer.setBloodlusting(false);
-            }
+            VampireRevamp.getPlayerCollection().getDataSynchronous(new Serializable[]{entity.getUniqueId()}, (uplayer) -> {
+                if (uplayer.isVampire()) {
+                    // Close down bloodlust.
+                    uplayer.setRad(0);
+                    uplayer.setBloodlusting(false);
+                }
+            }, () -> {}, true);
         }
     }
 
@@ -184,19 +174,16 @@ public class ListenerMain implements Listener {
         Player player = event.getPlayer();
 
         if (EntityUtil.isPlayer(player)) {
-            UPlayer uplayer = UPlayerColl.get(player.getUniqueId());
+            UPlayer uplayer = VampireRevamp.getPlayerCollection().getDataNow(new Serializable[]{player.getUniqueId()});
 
             if (uplayer.isVampire()) {
                 // ... modify food and health levels and force another speed-update.
-                Bukkit.getScheduler().scheduleSyncDelayedTask(VampireRevamp.getInstance(), new Runnable() {
-                    @Override
-                    public void run() {
-                        PluginConfig conf = VampireRevamp.getVampireConfig();
-                        player.setFoodLevel(conf.vampire.respawnFood);
-                        player.setHealth((double) conf.vampire.respawnHealth);
-                        EntityUtil.sendHealthFoodUpdatePacket(player);
-                        uplayer.update();
-                    }
+                Bukkit.getScheduler().scheduleSyncDelayedTask(VampireRevamp.getInstance(), () -> {
+                    PluginConfig conf = VampireRevamp.getVampireConfig();
+                    player.setFoodLevel(conf.vampire.respawnFood);
+                    player.setHealth((double) conf.vampire.respawnHealth);
+                    EntityUtil.sendHealthFoodUpdatePacket(player);
+                    uplayer.update();
                 });
             }
         }
@@ -270,7 +257,7 @@ public class ListenerMain implements Listener {
             Block from = event.getFrom().getBlock();
             Block to = event.getTo().getBlock();
             if (!from.equals(to)) {
-                UPlayer uplayer = UPlayerColl.get(player.getUniqueId());
+                UPlayer uplayer = VampireRevamp.getPlayerCollection().getDataNow(new Serializable[]{player.getUniqueId()});
 
                 // ... and that player is a vampire ...
                 // ... that has bloodlust on ...
@@ -297,11 +284,11 @@ public class ListenerMain implements Listener {
             // ... turn of bloodlust ...
             Player player = event.getPlayer();
             if (EntityUtil.isPlayer(player)) {
-                UPlayer uplayer = UPlayerColl.get(player.getUniqueId());
-
-                if (uplayer.isBloodlusting()) {
-                    uplayer.setBloodlusting(false);
-                }
+                VampireRevamp.getPlayerCollection().getDataSynchronous(new Serializable[]{player.getUniqueId()}, (uplayer) -> {
+                    if (uplayer.isBloodlusting()) {
+                        uplayer.setBloodlusting(false);
+                    }
+                }, () -> {}, true);
             }
         }
     }
@@ -321,10 +308,9 @@ public class ListenerMain implements Listener {
             PluginConfig conf = VampireRevamp.getVampireConfig();
 
             // ... by creature that cares about the truce with vampires ...
-            if (conf.truce.entityTypes.contains(event.getEntityType())) {
+            if (player != null && conf.truce.entityTypes.contains(event.getEntityType())) {
                 VampireRevamp.debugLog(Level.INFO, "Entity in truce list");
-                UPlayer uplayer = UPlayerColl.get(player.getUniqueId());
-
+                UPlayer uplayer = VampireRevamp.getPlayerCollection().getDataNow(new Serializable[]{player.getUniqueId()});
                 // ... and that player is a vampire ...
                 // ... that has not recently done something to break the truce...
                 if (uplayer.isVampire() && !uplayer.truceIsBroken()) {
@@ -360,12 +346,13 @@ public class ListenerMain implements Listener {
                     if (conf.truce.checkGamemode && ((Player) damager).getGameMode() == GameMode.CREATIVE)
                         return;
 
-                    UPlayer vpdamager = UPlayerColl.get(damager.getUniqueId());
 
-                    if (vpdamager.isVampire()) {
-                        // Then that vampire broke the truce.
-                        vpdamager.truceBreak();
-                    }
+                    VampireRevamp.getPlayerCollection().getDataSynchronous(new Serializable[]{damager.getUniqueId()}, (vpdamager) -> {
+                        if (vpdamager.isVampire()) {
+                            // Then that vampire broke the truce.
+                            vpdamager.truceBreak();
+                        }
+                    }, () -> {}, true);
                 }
             }
         }
@@ -383,12 +370,13 @@ public class ListenerMain implements Listener {
         Entity entity = event.getEntity();
 
         if (EntityUtil.isPlayer(entity)) {
-            UPlayer vampire = UPlayerColl.get(entity.getUniqueId());
-
-            if (vampire.isVampire()) {
-                // ... mark now as lastDamageMillis
-                vampire.setLastDamageMillis(System.currentTimeMillis());
-            }
+            final long timestamp = System.currentTimeMillis();
+            VampireRevamp.getPlayerCollection().getDataSynchronous(new Serializable[]{entity.getUniqueId()}, (vampire) -> {
+                if (vampire.isVampire()) {
+                    // ... mark now as lastDamageMillis
+                    vampire.setLastDamageMillis(timestamp);
+                }
+            }, () -> {}, false);
         }
     }
 
@@ -412,7 +400,7 @@ public class ListenerMain implements Listener {
                 PluginConfig conf = VampireRevamp.getVampireConfig();
 
                 // ... and the damagee is a vampire ...
-                UPlayer vampire = UPlayerColl.get(entity.getUniqueId());
+                UPlayer vampire = VampireRevamp.getPlayerCollection().getDataNow(new Serializable[]{entity.getUniqueId()});
                 if (vampire.isVampire()) {
                     // ... and a wooden item was used ...
                     ItemStack item = EntityUtil.getWeapon(damager);
@@ -434,11 +422,11 @@ public class ListenerMain implements Listener {
         if (VampireRevamp.getVampireConfig().vampire.batusi.disableOnHit
                 && EntityUtil.isPlayer(event.getEntity())) {
             Player damagee = (Player) event.getEntity();
-            UPlayer udamagee = UPlayerColl.get(damagee.getUniqueId());
-
-            if (udamagee.isVampire() && udamagee.isBatusi()) {
-                udamagee.setBatusi(false);
-            }
+            VampireRevamp.getPlayerCollection().getDataSynchronous(new Serializable[]{damagee.getUniqueId()}, (udamagee) -> {
+                if (udamagee.isVampire() && udamagee.isBatusi()) {
+                    udamagee.setBatusi(false);
+                }
+            }, () -> {}, true);
         }
     }
 
@@ -451,7 +439,7 @@ public class ListenerMain implements Listener {
             // ... and the liable damager is a vampire ...
             Entity damager = EventUtil.getLiableDamager(event);
             if (EntityUtil.isPlayer(damager)) {
-                UPlayer vampire = UPlayerColl.get(damager.getUniqueId());
+                UPlayer vampire = VampireRevamp.getPlayerCollection().getDataNow(new Serializable[]{damager.getUniqueId()});
 
                 if (vampire.isVampire()) {
                     PluginConfig conf = VampireRevamp.getVampireConfig();
@@ -480,26 +468,30 @@ public class ListenerMain implements Listener {
             Entity damagee = event.getEntity();
             Entity damager = EventUtil.getLiableDamager(event);
             if (EntityUtil.isPlayer(damagee) && EntityUtil.isPlayer(damager)) {
-                UPlayer vampire = UPlayerColl.get(damagee.getUniqueId());
-                UPlayer human = UPlayerColl.get(damager.getUniqueId());
-                if ((vampire.isVampire() && human.isHuman())
-                        || (human.isVampire() && vampire.isHuman())) {
-                    if (human.isVampire()) {
-                        UPlayer aux = vampire;
-                        vampire = human;
-                        human = aux;
-                    }
+                VampireRevamp.getPlayerCollection().getDataSynchronous(new Serializable[]{damagee.getUniqueId()}, (vampiree) -> {
+                    final UPlayer[] vampire = {vampiree};
+                    VampireRevamp.getPlayerCollection().getDataSynchronous(new Serializable[]{damager.getUniqueId()}, (human) -> {
+                        if ((vampire[0].isVampire() && human.isHuman())
+                                || (human.isVampire() && vampire[0].isHuman())) {
+                            if (human.isVampire()) {
+                                UPlayer aux = vampire[0];
+                                vampire[0] = human;
+                                human = aux;
+                            }
 
-                    // ... and the vampire is allowed to infect through combat ...
-                    // ... and the human is allowed to contract through combat ...
-                    // ... Then there is a risk for infection ...
-                    if (Perm.COMBAT_INFECT.has(vampire.getPlayer())
-                            && Perm.COMBAT_CONTRACT.has(human.getPlayer())
-                            && MathUtil.random.nextDouble() < vampire.combatInfectRisk()) {
-                        InfectionReason reason = vampire.isIntending() ? InfectionReason.COMBAT_INTENDED : InfectionReason.COMBAT_MISTAKE;
-                        human.addInfection(0.01D, reason, vampire);
-                    }
-                }
+                            // ... and the vampire is allowed to infect through combat ...
+                            // ... and the human is allowed to contract through combat ...
+                            // ... Then there is a risk for infection ...
+                            if (Perm.COMBAT_INFECT.has(vampire[0].getPlayer())
+                                    && Perm.COMBAT_CONTRACT.has(human.getPlayer())
+                                    && MathUtil.random.nextDouble() < vampire[0].combatInfectRisk()) {
+                                InfectionReason reason = vampire[0].isIntending() ? InfectionReason.COMBAT_INTENDED : InfectionReason.COMBAT_MISTAKE;
+                                human.addInfection(0.01D, reason, vampire[0]);
+                            }
+                        }
+                    }, () -> {}, true);
+                }, () -> {}, true);
+
             }
         }
     }
@@ -521,23 +513,22 @@ public class ListenerMain implements Listener {
             Entity damager = EventUtil.getLiableDamager(event);
             // only horses, no mules donkeys or undead ones
             if (EntityUtil.isPlayer(damager) && event.getEntity() instanceof Horse) {
-                UPlayer vampire = UPlayerColl.get(damager.getUniqueId());
-                // ... and the vampire is allowed to infect through combat ...
-                if (vampire.isVampire() && Perm.COMBAT_INFECT.has(vampire.getPlayer())) {
-                    Horse horse = (Horse) event.getEntity();
+                VampireRevamp.getPlayerCollection().getDataSynchronous(new Serializable[]{damager.getUniqueId()}, (vampire) -> {
+                    // ... and the vampire is allowed to infect through combat ...
+                    if (vampire.isVampire() && Perm.COMBAT_INFECT.has(vampire.getPlayer())) {
+                        Horse horse = (Horse) event.getEntity();
 
-                    // ... Then there is a risk for infection ...
-                    if (MathUtil.random.nextDouble() < vampire.combatInfectRisk()) {
-                        // ... then we spawn the new horse ...
-                        horse.getWorld().spawnEntity(horse.getLocation(), MathUtil.random.nextDouble() > 0.5 ? EntityType.SKELETON_HORSE : EntityType.ZOMBIE_HORSE);
+                        // ... Then there is a risk for infection ...
+                        if (MathUtil.random.nextDouble() < vampire.combatInfectRisk()) {
+                            // ... then we spawn the new horse ...
+                            horse.getWorld().spawnEntity(horse.getLocation(), MathUtil.random.nextDouble() > 0.5 ? EntityType.SKELETON_HORSE : EntityType.ZOMBIE_HORSE);
 
-                        // ... and we Thanos the old one ...
-                        horse.remove();
+                            // ... and we Thanos the old one ...
+                            horse.remove();
+                        }
                     }
-                }
+                }, () -> {}, true);
             }
-
-
         }
     }
 
@@ -556,7 +547,7 @@ public class ListenerMain implements Listener {
             // .. and the player right-clicks a cake block ...
             if (event.getAction() == Action.RIGHT_CLICK_BLOCK && event.getClickedBlock().getType() == Material.CAKE) {
                 // ... and the player is a vampire ...
-                UPlayer uplayer = UPlayerColl.get(player.getUniqueId());
+                UPlayer uplayer = VampireRevamp.getPlayerCollection().getDataNow(new Serializable[]{player.getUniqueId()});
                 if (uplayer.isVampire()) {
                     // ... we deny!
                     event.setCancelled(true);
@@ -587,21 +578,22 @@ public class ListenerMain implements Listener {
                     // ... and the liable damager is a vampire ...
                     Entity damager = EventUtil.getLiableDamager(event);
                     if (EntityUtil.isPlayer(damager)) {
-                        UPlayer vampire = UPlayerColl.get(damager.getUniqueId());
-                        // ... and the player is still retrievable ...
-                        if (vampire.isVampire() && vampire.getPlayer() != null) {
-                            // ... drink blood! ;,,;
-                            double damage = event.getFinalDamage();
-                            if (conf.general.useOldFoodFormula)
-                                damage = event.getDamage();
-                            if (damagee.getHealth() < damage)
-                                damage = damagee.getHealth();
-                            double food = damage * fullFoodQuotient;
-                            if (conf.general.useOldFoodFormula)
-                                food = damage / damagee.getAttribute(Attribute.GENERIC_MAX_HEALTH).getBaseValue() * fullFoodQuotient * vampire.getPlayer().getAttribute(Attribute.GENERIC_MAX_HEALTH).getBaseValue();
+                        VampireRevamp.getPlayerCollection().getDataSynchronous(new Serializable[]{damager.getUniqueId()}, (vampire) -> {
+                            // ... and the player is still retrievable ...
+                            if (vampire.isVampire() && vampire.getPlayer() != null) {
+                                // ... drink blood! ;,,;
+                                double damage = event.getFinalDamage();
+                                if (conf.general.useOldFoodFormula)
+                                    damage = event.getDamage();
+                                if (damagee.getHealth() < damage)
+                                    damage = damagee.getHealth();
+                                double food = damage * fullFoodQuotient;
+                                if (conf.general.useOldFoodFormula)
+                                    food = damage / damagee.getAttribute(Attribute.GENERIC_MAX_HEALTH).getBaseValue() * fullFoodQuotient * vampire.getPlayer().getAttribute(Attribute.GENERIC_MAX_HEALTH).getBaseValue();
 
-                            vampire.addFood(food);
-                        }
+                                vampire.addFood(food);
+                            }
+                        }, () -> {}, true);
                     }
                 }
             }
@@ -628,7 +620,7 @@ public class ListenerMain implements Listener {
             boolean isVampiric = BloodFlaskUtil.isBloodFlaskVampiric(item);
 
             // ... get the player ...
-            UPlayer uplayer = UPlayerColl.get(event.getPlayer().getUniqueId());
+            UPlayer uplayer = VampireRevamp.getPlayerCollection().getDataNow(new Serializable[]{event.getPlayer().getUniqueId()});
 
             // ... are they bloodlusting? ...
             if (!uplayer.isBloodlusting()) {
@@ -688,35 +680,36 @@ public class ListenerMain implements Listener {
                     for (Player player : splashLocation.getWorld().getPlayers()) {
                         if (EntityUtil.isPlayer(player)
                                 && player.getLocation().distance(splashLocation) <= conf.holyWater.splashRadius) {
-                            UPlayer uplayer = UPlayerColl.get(player.getUniqueId());
-                            VampireRevamp.sendMessage(player,
-                                    MessageType.INFO,
-                                    HolyWaterMessageKeys.COMMON_REACT,
-                                    "{player}", shooter.getDisplayName());
-                            uplayer.runFxEnderBurst();
+                            VampireRevamp.getPlayerCollection().getDataSynchronous(new Serializable[]{player.getUniqueId()}, (uplayer) -> {
+                                VampireRevamp.sendMessage(player,
+                                        MessageType.INFO,
+                                        HolyWaterMessageKeys.COMMON_REACT,
+                                        "{player}", shooter.getDisplayName());
+                                uplayer.runFxEnderBurst();
 
-                            // Trigger a damage event so other plugins can cancel this.
-                            EntityDamageByEntityEvent triggeredEvent = new EntityDamageByEntityEvent(shooter, player, DamageCause.CUSTOM, 1D);
-                            Bukkit.getPluginManager().callEvent(triggeredEvent);
-                            if (!triggeredEvent.isCancelled()) {
-                                if (uplayer.isHealthy()) {
-                                    VampireRevamp.sendMessage(player,
-                                            MessageType.INFO,
-                                            HolyWaterMessageKeys.HEALTHY_REACT);
-                                } else if (uplayer.isInfected()) {
-                                    VampireRevamp.sendMessage(player,
-                                            MessageType.INFO,
-                                            HolyWaterMessageKeys.INFECTED_REACT);
-                                    uplayer.setInfection(0);
-                                    uplayer.runFxEnder();
-                                } else if (uplayer.isVampire()) {
-                                    VampireRevamp.sendMessage(player,
-                                            MessageType.INFO,
-                                            HolyWaterMessageKeys.VAMPIRE_REACT);
-                                    uplayer.addTemp(conf.holyWater.temperature);
-                                    uplayer.runFxFlameBurst();
+                                // Trigger a damage event so other plugins can cancel this.
+                                EntityDamageByEntityEvent triggeredEvent = new EntityDamageByEntityEvent(shooter, player, DamageCause.CUSTOM, 1D);
+                                Bukkit.getPluginManager().callEvent(triggeredEvent);
+                                if (!triggeredEvent.isCancelled()) {
+                                    if (uplayer.isHealthy()) {
+                                        VampireRevamp.sendMessage(player,
+                                                MessageType.INFO,
+                                                HolyWaterMessageKeys.HEALTHY_REACT);
+                                    } else if (uplayer.isInfected()) {
+                                        VampireRevamp.sendMessage(player,
+                                                MessageType.INFO,
+                                                HolyWaterMessageKeys.INFECTED_REACT);
+                                        uplayer.setInfection(0);
+                                        uplayer.runFxEnder();
+                                    } else if (uplayer.isVampire()) {
+                                        VampireRevamp.sendMessage(player,
+                                                MessageType.INFO,
+                                                HolyWaterMessageKeys.VAMPIRE_REACT);
+                                        uplayer.addTemp(conf.holyWater.temperature);
+                                        uplayer.runFxFlameBurst();
+                                    }
                                 }
-                            }
+                            }, () -> {}, true);
                         }
                     }
                 }

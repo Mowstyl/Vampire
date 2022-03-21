@@ -2,8 +2,6 @@ package com.clanjhoo.vampire.listeners;
 
 import com.clanjhoo.vampire.VampireRevamp;
 import com.clanjhoo.vampire.entity.UPlayer;
-import com.clanjhoo.vampire.entity.UPlayerColl;
-import com.clanjhoo.vampire.event.InfectionChangeEvent;
 import com.clanjhoo.vampire.event.VampireTypeChangeEvent;
 import com.clanjhoo.vampire.util.EntityUtil;
 import com.clanjhoo.vampire.util.EventUtil;
@@ -20,6 +18,7 @@ import org.bukkit.inventory.ItemStack;
 import us.rfsmassacre.Werewolf.Events.WerewolfInfectionEvent;
 import us.rfsmassacre.Werewolf.WerewolfAPI;
 
+import java.io.Serializable;
 import java.util.logging.Level;
 
 public class WerewolvesSilverHook implements Listener {
@@ -35,6 +34,9 @@ public class WerewolvesSilverHook implements Listener {
 
     @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
     public void onSilverSword(EntityDamageByEntityEvent event) {
+        if (!(event.getEntity() instanceof Player))
+            return;
+
         if (!initialized) {
             if (!initialize())
                 return;
@@ -43,15 +45,21 @@ public class WerewolvesSilverHook implements Listener {
         if (!VampireRevamp.getVampireConfig().compatibility.useWerewolfSilverSword)
             return;
 
-        if (!EventUtil.isCloseCombatEvent(event))
-            return;
-
         if (!EntityUtil.isPlayer(event.getEntity()))
             return;
 
-        UPlayer uplayer = UPlayerColl.get(event.getEntity().getUniqueId());
-        if (!uplayer.isVampire())
+        if (!EventUtil.isCloseCombatEvent(event))
             return;
+
+        try {
+            UPlayer uplayer = VampireRevamp.getPlayerCollection().getDataNow(new Serializable[]{event.getEntity().getUniqueId()});
+            if (!uplayer.isVampire())
+                return;
+        }
+        catch (AssertionError ex) {
+            VampireRevamp.log(Level.WARNING, "Couldn't get data of player " + event.getEntity().getName());
+            return;
+        }
 
         Entity rawDamager = EventUtil.getLiableDamager(event);
         if (!(rawDamager instanceof LivingEntity))
@@ -68,41 +76,5 @@ public class WerewolvesSilverHook implements Listener {
 
         VampireRevamp.debugLog(Level.INFO, "Silver sword used! Scaling damage...");
         EventUtil.scaleDamage(event, VampireRevamp.getVampireConfig().compatibility.silverDamageFactor);
-    }
-
-    @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
-    public void onTypeChange(VampireTypeChangeEvent event) {
-        UPlayer uplayer = event.getUplayer();
-        if (uplayer == null) {
-            event.setCancelled(true);
-            return;
-        }
-
-        Player player = uplayer.getPlayer();
-        if (player == null) {
-            event.setCancelled(true);
-            return;
-        }
-
-        VampireRevamp.debugLog(Level.INFO, "Vampire: " + event.isVampire());
-
-        if (WerewolfAPI.isWerewolf(player) && event.isVampire()) {
-            VampireRevamp.debugLog(Level.INFO, "Cancelled!");
-            event.setCancelled(true);
-        }
-    }
-
-    @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
-    public void onWerewolfInfection(WerewolfInfectionEvent event) {
-        Player player = event.getPlayer();
-        if (player == null) {
-            event.setCancelled(true);
-            return;
-        }
-
-        UPlayer uplayer = UPlayerColl.get(player.getUniqueId());
-        if (uplayer.isUnhealthy()) {
-            event.setCancelled(true);
-        }
     }
 }

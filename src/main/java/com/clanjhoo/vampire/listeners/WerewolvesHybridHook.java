@@ -2,7 +2,6 @@ package com.clanjhoo.vampire.listeners;
 
 import com.clanjhoo.vampire.VampireRevamp;
 import com.clanjhoo.vampire.entity.UPlayer;
-import com.clanjhoo.vampire.entity.UPlayerColl;
 import com.clanjhoo.vampire.event.InfectionChangeEvent;
 import com.clanjhoo.vampire.event.VampireTypeChangeEvent;
 import org.bukkit.Bukkit;
@@ -14,6 +13,7 @@ import org.bukkit.event.Listener;
 import us.rfsmassacre.Werewolf.Events.WerewolfInfectionEvent;
 import us.rfsmassacre.Werewolf.WerewolfAPI;
 
+import java.io.Serializable;
 import java.util.logging.Level;
 
 public class WerewolvesHybridHook implements Listener {
@@ -103,8 +103,15 @@ public class WerewolvesHybridHook implements Listener {
             return;
         }
 
-        UPlayer uplayer = UPlayerColl.get(player.getUniqueId());
-        if (uplayer.isUnhealthy()) {
+        try {
+            UPlayer uplayer = VampireRevamp.getPlayerCollection().getDataNow(new Serializable[]{player.getUniqueId()});
+            if (uplayer.isUnhealthy()) {
+                event.setCancelled(true);
+            }
+        }
+        catch (AssertionError ex) {
+            player.sendMessage("You seem resistant to werewolf infection somehow... Please contact an admin if this error persists.");
+            VampireRevamp.log(Level.WARNING, "Couldn't get data of player " + player.getName());
             event.setCancelled(true);
         }
     }

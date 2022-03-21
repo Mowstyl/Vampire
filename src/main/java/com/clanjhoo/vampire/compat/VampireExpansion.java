@@ -3,10 +3,11 @@ package com.clanjhoo.vampire.compat;
 import com.clanjhoo.vampire.InfectionReason;
 import com.clanjhoo.vampire.VampireRevamp;
 import com.clanjhoo.vampire.entity.UPlayer;
-import com.clanjhoo.vampire.entity.UPlayerColl;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
+
+import java.io.Serializable;
 
 public class VampireExpansion extends PlaceholderExpansion {
     private final VampireRevamp plugin;
@@ -94,7 +95,7 @@ public class VampireExpansion extends PlaceholderExpansion {
             return "";
         }
 
-        UPlayer uplayer = UPlayerColl.get(player.getUniqueId());
+        UPlayer uplayer = VampireRevamp.getPlayerCollection().getDataNow(new Serializable[]{player.getUniqueId()});
 
         // %vampire_temperature%
         if(identifier.equals("temperature")){

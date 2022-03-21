@@ -2,8 +2,10 @@ package com.clanjhoo.vampire.tasks;
 
 import com.clanjhoo.vampire.VampireRevamp;
 import com.clanjhoo.vampire.entity.UPlayer;
-import com.clanjhoo.vampire.entity.UPlayerColl;
+import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
 
+import java.io.Serializable;
 import java.time.ZonedDateTime;
 import java.util.logging.Level;
 
@@ -38,13 +40,20 @@ public class TheTask implements Runnable {
         long now = System.currentTimeMillis();
 
         // Tick each online player
-        for (UPlayer uPlayer : UPlayerColl.getOnlinePlayers()) {
-            try {
-                // player.sendMessage("Ticking you!");
-                uPlayer.tick(now - this.getPreviousMillis());
-            } catch (NullPointerException ex) {
-                VampireRevamp.log(Level.SEVERE, "While executing Vampire.TheTask: " + ex.getMessage());
-                ex.printStackTrace();
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            boolean success = VampireRevamp.getPlayerCollection().getDataSynchronous(new Serializable[]{player.getUniqueId()}, (uPlayer) -> {
+                try {
+                    // player.sendMessage("Ticking you!");
+                    uPlayer.tick(now - this.getPreviousMillis());
+                } catch (NullPointerException ex) {
+                    VampireRevamp.log(Level.SEVERE, "While executing Vampire.TheTask: " + ex.getMessage());
+                    ex.printStackTrace();
+                }
+            },
+                () -> VampireRevamp.log(Level.WARNING, "Couldn't find data for player " + player.getName() + " while executing TheTask."),
+                false);
+            if (!success) {
+                VampireRevamp.log(Level.WARNING, "Couldn't schedule tick for player " + player.getName() + " while executing TheTask.");
             }
         }
 
