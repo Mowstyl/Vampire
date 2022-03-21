@@ -1336,7 +1336,7 @@ public class UPlayer implements DBObject {
             case "nosferatu":
                 return this.isNosferatu();
             case "infection":
-                return this.isInfected();
+                return this.infection;
             case "reason":
                 return this.reason != null ? this.reason.name() : null;
             case "makerUUID":
@@ -1424,9 +1424,6 @@ public class UPlayer implements DBObject {
                 this.setMakerUUID(uuid);
                 break;
             case "infection":
-                if (value instanceof Boolean) {
-                    value = 0.0;
-                }
                 if (!(value instanceof Number)) {
                     throw new IllegalArgumentException("infection field must be a Number");
                 }
