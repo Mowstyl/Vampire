@@ -45,8 +45,27 @@ public class SunUtil
 		if (VampireRevamp.getVampireConfig().compatibility.useWorldGuardRegions && wg.useWG) {
 			String aux = (String) wg.queryFlag(player, wg.getFlag("TIME_LOCK"));
 
-			if (aux != null)
-				rtime = Long.parseLong(aux);
+			if (aux != null) {
+				if (!aux.contains(":")) {
+					rtime = Long.parseLong(aux);
+				}
+				else {
+					String[] rawTimes = aux.split(":");
+					int h, m;
+					double wtime, s = 0;
+					h = Integer.parseInt(rawTimes[0]);
+					m = Integer.parseInt(rawTimes[1]);
+					if (rawTimes.length > 2) {
+						s = Double.parseDouble(rawTimes[2]);
+					}
+					h -= 6;  // Minecraft days start at 06:00
+					if (h < 0) {
+						h += 24;
+					}
+					wtime = h + m * 60 + s * 3600;
+					rtime = (long) (wtime * 1000);
+				}
+			}
 		}
 
 		int ret = (int) ((rtime - MID_DAY_TICKS) % DAY_TICKS);

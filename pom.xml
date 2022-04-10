@@ -5,7 +5,7 @@
     <groupId>com.clanjhoo</groupId>
     <artifactId>vampire</artifactId>
     <packaging>jar</packaging>
-    <version>1.0.BETA-14</version>
+    <version>1.0.BETA-14-HOTFIX</version>
 
     <!-- Info -->
     <name>VampireRevamp</name>
