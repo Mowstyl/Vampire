@@ -29,7 +29,7 @@ public class BatTask implements Runnable {
 
                     if (entity.isValid() && !entity.isDead()) {
                         // Getting the vector and setting the bat's velocity, You can make a BukkitRunnable and run this code every tick
-                        Vector velocity = player.getLocation().toVector().subtract(entity.getLocation().toVector()).normalize();
+                        Vector velocity = player.getEyeLocation().toVector().subtract(entity.getLocation().toVector()).normalize();
 
                         // To make the bat move faster, you can simply multiply the vector
                         //velocity.multiply(plugin.batMult);

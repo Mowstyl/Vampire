@@ -27,7 +27,6 @@ import com.clanjhoo.vampire.util.DisguiseUtil;
 import com.clanjhoo.vampire.util.SemVer;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteStreams;
-import com.google.gson.Gson;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
@@ -40,7 +39,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.HandlerList;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import com.google.gson.GsonBuilder;
 import org.bukkit.scheduler.BukkitScheduler;
 
 import java.io.*;
@@ -59,8 +57,6 @@ public class VampireRevamp extends JavaPlugin {
 	private int cleanTaskId = -1;
 	private int theTaskId = -1;
 	private int batTaskId = -1;
-	private GsonBuilder gsonb;
-	public Gson gson;
 	public PaperCommandManager manager;
 	public Map<UUID, Boolean> batEnabled = new ConcurrentHashMap<>();
 	public Set<LivingEntity> bats = new HashSet<>();
@@ -238,10 +234,16 @@ public class VampireRevamp extends JavaPlugin {
 	}
 
 	public static void loadPlayerFromDB(Player p) {
-		boolean result = VampireRevamp.getPlayerCollection().getDataAsynchronous(
+		boolean result = VampireRevamp.getPlayerCollection().getDataSynchronous(
 				new Serializable[]{p.getUniqueId()},
-				(hstPlayer) -> {},
-				() -> VampireRevamp.log(Level.SEVERE, "Couldn't load player " + p.getName() + " from DB."));
+				(hstPlayer) -> {
+					Player s = hstPlayer.getPlayer();
+					if (s == null || s.isValid() != p.isValid()) {
+						hstPlayer.setUUID(p.getUniqueId());
+					}
+				},
+				() -> VampireRevamp.log(Level.SEVERE, "Couldn't load player " + p.getName() + " from DB.")
+				, true);
 		if (!result) {
 			VampireRevamp.log(Level.SEVERE, "Error preparing load for player " + p.getName() + ".");
 		}

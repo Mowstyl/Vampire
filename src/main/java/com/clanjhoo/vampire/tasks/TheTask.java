@@ -43,7 +43,7 @@ public class TheTask implements Runnable {
         for (Player player : Bukkit.getOnlinePlayers()) {
             boolean success = VampireRevamp.getPlayerCollection().getDataSynchronous(new Serializable[]{player.getUniqueId()}, (uPlayer) -> {
                 try {
-                    // player.sendMessage("Ticking you!");
+                    // VampireRevamp.debugLog(Level.INFO, "Ticking " + player.getName());
                     uPlayer.tick(now - this.getPreviousMillis());
                 } catch (NullPointerException ex) {
                     VampireRevamp.log(Level.SEVERE, "While executing Vampire.TheTask: " + ex.getMessage());

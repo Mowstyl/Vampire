@@ -341,25 +341,27 @@ public class UPlayer implements DBObject {
         this.intending = val;
         Player p = offlinePlayer.getPlayer();
 
-        if (p != null) {
-            if (!VampireRevamp.getVampireConfig().vampire.intend.enabled) {
-                String intendAction = VampireRevamp.getMessage(p, GrammarMessageKeys.INTEND);
-                VampireRevamp.sendMessage(p,
-                        MessageType.ERROR,
-                        CommandMessageKeys.DISABLED_ACTION,
-                        "{action}", intendAction);
-                return;
-            }
-
-            String on = VampireRevamp.getMessage(p, GrammarMessageKeys.ON);
-            String off = VampireRevamp.getMessage(p, GrammarMessageKeys.OFF);
-
-            VampireRevamp.sendMessage(p,
-                    MessageType.INFO,
-                    CommandMessageKeys.SHOW_INTENT,
-                    "{enabled}", isIntending() ? on : off,
-                    "{percent}", String.format("%.1f", combatInfectRisk() * 100));
+        if (p == null) {
+            VampireRevamp.log(Level.WARNING, "An offline player is trying to infect on intend!");
+            return;
         }
+        if (!VampireRevamp.getVampireConfig().vampire.intend.enabled) {
+            String intendAction = VampireRevamp.getMessage(p, GrammarMessageKeys.INTEND);
+            VampireRevamp.sendMessage(p,
+                    MessageType.ERROR,
+                    CommandMessageKeys.DISABLED_ACTION,
+                    "{action}", intendAction);
+            return;
+        }
+
+        String on = VampireRevamp.getMessage(p, GrammarMessageKeys.ON);
+        String off = VampireRevamp.getMessage(p, GrammarMessageKeys.OFF);
+
+        VampireRevamp.sendMessage(p,
+                MessageType.INFO,
+                CommandMessageKeys.SHOW_INTENT,
+                "{enabled}", isIntending() ? on : off,
+                "{percent}", String.format("%.1f", combatInfectRisk() * 100));
     }
 
     public boolean isBloodlusting() {
@@ -367,9 +369,10 @@ public class UPlayer implements DBObject {
     }
 
     public void setBloodlusting(boolean val) {
+        VampireRevamp.debugLog(Level.INFO, "Changing bloodlust");
         Player me = offlinePlayer.getPlayer();
         if (me == null) {
-            VampireRevamp.log(Level.WARNING, "Error getting player in UPlayer!");
+            VampireRevamp.log(Level.WARNING, "An offline player is trying to bloodlust!");
             return;
         }
         PluginConfig conf = VampireRevamp.getVampireConfig();
@@ -379,6 +382,7 @@ public class UPlayer implements DBObject {
 
         if (this.bloodlusting == val) {
             // No real change - just view the info.
+            VampireRevamp.debugLog(Level.INFO, "This is not a change!");
             String on = VampireRevamp.getMessage(me, GrammarMessageKeys.ON);
             String off = VampireRevamp.getMessage(me, GrammarMessageKeys.OFF);
             VampireRevamp.sendMessage(me,
@@ -391,7 +395,9 @@ public class UPlayer implements DBObject {
 
         if (val) { // Enabling bloodlust
             // There are a few rules to when you can turn it on:
+            VampireRevamp.debugLog(Level.INFO, "Za warudo has changed!");
             if (!this.isVampire()) {
+                VampireRevamp.debugLog(Level.INFO, "Non non non again!");
                 String vampireType = VampireRevamp.getMessage(me, GrammarMessageKeys.VAMPIRE_TYPE);
                 VampireRevamp.sendMessage(me,
                         MessageType.ERROR,
@@ -399,23 +405,28 @@ public class UPlayer implements DBObject {
                         "{vampire_type}", vampireType,
                         "{action}", bloodlustAction);
             } else if (this.getFood() != null && this.getFood() < conf.vampire.bloodlust.minFood) {
+                VampireRevamp.debugLog(Level.INFO, "Too hungry!");
                 VampireRevamp.sendMessage(me,
                         MessageType.ERROR,
                         SkillMessageKeys.BLOODLUST_LOW_FOOD);
             } else if (conf.vampire.bloodlust.checkGamemode &&
                             (me.getGameMode() == GameMode.CREATIVE ||
                              me.getGameMode() == GameMode.SPECTATOR)) { // or offline :P but offline players wont see the message
+                VampireRevamp.debugLog(Level.INFO, "Le bad gamemode!");
                 VampireRevamp.sendMessage(me,
                         MessageType.ERROR,
                         SkillMessageKeys.BLOODLUST_GAMEMODE_CHECK);
             } else if (!conf.vampire.bloodlust.enabled) {
+                VampireRevamp.debugLog(Level.INFO, "Bloodlust config disabled!");
                 VampireRevamp.sendMessage(me,
                         MessageType.ERROR,
                         CommandMessageKeys.DISABLED_ACTION,
                         "{action}", bloodlustAction);
             } else {
                 this.bloodlusting = true;
+                VampireRevamp.debugLog(Level.INFO, "enabling bloodlust");
                 this.update();
+                VampireRevamp.debugLog(Level.INFO, "updated!");
                 String on = VampireRevamp.getMessage(me, GrammarMessageKeys.ON);
                 VampireRevamp.sendMessage(me,
                         MessageType.INFO,
@@ -423,6 +434,7 @@ public class UPlayer implements DBObject {
                         "{bloodlust}", bloodlustAction,
                         "{enabled}", on,
                         "{percent}", String.format("%.1f", this.combatDamageFactor() * 100));
+                VampireRevamp.debugLog(Level.INFO, "sent message to " + me);
             }
         }
         else { // Disabling bloodlust
@@ -445,8 +457,10 @@ public class UPlayer implements DBObject {
 
     public void setUsingNightVision(boolean val) {
         Player me = offlinePlayer.getPlayer();
-        if (me == null)
+        if (me == null) {
+            VampireRevamp.log(Level.WARNING, "An offline player is trying to use nightvision!");
             return;
+        }
 
         // If an actual change is being made ...
         if (this.usingNightVision != val) {
@@ -638,6 +652,7 @@ public class UPlayer implements DBObject {
         // You must be online to shriek
         Player me = offlinePlayer.getPlayer();
         if (me == null) {
+            VampireRevamp.log(Level.WARNING, "An offline player is trying to shriek!");
             return;
         }
 
@@ -700,8 +715,10 @@ public class UPlayer implements DBObject {
 
     private void enableBatusi() {
         Player me = offlinePlayer.getPlayer();
-        if (me == null)
+        if (me == null) {
+            VampireRevamp.log(Level.WARNING, "An offline player is trying to batusi!");
             return;
+        }
 
         VampireRevamp plugin = VampireRevamp.getInstance();
         PluginConfig conf = VampireRevamp.getVampireConfig();
@@ -717,18 +734,24 @@ public class UPlayer implements DBObject {
 
         CommandMessageKeys messageKey = CommandMessageKeys.BATUSI_ALREADY_USED;
         if (!plugin.batEnabled.getOrDefault(me.getUniqueId(), false)) {
+            VampireRevamp.debugLog(Level.INFO, "Enabling batusi!");
             EntityUtil.spawnBats(me, conf.vampire.batusi.numberOfBats);
+            VampireRevamp.debugLog(Level.INFO, "Bats spawned!");
             messageKey = CommandMessageKeys.BATUSI_TOGGLED_ON;
             this.hadFlight = me.getAllowFlight();
             plugin.batEnabled.put(me.getUniqueId(), true);
         }
-        if (plugin.isDisguiseEnabled)
+        if (plugin.isDisguiseEnabled) {
             DisguiseUtil.disguiseBat(me);
+            VampireRevamp.debugLog(Level.INFO, "Disguised enabled!");
+        }
         if (conf.vampire.batusi.enableFlight) {
             me.setAllowFlight(true);
             me.setFlying(true);
+            VampireRevamp.debugLog(Level.INFO, "Flight enabled!");
         }
         VampireRevamp.sendMessage(me, MessageType.INFO, messageKey);
+        VampireRevamp.debugLog(Level.INFO, "Batusi message sent!");
     }
 
     private void disableBatusi() {
@@ -765,15 +788,19 @@ public class UPlayer implements DBObject {
     // -------------------------------------------- //
 
     public void update() {
+        VampireRevamp.debugLog(Level.INFO, "Updating...");
         Player player = offlinePlayer.getPlayer();
         PluginConfig conf = VampireRevamp.getVampireConfig();
 
         if (player != null) {
+            VampireRevamp.debugLog(Level.INFO, "Not null...");
             if (!conf.general.isBlacklisted(player.getWorld())) {
+                VampireRevamp.debugLog(Level.INFO, "Not blacklisted!");
                 //this.updatePermissions();
                 this.updatePotionEffects();
             }
             else {
+                VampireRevamp.debugLog(Level.INFO, "Another blacklist!");
                 this.setBloodlusting(false);
                 this.setUsingNightVision(false);
                 this.setIntending(false);
@@ -782,6 +809,7 @@ public class UPlayer implements DBObject {
                 this.setTemp(0);
             }
         }
+        VampireRevamp.debugLog(Level.INFO, "Updated");
     }
 
     public boolean canHaveNosferatuEffects() {
@@ -804,10 +832,12 @@ public class UPlayer implements DBObject {
     // -------------------------------------------- //
 
     public void updatePotionEffects() {
+        // VampireRevamp.debugLog(Level.INFO, "Updating potion effects...");
         // Find the player and their conf
         Player player = offlinePlayer.getPlayer();
-        if (player == null || player.isDead())
+        if (player == null || player.isDead()) {
             return;
+        }
         PluginConfig conf = VampireRevamp.getVampireConfig();
         final int targetDuration = conf.potionEffects.seconds * 20;
 

@@ -295,7 +295,9 @@ public class CmdVampire extends BaseCommand {
 	@Description("{@@commands.bloodlust_description}")
 	@Syntax("[yes/no=toggle]")
 	public void onModeBloodlust(Player sender, @Optional String yesno) {
+		VampireRevamp.debugLog(Level.INFO, "Executed command!");
 		if (VampireRevamp.getVampireConfig().general.isBlacklisted(sender.getWorld())) {
+			VampireRevamp.debugLog(Level.INFO, "Blacklisted world!");
 			VampireRevamp.sendMessage(sender,
 					MessageType.ERROR,
 					CommandMessageKeys.BLACKLISTED_WORLD);
@@ -303,8 +305,11 @@ public class CmdVampire extends BaseCommand {
 		}
 
 		if (yesno == null || yesno.equalsIgnoreCase("yes") || yesno.equalsIgnoreCase("no")) {
+			VampireRevamp.debugLog(Level.INFO, "Scheduling synchronous");
 			boolean success = VampireRevamp.getPlayerCollection().getDataSynchronous(new Serializable[]{sender.getUniqueId()}, (uplayer) -> {
+				VampireRevamp.debugLog(Level.INFO, "Acceptance");
 				if (uplayer.isVampire()) {
+					VampireRevamp.debugLog(Level.INFO, "Le vampire");
 					boolean isActive = uplayer.isBloodlusting();
 
 					if (yesno != null) {
@@ -313,6 +318,7 @@ public class CmdVampire extends BaseCommand {
 
 					uplayer.setBloodlusting(!isActive);
 				} else {
+					VampireRevamp.debugLog(Level.INFO, "Non non non!");
 					String vampireType = VampireRevamp.getMessage(sender, GrammarMessageKeys.VAMPIRE_TYPE);
 					String bloodlustAction = VampireRevamp.getMessage(sender, GrammarMessageKeys.BLOODLUST);
 					VampireRevamp.sendMessage(sender,
@@ -322,23 +328,27 @@ public class CmdVampire extends BaseCommand {
 							"{action}", bloodlustAction);
 				}
 			}, () -> {
+				VampireRevamp.debugLog(Level.INFO, "Errorance");
 				VampireRevamp.sendMessage(sender,
 						MessageType.ERROR,
 						CommandMessageKeys.DATA_NOT_FOUND);
 			}, true);
 			if (!success) {
+				VampireRevamp.debugLog(Level.INFO, "Scheduling failed!");
 				VampireRevamp.sendMessage(sender,
 						MessageType.ERROR,
 						CommandMessageKeys.DATA_NOT_FOUND);
 			}
 		}
 		else {
+			VampireRevamp.debugLog(Level.INFO, "Bad Syntax!");
 			VampireRevamp.sendMessage(sender,
 					MessageType.ERROR,
 					CommandMessageKeys.NOT_VALID_VALUE,
 					"{value}", yesno);
 			sender.sendMessage(getCommandSyntax("bloodlust"));
 		}
+		VampireRevamp.debugLog(Level.INFO, "End of ZA WARUDO");
 	}
 
 	@Subcommand("intend|modeintend|i")
