@@ -558,14 +558,11 @@ public class CmdVampire extends BaseCommand {
 			} else {
 				// ... create a blood flask!
 				if (BloodFlaskUtil.fillBottle(vme, amount)) {
-					/*
-					if (vme.isVampire()) {
+					if (VampireRevamp.getVampireConfig().general.vampiricFlaskConsumeFood && vme.isVampire()) {
 						vme.addFood(-amount);
 					} else {
 						sender.setHealth(sender.getHealth() - amount);
 					}
-					 */
-					sender.setHealth(sender.getHealth() - amount);
 					// Inform
 					VampireRevamp.sendMessage(sender,
 							MessageType.INFO,
