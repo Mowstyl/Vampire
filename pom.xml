@@ -5,7 +5,7 @@
     <groupId>com.clanjhoo</groupId>
     <artifactId>vampire</artifactId>
     <packaging>jar</packaging>
-    <version>1.0.BETA-15</version>
+    <version>1.0.BETA-16</version>
 
     <!-- Info -->
     <name>VampireRevamp</name>
@@ -62,10 +62,6 @@
                             <shadedPattern>co.aikar.${project.artifactId}.locales</shadedPattern> <!-- Replace this -->
                         </relocation>
                         <relocation>
-                            <pattern>de.tr7zw.nbtapi</pattern>
-                            <shadedPattern>de.tr7zw.${project.artifactId}.nbtapi</shadedPattern>
-                        </relocation>
-                        <relocation>
                             <pattern>com.clanjhoo.dbhandler</pattern>
                             <shadedPattern>com.clanjhoo.${project.artifactId}.dbhandler</shadedPattern> <!-- Replace this -->
                         </relocation>
@@ -82,7 +78,6 @@
                             <artifactSet>
                                 <includes>
                                     <include>co.aikar:acf-paper</include>
-                                    <include>de.tr7zw:item-nbt-api-plugin</include>
                                     <include>com.clanjhoo:DBHandler</include>
                                 </includes>
                             </artifactSet>
@@ -94,13 +89,6 @@
                                         <include>acf-core_*.properties</include>
                                         <include>co/aikar/commands/**</include>
                                         <include>co/aikar/locales/**</include>
-                                    </includes>
-                                </filter>
-                                <filter>
-                                    <artifact>de.tr7zw:item-nbt-api-plugin</artifact>
-                                    <excludeDefaults>true</excludeDefaults>
-                                    <includes>
-                                        <include>de/tr7zw/nbtapi/**</include>
                                     </includes>
                                 </filter>
                                 <filter>
@@ -149,12 +137,6 @@
             <id>placeholderapi</id>
             <url>https://repo.extendedclip.com/content/repositories/placeholderapi/</url>
         </repository>
-        <!-- NBTAPI -->
-        <repository>
-            <id>codemc-repo</id>
-            <url>https://repo.codemc.org/repository/maven-public/</url>
-            <layout>default</layout>
-        </repository>
         <!-- SkinsRestorer API -->
         <!--
         <repository>
@@ -162,6 +144,11 @@
             <url>https://repo.codemc.org/repository/maven-snapshots/</url>
         </repository>
         -->
+        <!-- Jitpack -->
+        <repository>
+            <id>jitpack.io</id>
+            <url>https://jitpack.io</url>
+        </repository>
         <!-- Clan Jhoo -->
         <repository>
             <id>clan-jhoo</id>
@@ -183,13 +170,13 @@
         <dependency>
             <groupId>io.papermc.paper</groupId>
             <artifactId>paper-api</artifactId>
-            <version>1.18.2-R0.1-SNAPSHOT</version>
+            <version>1.19-R0.1-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>io.papermc.paper</groupId>
             <artifactId>paper-api</artifactId>
-            <version>1.18.2-R0.1-SNAPSHOT</version>
+            <version>1.19-R0.1-SNAPSHOT</version>
             <scope>provided</scope>
             <classifier>javadoc</classifier>
         </dependency>
@@ -230,23 +217,6 @@
             <artifactId>worldguard-bukkit</artifactId>
             <version>7.0.7</version>
         </dependency>
-        <!--
-        <dependency>
-            <groupId>com.sk89q.worldedit</groupId>
-            <artifactId>worldedit-core</artifactId>
-            <version>6.1.4-SNAPSHOT</version>
-        </dependency>
-        <dependency>
-            <groupId>com.sk89q.worldedit</groupId>
-            <artifactId>worldedit-bukkit</artifactId>
-            <version>6.1.5</version>
-        </dependency>
-        <dependency>
-            <groupId>com.sk89q.worldguard</groupId>
-            <artifactId>worldguard-legacy</artifactId>
-            <version>6.2</version>
-        </dependency>
-        -->
         <!--Aikar-->
         <dependency>
             <groupId>co.aikar</groupId>
@@ -257,27 +227,21 @@
         <dependency>
             <groupId>LibsDisguises</groupId>
             <artifactId>LibsDisguises</artifactId>
-            <version>10.0.26-SNAPSHOT</version>
+            <version>10.0.28-SNAPSHOT</version>
         </dependency>
         <!--PlaceholderAPI-->
         <dependency>
             <groupId>me.clip</groupId>
             <artifactId>placeholderapi</artifactId>
-            <version>2.10.9</version>
+            <version>2.11.2</version>
         </dependency>
         <!--PlaceholderAPI-->
         <dependency>
             <groupId>us.rfsmassacre</groupId>
             <artifactId>Werewolves</artifactId>
-            <version>1.6.0-SNAPSHOT</version>
+            <version>1.6.1-SNAPSHOT</version>
             <scope>system</scope>
-            <systemPath>F:/Users/Mowser/MineLibs/Werewolf-1.6.0-SNAPSHOT.jar</systemPath>
-        </dependency>
-        <!-- NBTAPI -->
-        <dependency>
-            <groupId>de.tr7zw</groupId>
-            <artifactId>item-nbt-api-plugin</artifactId>
-            <version>2.9.2</version>
+            <systemPath>F:/Users/Mowser/MineLibs/Werewolf-1.6.1-SNAPSHOT.jar</systemPath>
         </dependency>
         <!-- SkinsRestorer API -->
         <!--
@@ -287,6 +251,13 @@
             <version>13.8.7-SNAPSHOT</version>
         </dependency>
         -->
+        <!--Vault-->
+        <dependency>
+            <groupId>com.github.MilkBowl</groupId>
+            <artifactId>VaultAPI</artifactId>
+            <version>1.7.1</version>
+            <scope>provided</scope>
+        </dependency>
         <!--DBHandler-->
         <dependency>
             <groupId>com.clanjhoo</groupId>

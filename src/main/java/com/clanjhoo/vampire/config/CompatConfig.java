@@ -11,6 +11,8 @@ public class CompatConfig {
     public final boolean preventWerewolfHybrids;
     public final boolean useWerewolfSilverSword;
     public final double silverDamageFactor;
+    public final boolean useVampirePermGroup;
+    public final String vampirePermissionGroup;
 
     public CompatConfig() {
         useWorldGuardRegions = true;
@@ -18,6 +20,8 @@ public class CompatConfig {
         preventWerewolfHybrids = true;
         useWerewolfSilverSword = false;
         silverDamageFactor = 1.2;
+        useVampirePermGroup = false;
+        vampirePermissionGroup = "vampiregroup";
     }
 
     public CompatConfig(@NotNull ConfigurationSection cs) {
@@ -28,6 +32,8 @@ public class CompatConfig {
         preventWerewolfHybrids = cs.getBoolean("preventWerewolfHybrids", def.preventWerewolfHybrids);
         useWerewolfSilverSword = cs.getBoolean("useWerewolfSilverSword", def.useWerewolfSilverSword);
         silverDamageFactor = cs.getDouble("silverDamageFactor", def.silverDamageFactor);
+        useVampirePermGroup = cs.getBoolean("useVampirePermGroup", def.useVampirePermGroup);
+        vampirePermissionGroup = cs.getString("vampirePermissionGroup", def.vampirePermissionGroup);
     }
 
     protected boolean saveConfigToFile(BufferedWriter configWriter, String indent, int level) {
@@ -41,6 +47,10 @@ public class CompatConfig {
         result = result && PluginConfig.writeLine(configWriter, "useWerewolfSilverSword: " + this.useWerewolfSilverSword, indent, level);
         result = result && PluginConfig.writeLine(configWriter, "# The damage multiplier when a vampire gets hit by a silver sword (only if the previous option was enabled)", indent, level);
         result = result && PluginConfig.writeLine(configWriter, "silverDamageFactor: " + this.silverDamageFactor, indent, level);
+        result = result && PluginConfig.writeLine(configWriter, "# (Vault needed) Whether to add vampires to a specified permission group or not", indent, level);
+        result = result && PluginConfig.writeLine(configWriter, "useVampirePermGroup: " + this.useVampirePermGroup, indent, level);
+        result = result && PluginConfig.writeLine(configWriter, "# The permission group in which vampires will be put", indent, level);
+        result = result && PluginConfig.writeLine(configWriter, "vampirePermissionGroup: " + this.vampirePermissionGroup, indent, level);
 
         return result;
     }
@@ -53,6 +63,8 @@ public class CompatConfig {
                 ", preventWerewolfHybrids=" + preventWerewolfHybrids +
                 ", useWerewolfSilverSword=" + useWerewolfSilverSword +
                 ", silverDamageFactor=" + silverDamageFactor +
+                ", useVampirePermGroup=" + useVampirePermGroup +
+                ", vampirePermissionGroup=" + vampirePermissionGroup +
                 '}';
     }
 }

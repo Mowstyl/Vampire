@@ -1,7 +1,9 @@
 package com.clanjhoo.vampire;
 
 import com.clanjhoo.vampire.entity.UPlayer;
+import com.clanjhoo.vampire.util.RingUtil;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.Serializable;
@@ -35,5 +37,9 @@ public class VampireAPI {
     public static boolean isNosferatu(@NotNull Player player) {
         UPlayer uplayer = VampireRevamp.getPlayerCollection().getDataNow(new Serializable[]{player.getUniqueId()});
         return uplayer.isNosferatu();
+    }
+
+    public static boolean isSunRing(@NotNull ItemStack item) {
+        return RingUtil.isSunRing(item);
     }
 }

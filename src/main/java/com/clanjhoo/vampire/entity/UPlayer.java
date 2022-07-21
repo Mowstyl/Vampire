@@ -14,8 +14,6 @@ import com.clanjhoo.vampire.config.StateEffectConfig;
 import com.clanjhoo.vampire.event.InfectionChangeEvent;
 import com.clanjhoo.vampire.event.VampireTypeChangeEvent;
 import com.clanjhoo.vampire.util.*;
-import de.tr7zw.nbtapi.NBTCompound;
-import de.tr7zw.nbtapi.NBTItem;
 import me.libraryaddict.disguise.DisguiseAPI;
 import org.bukkit.*;
 import org.bukkit.attribute.Attribute;
@@ -29,6 +27,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.Serializable;
 import java.util.*;
+import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.logging.Level;
 
 public class UPlayer implements DBObject {
@@ -60,6 +59,10 @@ public class UPlayer implements DBObject {
      * PERSISTENT: whether or not the vampire is trying to infect others in combat on purpose or not
      */
     private boolean intending = false;
+    /**
+     * TRANSIENT: set of regions this vampire is allowed to enter (worldguard enabled)
+     */
+    private Set<String> allowedRegions = new ConcurrentSkipListSet<>();
     /**
      * TRANSIENT: whether or not the vampire is in bloodlust mode
      */
@@ -154,6 +157,14 @@ public class UPlayer implements DBObject {
         this.usingNightVision = false;
     }
 
+    public void invite(String regionName) {
+        allowedRegions.add(regionName);
+    }
+
+    public void expel(String regionName) {
+        allowedRegions.remove(regionName);
+    }
+
     /*
     public UPlayer(boolean vampire, boolean nosferatu, double infection, InfectionReason reason,
                    UUID makerUUID, boolean intending, boolean usingNightVision) {
@@ -181,21 +192,24 @@ public class UPlayer implements DBObject {
     }
 
     public void setVampire(boolean val) {
-        this.setInfection(0);
-
         if (this.vampire != val) {
             VampireTypeChangeEvent event = new VampireTypeChangeEvent(val, this);
             Bukkit.getPluginManager().callEvent(event);
             if (!event.isCancelled()) {
                 this.vampire = val;
                 this.setNosferatu(false);
-                this.setMaker(null);
-                this.setReason(null);
+                if (!val) {
+                    this.setMaker(null);
+                    this.setReason(null);
+                }
                 this.setBloodlusting(false);
                 this.setIntending(false);
                 this.setUsingNightVision(false);
+                this.setInfection(0);
 
                 Player player = offlinePlayer.getPlayer();
+                if (VampireRevamp.getInstance().permissionGroupEnabled())
+                    VampireRevamp.getInstance().setVampireGroup(player, val);
                 if (player != null) {
                     PluginConfig conf = VampireRevamp.getVampireConfig();
                     if (this.vampire) {
@@ -222,6 +236,9 @@ public class UPlayer implements DBObject {
                     this.update();
                 }
             }
+        }
+        else {
+            this.setInfection(0);
         }
     }
 
@@ -879,13 +896,9 @@ public class UPlayer implements DBObject {
     // -------------------------------------------- //
 
     public boolean isWearingRing(@NotNull Player player) {
-        if (player.getInventory().getItemInOffHand().getType() == Material.IRON_NUGGET) {
-            NBTItem item = new NBTItem(player.getInventory().getItemInOffHand());
-            if (item.hasKey("VampireRevamp")) {
-                NBTCompound vampCompound = item.getCompound("VampireRevamp");
-                return vampCompound.hasKey("IgnoreRadiation") && vampCompound.getBoolean("IgnoreRadiation");
-            }
-        }
+        PluginConfig conf = VampireRevamp.getVampireConfig();
+        if (conf.radiation.radiationRingEnabled)
+            return RingUtil.isSunRing(player.getInventory().getItemInOffHand());
         return false;
     }
 
@@ -893,7 +906,7 @@ public class UPlayer implements DBObject {
         Player player = offlinePlayer.getPlayer();
         PluginConfig conf = VampireRevamp.getVampireConfig();
         if (player != null && player.getGameMode() != GameMode.SPECTATOR && !conf.general.isBlacklisted(player.getWorld())) {
-            if (!conf.radiation.radiationRingEnabled || !isWearingRing(player)) {
+            if (!isWearingRing(player)) {
                 this.tickRadTemp(millis);
             }
             this.tickInfection(millis);
@@ -911,13 +924,12 @@ public class UPlayer implements DBObject {
         if (me != null) {
             PluginConfig conf = VampireRevamp.getVampireConfig();
             if (me.getGameMode() != GameMode.CREATIVE && this.isVampire() && !me.isDead()) {
-                WorldGuardCompat wg = VampireRevamp.getWorldGuardCompat();
                 double irradiation = 0;
                 boolean irradiationEnabled = true;
 
-                if (VampireRevamp.getVampireConfig().compatibility.useWorldGuardRegions && wg.useWG) {
-                    Object flagValue = wg.queryFlag(me, wg.IRRADIATE_VAMPIRES_FLAG);
-                    irradiationEnabled = flagValue.toString().equals("ALLOW");
+                if (VampireRevamp.isWorldGuardEnabled()) {
+                    WorldGuardCompat wg = VampireRevamp.getWorldGuardCompat();
+                    irradiationEnabled = wg.isIrradiationEnabled(me, me.getLocation());
                 }
 
                 if (irradiationEnabled) {
@@ -960,7 +972,7 @@ public class UPlayer implements DBObject {
     }
 
     public int infectionGetMessageIndex() {
-        return (int) ((InfectionMessageKeys.getMaxFeeling() + 1) * this.getInfection() / 1D) - 1;
+        return (int) ((InfectionMessageKeys.getMaxFeeling() + 1) * this.getInfection()) - 1;
     }
 
     public void tickRegen(long millis) {

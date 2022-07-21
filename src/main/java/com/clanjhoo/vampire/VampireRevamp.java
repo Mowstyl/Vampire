@@ -9,6 +9,7 @@ import co.aikar.locales.MessageKeyProvider;
 import com.clanjhoo.dbhandler.collections.DBObjectManager;
 import com.clanjhoo.dbhandler.drivers.StorageType;
 import com.clanjhoo.vampire.compat.WerewolfCompat;
+import com.clanjhoo.vampire.listeners.EntryVampiresListener;
 import com.clanjhoo.vampire.listeners.ListenerMain;
 import com.clanjhoo.vampire.listeners.PhantomListener;
 import com.clanjhoo.vampire.keyproviders.GrammarMessageKeys;
@@ -27,6 +28,7 @@ import com.clanjhoo.vampire.util.DisguiseUtil;
 import com.clanjhoo.vampire.util.SemVer;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteStreams;
+import net.milkbowl.vault.permission.Permission;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
@@ -37,6 +39,7 @@ import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.HandlerList;
+import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import org.bukkit.scheduler.BukkitScheduler;
@@ -62,6 +65,7 @@ public class VampireRevamp extends JavaPlugin {
 	public Set<LivingEntity> bats = new HashSet<>();
 	public Map<UUID, List<LivingEntity>> batmap = new ConcurrentHashMap<>();
 	public boolean isDisguiseEnabled = false;
+	public boolean hasVault = false;
 	private PluginConfig conf = null;
 	private static boolean isPapermc = false;
 	private AltarDark altarDark;
@@ -72,12 +76,27 @@ public class VampireRevamp extends JavaPlugin {
 	private WerewolfCompat ww;
 	private VampireExpansion expansionPAPI;
 	private PhantomListener pl;
+	private EntryVampiresListener dvl;
+	private static Permission perms = null;
 
 	private DBObjectManager<UPlayer> uPlayerColl;
 	
 	// -------------------------------------------- //
 	// FIELDS
 	// -------------------------------------------- //
+
+	public boolean setVampireGroup(Player player, boolean isVampire) {
+		if (isVampire) {
+			return perms.playerAddGroup(player, conf.compatibility.vampirePermissionGroup);
+		}
+		else {
+			return perms.playerRemoveGroup(player, conf.compatibility.vampirePermissionGroup);
+		}
+	}
+
+	public boolean permissionGroupEnabled() {
+		return perms != null;
+	}
 
 	public boolean isPaperMc() {
 		return isPapermc;
@@ -93,6 +112,10 @@ public class VampireRevamp extends JavaPlugin {
 
 	public static SemVer getServerVersion() {
 		return getInstance().serverVersion;
+	}
+
+	public static boolean isWorldGuardEnabled() {
+		return getInstance().wg != null && VampireRevamp.getVampireConfig().compatibility.useWorldGuardRegions;
 	}
 
 	public static WorldGuardCompat getWorldGuardCompat() {
@@ -163,7 +186,13 @@ public class VampireRevamp extends JavaPlugin {
 		loadConfig(true);
 
 		// WorldGuard compat
-		wg = new WorldGuardCompat();
+		if (Bukkit.getPluginManager().getPlugin("WorldGuard") != null) {
+			wg = new WorldGuardCompat();
+		}
+		else {
+			wg = null;
+			VampireRevamp.log(Level.WARNING, "WorldGuard plugin not detected. Disabling WorldGuard hooks.");
+		}
 
 		try {
 			File localesFolder = new File(this.getDataFolder() + "/locales");
@@ -204,6 +233,7 @@ public class VampireRevamp extends JavaPlugin {
 		this.reloadConfig();
 		ww.disable();
 		HandlerList.unregisterAll(pl);
+		HandlerList.unregisterAll(dvl);
 		boolean result = loadConfig(false);
 
 		loadCompat();
@@ -218,6 +248,11 @@ public class VampireRevamp extends JavaPlugin {
 		if (isPapermc && new SemVer(1, 13).compareTo(serverVersion) < 0 && this.conf.truce.entityTypes.contains(EntityType.PHANTOM)) {
 			pl = new PhantomListener();
 			Bukkit.getPluginManager().registerEvents(pl, this);
+		}
+
+		if (wg != null && wg.useWG) {
+			dvl = new EntryVampiresListener();
+			Bukkit.getPluginManager().registerEvents(dvl, this);
 		}
 	}
 
@@ -236,10 +271,13 @@ public class VampireRevamp extends JavaPlugin {
 	public static void loadPlayerFromDB(Player p) {
 		boolean result = VampireRevamp.getPlayerCollection().getDataSynchronous(
 				new Serializable[]{p.getUniqueId()},
-				(hstPlayer) -> {
-					Player s = hstPlayer.getPlayer();
+				(vPlayer) -> {
+					Player s = vPlayer.getPlayer();
 					if (s == null || s.isValid() != p.isValid()) {
-						hstPlayer.setUUID(p.getUniqueId());
+						vPlayer.setUUID(p.getUniqueId());
+					}
+					if (perms != null && vPlayer.isVampire()) {
+						VampireRevamp.getInstance().setVampireGroup(p, true);
 					}
 				},
 				() -> VampireRevamp.log(Level.SEVERE, "Couldn't load player " + p.getName() + " from DB.")
@@ -342,6 +380,15 @@ public class VampireRevamp extends JavaPlugin {
 		return finalResult;
 	}
 
+	private boolean setupPermissions() {
+		RegisteredServiceProvider<Permission> rsp = getServer().getServicesManager().getRegistration(Permission.class);
+		if (rsp == null) {
+			return false;
+		}
+		perms = rsp.getProvider();
+		return perms != null;
+	}
+
 	@Override
 	public void onEnable()
 	{
@@ -352,6 +399,27 @@ public class VampireRevamp extends JavaPlugin {
 		isDisguiseEnabled = Bukkit.getPluginManager().isPluginEnabled("LibsDisguises");
 		if (isDisguiseEnabled)
 			DisguiseUtil.plugin = this;
+
+		if (conf.compatibility.useVampirePermGroup) {
+			hasVault = getServer().getPluginManager().getPlugin("Vault") != null;
+			if (hasVault) {
+				if (setupPermissions()) {
+					if (perms.hasGroupSupport()) {
+						VampireRevamp.log(Level.INFO, "Successfully hooked with Vault permission service!");
+					}
+					else {
+						VampireRevamp.log(Level.WARNING, "Your permission plugin doesn't support groups! Vampire permission group won't be available.");
+						perms = null;
+					}
+				}
+				else {
+					VampireRevamp.log(Level.WARNING, "No permission plugin compatible with Vault could be found! Vampire permission group won't be available.");
+				}
+			}
+			else {
+				VampireRevamp.log(Level.WARNING, "You need Vault plugin to enable vampire permission group!");
+			}
+		}
 
 		loadCompat();
 

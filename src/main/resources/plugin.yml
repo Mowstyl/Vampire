@@ -6,7 +6,7 @@ website: ${project.url}
 description: ${project.description}
 authors: [Cayorion, Mowstyl]
 #depend: [MassiveCore]
-softdepend: [WorldEdit, WorldGuard, LibsDisguises, PlaceholderAPI]
+softdepend: [WorldEdit, WorldGuard, LibsDisguises, PlaceholderAPI, Vault]
 loadbefore: [Werewolf]
 permissions:
 # -------------------------------------------- #

@@ -9,17 +9,11 @@ import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.util.logging.Level;
-
 public class SunUtil
 {
 	// -------------------------------------------- //
 	// CONSTANTS
 	// -------------------------------------------- //
-
-	private static boolean failedWG = false;
 	
 	public final static int MID_DAY_TICKS = 6000;
 	public final static int DAY_TICKS = 24000;
@@ -40,32 +34,10 @@ public class SunUtil
 	public static int calcMidDeltaTicks(World world, Player player)
 	{
 		long rtime = world.getFullTime();
-		WorldGuardCompat wg = VampireRevamp.getWorldGuardCompat();
 
-		if (VampireRevamp.getVampireConfig().compatibility.useWorldGuardRegions && wg.useWG) {
-			String aux = (String) wg.queryFlag(player, wg.getFlag("TIME_LOCK"));
-
-			if (aux != null) {
-				if (!aux.contains(":")) {
-					rtime = Long.parseLong(aux);
-				}
-				else {
-					String[] rawTimes = aux.split(":");
-					int h, m;
-					double wtime, s = 0;
-					h = Integer.parseInt(rawTimes[0]);
-					m = Integer.parseInt(rawTimes[1]);
-					if (rawTimes.length > 2) {
-						s = Double.parseDouble(rawTimes[2]);
-					}
-					h -= 6;  // Minecraft days start at 06:00
-					if (h < 0) {
-						h += 24;
-					}
-					wtime = h + m * 60 + s * 3600;
-					rtime = (long) (wtime * 1000);
-				}
-			}
+		if (VampireRevamp.isWorldGuardEnabled()) {
+			WorldGuardCompat wg = VampireRevamp.getWorldGuardCompat();
+			rtime = wg.getTime(player, player.getLocation());
 		}
 
 		int ret = (int) ((rtime - MID_DAY_TICKS) % DAY_TICKS);
@@ -97,27 +69,10 @@ public class SunUtil
 		if (world.getEnvironment() != Environment.NORMAL)
 			return 0d;
 		boolean storming = world.hasStorm();
-		WorldGuardCompat wg = VampireRevamp.getWorldGuardCompat();
 
-		if (VampireRevamp.getVampireConfig().compatibility.useWorldGuardRegions && wg.useWG) {
-			Object qres = wg.queryFlag(player, wg.getFlag("WEATHER_LOCK"));
-			if (qres != null) {
-				if (!wg.oldWG) {
-					try {
-						Class<?> WeatherTypeWG = Class.forName("com.sk89q.worldedit.world.weather.WeatherType");
-						Method getName = WeatherTypeWG.getMethod("getName");
-						storming = getName.invoke(qres).equals(WeatherType.DOWNFALL.name());
-					} catch (ClassNotFoundException | NoSuchMethodException | IllegalAccessException | InvocationTargetException ex) {
-						if (!failedWG) {
-							VampireRevamp.log(Level.WARNING, "Error getting weather from WorldGuard, please report it to the plugin developer.");
-							ex.printStackTrace();
-							failedWG = true;
-						}
-					}
-				} else {
-					storming = qres.equals(WeatherType.DOWNFALL);
-				}
-			}
+		if (VampireRevamp.isWorldGuardEnabled()) {
+			WorldGuardCompat wg = VampireRevamp.getWorldGuardCompat();
+			storming = !wg.isSkyClear(player, player.getLocation());
 		}
 
 		if (storming) return 0d;
@@ -136,7 +91,6 @@ public class SunUtil
 	/**
 	 * The sum of the opacity above and including the block.
 	 */
-	@SuppressWarnings("deprecation")
 	public static double calcTerrainOpacity(Block block)
 	{
 		double ret = 0;
@@ -214,8 +168,7 @@ public class SunUtil
 		// Armor
 		double armorOpacity = calcArmorOpacity(player);
 		ret *= (1-armorOpacity);
-		if (ret == 0) return 0;
-		//P.p.log("calcPlayerIrradiation",ret);
+
 		return ret;
 	}
 	

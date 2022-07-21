@@ -113,8 +113,8 @@ public class ListenerMain implements Listener {
             try {
                 UPlayer uplayer = VampireRevamp.getPlayerCollection().getDataNow(new Serializable[]{entity.getUniqueId()});
                 if (uplayer.isVampire()) {
-                    event.setCancelled(true);
-                    EntityUtil.sendHealthFoodUpdatePacket((Player) entity);
+                    event.setFoodLevel(((Player) entity).getFoodLevel());
+                    // EntityUtil.sendHealthFoodUpdatePacket((Player) entity);
                 }
             }
             catch (AssertionError ignore) {}
@@ -181,7 +181,7 @@ public class ListenerMain implements Listener {
                 Bukkit.getScheduler().scheduleSyncDelayedTask(VampireRevamp.getInstance(), () -> {
                     PluginConfig conf = VampireRevamp.getVampireConfig();
                     player.setFoodLevel(conf.vampire.respawnFood);
-                    player.setHealth((double) conf.vampire.respawnHealth);
+                    player.setHealth(conf.vampire.respawnHealth);
                     EntityUtil.sendHealthFoodUpdatePacket(player);
                     uplayer.update();
                 });
@@ -611,41 +611,45 @@ public class ListenerMain implements Listener {
 
         ItemStack item = event.getItem();
         // If the item is a potion ...
+        if (!item.getType().equals(Material.POTION))
+            return;
+
         // ... and is a blood flask ...
-        if (item.getType().equals(Material.POTION) && BloodFlaskUtil.isBloodFlask(item)) {
-            // ... get the blood amount ...
-            double amount = BloodFlaskUtil.getBloodFlaskAmount(item);
+        BloodFlaskUtil.BloodFlaskData bloodFlaskData = BloodFlaskUtil.getBloodFlaskData(item);
+        if (bloodFlaskData == null)
+            return;
+        // ... get the blood amount ...
+        double amount = bloodFlaskData.getAmount();
 
-            // ... and is the blood vampiric?  ...
-            boolean isVampiric = BloodFlaskUtil.isBloodFlaskVampiric(item);
+        // ... and is the blood vampiric?  ...
+        boolean isVampiric = bloodFlaskData.isVampiric();
 
-            // ... get the player ...
-            UPlayer uplayer = VampireRevamp.getPlayerCollection().getDataNow(new Serializable[]{event.getPlayer().getUniqueId()});
+        // ... get the player ...
+        UPlayer uplayer = VampireRevamp.getPlayerCollection().getDataNow(new Serializable[]{event.getPlayer().getUniqueId()});
 
-            // ... are they bloodlusting? ...
-            if (!uplayer.isBloodlusting()) {
-                // ... calculate and add the blood amount to the player ...
-                double lacking;
-                if (uplayer.isVampire()) {
-                    // Vampires drink blood to replenish food.
-                    lacking = (20 - uplayer.getFood());
-                    if (amount > lacking) amount = lacking;
-                    uplayer.addFood(amount);
-                } else if (isVampiric) {
-                    // ... finally, if the player is human did they contract the dark disease from vampiric blood?
-                    if (uplayer.isInfected()) {
-                        uplayer.addInfection(0.01D);
-                    } else if (event.getPlayer().hasPermission("vampire.flask.contract")
-                            && MathUtil.random.nextDouble() * 20 < amount) {
-                        uplayer.addInfection(0.05D, InfectionReason.FLASK, uplayer);
-                    }
+        // ... are they bloodlusting? ...
+        if (!uplayer.isBloodlusting()) {
+            // ... calculate and add the blood amount to the player ...
+            double lacking;
+            if (uplayer.isVampire()) {
+                // Vampires drink blood to replenish food.
+                lacking = (20 - uplayer.getFood());
+                if (amount > lacking) amount = Math.ceil(lacking);
+                uplayer.addFood(amount);
+            } else if (isVampiric) {
+                // ... finally, if the player is human did they contract the dark disease from vampiric blood?
+                if (uplayer.isInfected()) {
+                    uplayer.addInfection(0.01D);
+                } else if (event.getPlayer().hasPermission("vampire.flask.contract")
+                        && MathUtil.random.nextDouble() * 20 < amount) {
+                    uplayer.addInfection(0.05D, InfectionReason.FLASK, uplayer);
                 }
-            } else {
-                VampireRevamp.sendMessage(event.getPlayer(),
-                        MessageType.ERROR,
-                        SkillMessageKeys.FLASK_BLOODLUSTING);
-                event.setCancelled(true);
             }
+        } else {
+            VampireRevamp.sendMessage(event.getPlayer(),
+                    MessageType.ERROR,
+                    SkillMessageKeys.FLASK_BLOODLUSTING);
+            event.setCancelled(true);
         }
     }
 

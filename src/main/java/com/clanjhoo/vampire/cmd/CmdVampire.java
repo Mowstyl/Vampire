@@ -2,22 +2,17 @@ package com.clanjhoo.vampire.cmd;
 
 import co.aikar.commands.*;
 import co.aikar.commands.annotation.*;
-import com.clanjhoo.vampire.BloodFlaskUtil;
-import com.clanjhoo.vampire.InfectionReason;
+import com.clanjhoo.vampire.*;
 import com.clanjhoo.vampire.keyproviders.CommandMessageKeys;
 import com.clanjhoo.vampire.keyproviders.GrammarMessageKeys;
 import com.clanjhoo.vampire.keyproviders.SkillMessageKeys;
 import com.clanjhoo.vampire.keyproviders.VampirismMessageKeys;
-import com.clanjhoo.vampire.Perm;
-import com.clanjhoo.vampire.VampireRevamp;
 import com.clanjhoo.vampire.config.PluginConfig;
 import com.clanjhoo.vampire.entity.UPlayer;
 import com.clanjhoo.vampire.util.*;
-import de.tr7zw.nbtapi.NBTItem;
 import net.md_5.bungee.api.chat.BaseComponent;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
-import org.bukkit.Material;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -538,7 +533,14 @@ public class CmdVampire extends BaseCommand {
 	@CommandPermission("vampire.flask")
 	@Description("{@@commands.flask_description}")
 	@Syntax("[amount=4.0]")
-	public void onFlask(Player sender, @Default("4") double amount) {
+	public void onFlask(Player sender, @Default("4") Integer amount) {
+		if (amount <= 0) {
+			VampireRevamp.sendMessage(sender,
+					MessageType.ERROR,
+					CommandMessageKeys.NOT_VALID_VALUE,
+					"{value}", amount.toString());
+			return;
+		}
 		if (VampireRevamp.getVampireConfig().general.isBlacklisted(sender.getWorld())) {
 			VampireRevamp.sendMessage(sender,
 					MessageType.ERROR,
@@ -548,23 +550,32 @@ public class CmdVampire extends BaseCommand {
 
 		boolean success = VampireRevamp.getPlayerCollection().getDataSynchronous(new Serializable[]{sender.getUniqueId()}, (vme) -> {
 			// Does the player have the required amount?
-			if ((vme.isVampire() && amount > vme.getFood()) || (!vme.isVampire() && amount > sender.getHealth())) {
+			//if ((vme.isVampire() && amount > vme.getFood()) || (!vme.isVampire() && amount > sender.getHealth())) {
+			if (amount > sender.getHealth()) {
 				VampireRevamp.sendMessage(sender,
 						MessageType.ERROR,
 						SkillMessageKeys.FLASK_INSUFFICIENT);
 			} else {
 				// ... create a blood flask!
-				if (vme.isVampire()) {
-					vme.addFood(-amount);
-				} else {
+				if (BloodFlaskUtil.fillBottle(vme, amount)) {
+					/*
+					if (vme.isVampire()) {
+						vme.addFood(-amount);
+					} else {
+						sender.setHealth(sender.getHealth() - amount);
+					}
+					 */
 					sender.setHealth(sender.getHealth() - amount);
+					// Inform
+					VampireRevamp.sendMessage(sender,
+							MessageType.INFO,
+							SkillMessageKeys.FLASK_SUCCESS);
 				}
-				BloodFlaskUtil.fillBottle(amount, vme);
-
-				// Inform
-				VampireRevamp.sendMessage(sender,
-						MessageType.ERROR,
-						SkillMessageKeys.FLASK_SUCCESS);
+				else {
+					VampireRevamp.sendMessage(sender,
+							MessageType.ERROR,
+							SkillMessageKeys.FLASK_NO_BOTTLE);
+				}
 			}
 		}, () -> {
 			VampireRevamp.sendMessage(sender,
@@ -769,15 +780,33 @@ public class CmdVampire extends BaseCommand {
 		}
 	}
 
+	@Subcommand("holywater")
+	@CommandPermission("vampire.give.holywater")
+	@Description("{@@commands.holywater_description}")
+	public void onHolyWater(Player sender, @Default("1") Integer quantity) {
+		if (quantity < 1 || quantity > 64) {
+			VampireRevamp.sendMessage(sender,
+					MessageType.ERROR,
+					CommandMessageKeys.NOT_VALID_VALUE,
+					"{value}", quantity.toString());
+			return;
+		}
+		ItemStack water = HolyWaterUtil.createHolyWater(sender);
+		water.setAmount(quantity);
+		Map<Integer, ItemStack> result = sender.getInventory().addItem(water);
+		if (!result.isEmpty()) {
+			VampireRevamp.sendMessage(sender,
+					MessageType.ERROR,
+					CommandMessageKeys.FULL_INVENTORY);
+		}
+	}
+
 	@Subcommand("ring")
 	@CommandPermission("vampire.give.ring")
 	@Description("{@@commands.ring_description}")
 	public void onRing(Player sender) {
-		ItemStack ring = new ItemStack(Material.IRON_NUGGET, 1);
-		NBTItem nbtRing = new NBTItem(ring);
-		nbtRing.addCompound("VampireRevamp");
-		nbtRing.getCompound("VampireRevamp").setBoolean("IgnoreRadiation", true);
-		Map<Integer, ItemStack> result = sender.getInventory().addItem(nbtRing.getItem());
+		ItemStack ring = RingUtil.getSunRing();
+		Map<Integer, ItemStack> result = sender.getInventory().addItem(ring);
 		if (!result.isEmpty()) {
 			VampireRevamp.sendMessage(sender,
 					MessageType.ERROR,
