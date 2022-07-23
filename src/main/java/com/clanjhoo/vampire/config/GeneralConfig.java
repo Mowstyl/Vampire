@@ -21,7 +21,7 @@ public class GeneralConfig {
     public final boolean useOldFoodFormula;
     private final Set<String> worldBlacklist;
     public final Locale defaultLocale;
-    public final boolean vampiricFlaskConsumeFood;
+    public final boolean vampiresUseFoodAsBlood;
 
     public GeneralConfig() {
         debug = false;
@@ -31,7 +31,7 @@ public class GeneralConfig {
         useOldFoodFormula = false;
         worldBlacklist = new HashSet<>();
         defaultLocale = Locale.ENGLISH;
-        vampiricFlaskConsumeFood = false;
+        vampiresUseFoodAsBlood = false;
     }
 
     public GeneralConfig(@NotNull ConfigurationSection cs) {
@@ -62,7 +62,7 @@ public class GeneralConfig {
 
         String locstring = cs.getString("defaultLocale");
         defaultLocale = cs.contains("defaultLocale") && locstring != null && !locstring.isEmpty() ? new Locale(locstring) : def.defaultLocale;
-        vampiricFlaskConsumeFood = cs.getBoolean("vampiricFlaskConsumeFood", def.vampiricFlaskConsumeFood);
+        vampiresUseFoodAsBlood = cs.getBoolean("vampiresUseFoodAsBlood", def.vampiresUseFoodAsBlood);
     }
 
     public boolean isBlacklisted(World world) {
@@ -85,7 +85,7 @@ public class GeneralConfig {
         result = result && PluginConfig.writeLine(configWriter, "# The default language to load. It has to exist in locales folder", indent, level);
         result = result && PluginConfig.writeLine(configWriter, "defaultLocale: \"" + this.defaultLocale + "\"", indent, level);
         result = result && PluginConfig.writeLine(configWriter, "# If vampires use their food level to create a blood flask or not (using their health instead)", indent, level);
-        result = result && PluginConfig.writeLine(configWriter, "vampiricFlaskConsumeFood: " + this.vampiricFlaskConsumeFood, indent, level);
+        result = result && PluginConfig.writeLine(configWriter, "vampiresUseFoodAsBlood: " + this.vampiresUseFoodAsBlood, indent, level);
 
         return result;
     }
@@ -100,7 +100,7 @@ public class GeneralConfig {
                 ", useOldFoodFormula=" + useOldFoodFormula +
                 ", worldBlacklist=" + worldBlacklist +
                 ", defaultLocale=" + defaultLocale +
-                ", vampiricFlaskConsumeFood=" + vampiricFlaskConsumeFood +
+                ", vampiresUseFoodAsBlood=" + vampiresUseFoodAsBlood +
                 '}';
     }
 }

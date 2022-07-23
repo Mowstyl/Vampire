@@ -232,7 +232,7 @@ public class CmdVampire extends BaseCommand {
 									CommandMessageKeys.SHOW_INFECTED,
 									"{player}", you,
 									"{to_be}", are,
-									"{percent}", String.format("%d%%", Math.round(uplayer.getInfection())));
+									"{percent}", String.format("%d%%", Math.round(uplayer.getInfection() * 100)));
 
 							InfectionReason reason = uplayer.getReason();
 							String parent = null;
@@ -550,15 +550,15 @@ public class CmdVampire extends BaseCommand {
 
 		boolean success = VampireRevamp.getPlayerCollection().getDataSynchronous(new Serializable[]{sender.getUniqueId()}, (vme) -> {
 			// Does the player have the required amount?
-			//if ((vme.isVampire() && amount > vme.getFood()) || (!vme.isVampire() && amount > sender.getHealth())) {
-			if (amount > sender.getHealth()) {
+			boolean consumeFood = VampireRevamp.getVampireConfig().general.vampiresUseFoodAsBlood && vme.isVampire();
+			if ((consumeFood && amount > vme.getFood()) || (!consumeFood && amount > sender.getHealth())) {
 				VampireRevamp.sendMessage(sender,
 						MessageType.ERROR,
 						SkillMessageKeys.FLASK_INSUFFICIENT);
 			} else {
 				// ... create a blood flask!
 				if (BloodFlaskUtil.fillBottle(vme, amount)) {
-					if (VampireRevamp.getVampireConfig().general.vampiricFlaskConsumeFood && vme.isVampire()) {
+					if (consumeFood) {
 						vme.addFood(-amount);
 					} else {
 						sender.setHealth(sender.getHealth() - amount);

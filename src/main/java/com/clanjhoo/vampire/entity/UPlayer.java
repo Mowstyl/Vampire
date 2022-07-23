@@ -1105,7 +1105,7 @@ public class UPlayer implements DBObject {
 
                 // Enough blood?
                 double enough = 0;
-                if (vyou.isVampire()) {
+                if (conf.general.vampiresUseFoodAsBlood && vyou.isVampire()) {
                     // blood is only food for vampires
                     enough = vyou.getFood();
                 } else {
@@ -1123,7 +1123,7 @@ public class UPlayer implements DBObject {
                             "{player}", you.getDisplayName());
                 } else {
                     // Transfer blood (food for vampires, life for humans)
-                    if (vyou.isVampire()) {
+                    if (conf.general.vampiresUseFoodAsBlood && vyou.isVampire()) {
                         vyou.addFood(-amount);
                     } else {
                         you.damage(amount);
