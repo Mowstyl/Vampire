@@ -1,12 +1,14 @@
 package com.clanjhoo.vampire.util;
 
 import com.clanjhoo.vampire.VampireRevamp;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.*;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.metadata.Metadatable;
 import org.bukkit.permissions.PermissionAttachment;
+import org.bukkit.util.Vector;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -173,5 +175,22 @@ public class EntityUtil {
         }
 
         return result;
+    }
+
+    public static Location toBlockLocation(Location origin) {
+        return new Location(
+                origin.getWorld(),
+                origin.getBlockX(),
+                origin.getBlockY(),
+                origin.getBlockZ(),
+                origin.getYaw(),
+                origin.getPitch());
+    }
+
+    public static Vector toBlockVector(Location origin) {
+        return new Vector(
+                origin.getBlockX(),
+                origin.getBlockY(),
+                origin.getBlockZ());
     }
 }

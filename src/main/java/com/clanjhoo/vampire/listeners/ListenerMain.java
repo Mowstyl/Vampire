@@ -149,18 +149,18 @@ public class ListenerMain implements Listener {
     }
 
     @EventHandler(priority = EventPriority.NORMAL)
-    public void updateOnDeath(EntityDeathEvent event) {
+    public void updateOnDeath(PlayerDeathEvent event) {
         if (VampireRevamp.getVampireConfig().general.isBlacklisted(event.getEntity().getWorld()))
             return;
         // If a vampire dies ...
-        LivingEntity entity = event.getEntity();
-
+        Player entity = event.getEntity();
         if (EntityUtil.isPlayer(entity)) {
             VampireRevamp.getPlayerCollection().getDataSynchronous(new Serializable[]{entity.getUniqueId()}, (uplayer) -> {
                 if (uplayer.isVampire()) {
                     // Close down bloodlust.
                     uplayer.setRad(0);
                     uplayer.setBloodlusting(false);
+                    entity.setFireTicks(0);
                 }
             }, () -> {}, true);
         }

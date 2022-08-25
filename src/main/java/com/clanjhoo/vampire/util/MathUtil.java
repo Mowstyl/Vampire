@@ -86,12 +86,12 @@ public class MathUtil {
 
     public static boolean equalsishNumber(Number number1, Number number2) {
         boolean eq = false;
-        if (number1 == null) {
-            if (number2 == null) {
-                eq = true;
-            } else {
-                eq = Math.abs(number1.doubleValue() - number2.doubleValue()) < EQUALSISH_EPSILON;
-            }
+
+        if (number1 == null && number2 == null) {
+            eq = true;
+        }
+        else if (number1 != null && number2 != null) {
+            eq = Math.abs(number2.doubleValue() - number1.doubleValue()) < EQUALSISH_EPSILON;
         }
 
         return eq;

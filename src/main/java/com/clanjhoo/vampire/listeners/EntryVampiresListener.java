@@ -3,6 +3,7 @@ package com.clanjhoo.vampire.listeners;
 import com.clanjhoo.vampire.VampireAPI;
 import com.clanjhoo.vampire.VampireRevamp;
 import com.clanjhoo.vampire.compat.WorldGuardCompat;
+import com.clanjhoo.vampire.util.EntityUtil;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -18,7 +19,7 @@ public class EntryVampiresListener implements Listener {
         Location to = event.getTo();
 
         // Haven't moved from the block the player was standing
-        if (from.toBlockLocation().toVector().subtract(to.toBlockLocation().toVector()).lengthSquared() == 0) {
+        if (to == null || EntityUtil.toBlockVector(to).subtract(EntityUtil.toBlockVector(from)).lengthSquared() == 0) {
             return;
         }
         WorldGuardCompat wgc = VampireRevamp.getWorldGuardCompat();
