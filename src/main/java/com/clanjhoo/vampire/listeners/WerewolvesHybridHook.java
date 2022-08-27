@@ -1,7 +1,7 @@
 package com.clanjhoo.vampire.listeners;
 
 import com.clanjhoo.vampire.VampireRevamp;
-import com.clanjhoo.vampire.entity.UPlayer;
+import com.clanjhoo.vampire.entity.VPlayer;
 import com.clanjhoo.vampire.event.InfectionChangeEvent;
 import com.clanjhoo.vampire.event.VampireTypeChangeEvent;
 import org.bukkit.Bukkit;
@@ -13,7 +13,6 @@ import org.bukkit.event.Listener;
 import us.rfsmassacre.Werewolf.Events.WerewolfInfectionEvent;
 import us.rfsmassacre.Werewolf.WerewolfAPI;
 
-import java.io.Serializable;
 import java.util.logging.Level;
 
 public class WerewolvesHybridHook implements Listener {
@@ -37,7 +36,7 @@ public class WerewolvesHybridHook implements Listener {
         if (!VampireRevamp.getVampireConfig().compatibility.preventWerewolfHybrids)
             return;
 
-        UPlayer uplayer = event.getUplayer();
+        VPlayer uplayer = event.getUplayer();
         if (uplayer == null) {
             event.setCancelled(true);
             return;
@@ -67,7 +66,7 @@ public class WerewolvesHybridHook implements Listener {
         if (!VampireRevamp.getVampireConfig().compatibility.preventWerewolfHybrids)
             return;
 
-        UPlayer uplayer = event.getUplayer();
+        VPlayer uplayer = event.getUplayer();
         if (uplayer == null) {
             event.setCancelled(true);
             return;
@@ -104,7 +103,7 @@ public class WerewolvesHybridHook implements Listener {
         }
 
         try {
-            UPlayer uplayer = VampireRevamp.getPlayerCollection().getDataNow(new Serializable[]{player.getUniqueId()});
+            VPlayer uplayer = VampireRevamp.getVPlayerManager().tryGetDataNow(player.getUniqueId());
             if (uplayer.isUnhealthy()) {
                 event.setCancelled(true);
             }

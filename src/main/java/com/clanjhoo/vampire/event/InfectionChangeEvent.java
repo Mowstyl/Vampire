@@ -1,6 +1,6 @@
 package com.clanjhoo.vampire.event;
 
-import com.clanjhoo.vampire.entity.UPlayer;
+import com.clanjhoo.vampire.entity.VPlayer;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 
@@ -35,9 +35,9 @@ public class InfectionChangeEvent extends Event {
         this.infection = infection;
     }
 
-    private final UPlayer uplayer;
+    private final VPlayer uplayer;
 
-    public UPlayer getUplayer() {
+    public VPlayer getUplayer() {
         return this.uplayer;
     }
 
@@ -45,7 +45,7 @@ public class InfectionChangeEvent extends Event {
     // CONSTRUCT
     // -------------------------------------------- //
 
-    public InfectionChangeEvent(double infection, UPlayer uplayer) {
+    public InfectionChangeEvent(double infection, VPlayer uplayer) {
         this.infection = infection;
         this.uplayer = uplayer;
     }

@@ -1,6 +1,6 @@
 package com.clanjhoo.vampire;
 
-import com.clanjhoo.vampire.entity.UPlayer;
+import com.clanjhoo.vampire.entity.VPlayer;
 import com.clanjhoo.vampire.keyproviders.SkillMessageKeys;
 import com.clanjhoo.vampire.util.BooleanTagType;
 import com.clanjhoo.vampire.util.CollectionUtil;
@@ -95,7 +95,7 @@ public class BloodFlaskUtil {
         return false;
     }
 
-    public static boolean fillBottle(UPlayer uplayer, double amount) {
+    public static boolean fillBottle(VPlayer uplayer, double amount) {
         Player player = uplayer.getPlayer();
         if (!BloodFlaskUtil.playerConsumeGlassBottle(player)) {
             return false;

@@ -38,6 +38,8 @@ public enum InfectionReason
 
 	public static InfectionReason fromName(String name) {
 		InfectionReason reason = InfectionReason.UNKNOWN;
+		if (name == null)
+			return reason;
 
 		if (name.equalsIgnoreCase("ALTAR"))
 			reason = InfectionReason.ALTAR;

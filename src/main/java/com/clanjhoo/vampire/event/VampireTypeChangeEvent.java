@@ -1,6 +1,6 @@
 package com.clanjhoo.vampire.event;
 
-import com.clanjhoo.vampire.entity.UPlayer;
+import com.clanjhoo.vampire.entity.VPlayer;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 
@@ -35,9 +35,9 @@ public class VampireTypeChangeEvent extends Event {
         this.vampire = vampire;
     }
 
-    private final UPlayer uplayer;
+    private final VPlayer uplayer;
 
-    public UPlayer getUplayer() {
+    public VPlayer getUplayer() {
         return this.uplayer;
     }
 
@@ -45,7 +45,7 @@ public class VampireTypeChangeEvent extends Event {
     // CONSTRUCT
     // -------------------------------------------- //
 
-    public VampireTypeChangeEvent(boolean vampire, UPlayer uplayer) {
+    public VampireTypeChangeEvent(boolean vampire, VPlayer uplayer) {
         this.vampire = vampire;
         this.uplayer = uplayer;
         this.cancel = false;

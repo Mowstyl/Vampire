@@ -1,9 +1,10 @@
 package com.clanjhoo.vampire.entity;
 
 import co.aikar.commands.MessageType;
-import com.clanjhoo.dbhandler.data.DBObject;
-import com.clanjhoo.dbhandler.data.TableData;
-import com.clanjhoo.dbhandler.utils.Pair;
+import com.clanjhoo.dbhandler.annotations.DataField;
+import com.clanjhoo.dbhandler.annotations.Entity;
+import com.clanjhoo.dbhandler.annotations.NotNullField;
+import com.clanjhoo.dbhandler.annotations.PrimaryKey;
 import com.clanjhoo.vampire.InfectionReason;
 import com.clanjhoo.vampire.compat.WorldGuardCompat;
 import com.clanjhoo.vampire.keyproviders.*;
@@ -18,39 +19,49 @@ import me.libraryaddict.disguise.DisguiseAPI;
 import org.bukkit.*;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.Creature;
-import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.jetbrains.annotations.NotNull;
 
-import java.io.Serializable;
 import java.util.*;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.logging.Level;
 
-public class UPlayer implements DBObject {
+@Entity(table = "vampire_data")
+public class VPlayer {
     // -------------------------------------------- //
     // PERSISTENT FIELDS
     // -------------------------------------------- //
 
     /**
+     * PERSISTENT: UniqueID of this player
+     */
+    @PrimaryKey
+    private UUID uuid;
+    /**
      * PERSISTENT: whether or not the player is a vampire
      */
+    @NotNullField
+    @DataField(sqltype = "BOOL")
     private boolean vampire = false;
     /**
      * PERSISTENT: whether or not the player is a nosferatu (higher tier)
      */
+    @NotNullField
+    @DataField(sqltype = "BOOL")
     private boolean nosferatu = false;
     /**
      * PERSISTENT: degree of infection [0, 1]. 0 means no infection, 1 turns the player into a vampire
      */
+    @NotNullField
     private double infection = 0;
     /**
-     * PERSISTENT:
+     * PERSISTENT: how was this player infected
      */
-    private InfectionReason reason;
+    @DataField(sqltype = "VARCHAR(16)")
+    private String reason;
     /**
      * PERSISTENT: UUID of the player who infected this player
      */
@@ -58,23 +69,23 @@ public class UPlayer implements DBObject {
     /**
      * PERSISTENT: whether or not the vampire is trying to infect others in combat on purpose or not
      */
+    @NotNullField
+    @DataField(sqltype = "BOOL")
     private boolean intending = false;
+    /**
+     * PERSISTENT: whether or not to apply night vision effects to a vampire
+     */
+    @DataField(sqltype = "BOOL")
+    private boolean usingNightVision = false;
+
     /**
      * TRANSIENT: set of regions this vampire is allowed to enter (worldguard enabled)
      */
-    private Set<String> allowedRegions = new ConcurrentSkipListSet<>();
+    private transient Set<String> allowedRegions = new ConcurrentSkipListSet<>();
     /**
      * TRANSIENT: whether or not the vampire is in bloodlust mode
      */
     private transient boolean bloodlusting = false;
-    /**
-     * PERSISTENT: whether or not to apply night vision effects to a vampire
-     */
-    private boolean usingNightVision = false;
-    /**
-     * TRANSIENT: Reference to the online player
-     */
-    private transient OfflinePlayer offlinePlayer = null;
     /**
      * TRANSIENT: Had enabled flight
      */
@@ -110,7 +121,7 @@ public class UPlayer implements DBObject {
     /**
      * TRANSIENT: the player who offered the blood in a trade
      */
-    private transient UPlayer tradeOfferedFrom = null;
+    private transient VPlayer tradeOfferedFrom = null;
     /**
      * TRANSIENT: the amount of blood offered in a trade
      */
@@ -133,21 +144,7 @@ public class UPlayer implements DBObject {
     // CONSTRUCTORS
     // -------------------------------------------- //
 
-    public UPlayer(Serializable rawUUID) {
-        UUID uuid;
-        offlinePlayer = null;
-        if (rawUUID != null) {
-            if (rawUUID instanceof String) {
-                uuid = UUID.fromString((String) rawUUID);
-            }
-            else if (rawUUID instanceof UUID) {
-                uuid = (UUID) rawUUID;
-            }
-            else {
-                throw new IllegalArgumentException("rawUUID must be a String or a Java UUID");
-            }
-            offlinePlayer = Bukkit.getServer().getOfflinePlayer(uuid);
-        }
+    public VPlayer() {
         this.vampire = false;
         this.nosferatu = false; // You can't be nosferatu without being vampire
         this.infection = 0;
@@ -164,19 +161,6 @@ public class UPlayer implements DBObject {
     public void expel(String regionName) {
         allowedRegions.remove(regionName);
     }
-
-    /*
-    public UPlayer(boolean vampire, boolean nosferatu, double infection, InfectionReason reason,
-                   UUID makerUUID, boolean intending, boolean usingNightVision) {
-        this.vampire = vampire || nosferatu;
-        this.nosferatu = this.vampire && nosferatu; // You can't be nosferatu without being vampire
-        this.infection = infection;
-        this.reason = reason;
-        this.makerUUID = makerUUID;
-        this.intending = vampire && intending;
-        this.usingNightVision = vampire && usingNightVision;
-    }
-     */
 
     // -------------------------------------------- //
     // Getters and setters
@@ -207,7 +191,7 @@ public class UPlayer implements DBObject {
                 this.setUsingNightVision(false);
                 this.setInfection(0);
 
-                Player player = offlinePlayer.getPlayer();
+                Player player = Bukkit.getPlayer(uuid);
                 if (VampireRevamp.getInstance().permissionGroupEnabled())
                     VampireRevamp.getInstance().setVampireGroup(player, val);
                 if (player != null) {
@@ -269,7 +253,7 @@ public class UPlayer implements DBObject {
                 if (val >= 1D) {
                     this.setVampire(true);
                 } else if (val <= 0D) {
-                    Player player = offlinePlayer.getPlayer();
+                    Player player = Bukkit.getPlayer(uuid);
                     if (player != null) {
                         if (this.infection > 0D && !this.isVampire()) {
                             VampireRevamp.sendMessage(player,
@@ -291,8 +275,8 @@ public class UPlayer implements DBObject {
         this.setInfection(this.getInfection() + val);
     }
 
-    public void addInfection(double val, InfectionReason reason, UPlayer maker) {
-        Player player = offlinePlayer.getPlayer();
+    public void addInfection(double val, InfectionReason reason, VPlayer maker) {
+        Player player = Bukkit.getPlayer(uuid);
         if (!vampire) {
             this.setReason(reason);
             this.setMakerUUID(maker == null ? null : maker.getUuid());
@@ -327,11 +311,11 @@ public class UPlayer implements DBObject {
     }
 
     public InfectionReason getReason() {
-        return reason == null ? InfectionReason.UNKNOWN : reason;
+        return InfectionReason.fromName(reason);
     }
 
     public void setReason(InfectionReason reason) {
-        this.reason = reason;
+        this.reason = reason.name();
     }
 
     public UUID getMakerUUID() {
@@ -346,7 +330,7 @@ public class UPlayer implements DBObject {
         return Bukkit.getOfflinePlayer(this.makerUUID).getName();
     }
 
-    public void setMaker(UPlayer val) {
+    public void setMaker(VPlayer val) {
         this.setMakerUUID(val == null ? null : val.getUuid());
     }
 
@@ -356,7 +340,7 @@ public class UPlayer implements DBObject {
 
     public void setIntending(boolean val) {
         this.intending = val;
-        Player p = offlinePlayer.getPlayer();
+        Player p = Bukkit.getPlayer(uuid);
 
         if (p == null) {
             VampireRevamp.log(Level.WARNING, "An offline player is trying to infect on intend!");
@@ -387,7 +371,7 @@ public class UPlayer implements DBObject {
 
     public void setBloodlusting(boolean val) {
         VampireRevamp.debugLog(Level.INFO, "Changing bloodlust");
-        Player me = offlinePlayer.getPlayer();
+        Player me = Bukkit.getPlayer(uuid);
         if (me == null) {
             VampireRevamp.log(Level.WARNING, "An offline player is trying to bloodlust!");
             return;
@@ -473,7 +457,7 @@ public class UPlayer implements DBObject {
     }
 
     public void setUsingNightVision(boolean val) {
-        Player me = offlinePlayer.getPlayer();
+        Player me = Bukkit.getPlayer(uuid);
         if (me == null) {
             VampireRevamp.log(Level.WARNING, "An offline player is trying to use nightvision!");
             return;
@@ -511,22 +495,12 @@ public class UPlayer implements DBObject {
         }
     }
 
-    public void setUUID(UUID uuid) {
-        this.offlinePlayer = Bukkit.getOfflinePlayer(uuid);
-    }
-
     public UUID getUuid() {
-        if (offlinePlayer == null) {
-            return null;
-        }
-        return offlinePlayer.getUniqueId();
+        return uuid;
     }
 
     public Player getPlayer() {
-        if (offlinePlayer == null) {
-            return null;
-        }
-        return offlinePlayer.getPlayer();
+        return Bukkit.getPlayer(uuid);
     }
 
     public double getRad() {
@@ -551,7 +525,7 @@ public class UPlayer implements DBObject {
 
     public Double getFood() {
         Double food = null;
-        Player player = offlinePlayer.getPlayer();
+        Player player = Bukkit.getPlayer(uuid);
         if (player != null) {
             food = this.foodRem + player.getFoodLevel();
         }
@@ -560,7 +534,7 @@ public class UPlayer implements DBObject {
 
     public int addFood(double amount) {
         Integer added = null;
-        Player player = offlinePlayer.getPlayer();
+        Player player = Bukkit.getPlayer(uuid);
         if (player != null) {
             this.foodRem += amount;
             int diff = (int) this.foodRem;
@@ -623,7 +597,7 @@ public class UPlayer implements DBObject {
 
     // FX: Shriek
     public void runFxShriek() {
-        Player me = offlinePlayer.getPlayer();
+        Player me = Bukkit.getPlayer(uuid);
         if (me != null) {
             Location location = me.getLocation();
             World world = location.getWorld();
@@ -633,7 +607,7 @@ public class UPlayer implements DBObject {
 
     // FX: SmokeBurst
     public void runFxSmokeBurst() {
-        Player me = offlinePlayer.getPlayer();
+        Player me = Bukkit.getPlayer(uuid);
         if (me != null) {
             double dcount = VampireRevamp.getVampireConfig().specialEffects.smokeBurstCount;
             long lcount = MathUtil.probabilityRound(dcount);
@@ -643,7 +617,7 @@ public class UPlayer implements DBObject {
 
     // FX: EnderBurst
     public void runFxEnderBurst() {
-        Player me = offlinePlayer.getPlayer();
+        Player me = Bukkit.getPlayer(uuid);
         if (me != null) {
             double dcount = VampireRevamp.getVampireConfig().specialEffects.enderBurstCount;
             long lcount = MathUtil.probabilityRound(dcount);
@@ -653,7 +627,7 @@ public class UPlayer implements DBObject {
 
     // FX: FlameBurst
     public void runFxFlameBurst() {
-        Player me = offlinePlayer.getPlayer();
+        Player me = Bukkit.getPlayer(uuid);
         if (me != null) {
             double dcount = VampireRevamp.getVampireConfig().specialEffects.flameBurstCount;
             long lcount = MathUtil.probabilityRound(dcount);
@@ -667,7 +641,7 @@ public class UPlayer implements DBObject {
 
     public void shriek() {
         // You must be online to shriek
-        Player me = offlinePlayer.getPlayer();
+        Player me = Bukkit.getPlayer(uuid);
         if (me == null) {
             VampireRevamp.log(Level.WARNING, "An offline player is trying to shriek!");
             return;
@@ -724,14 +698,14 @@ public class UPlayer implements DBObject {
     }
 
     public boolean isBatusi() {
-        Player player = offlinePlayer.getPlayer();
+        Player player = Bukkit.getPlayer(uuid);
         if (player == null)
             return false;
         return VampireRevamp.getInstance().batEnabled.getOrDefault(player.getUniqueId(), false);
     }
 
     private void enableBatusi() {
-        Player me = offlinePlayer.getPlayer();
+        Player me = Bukkit.getPlayer(uuid);
         if (me == null) {
             VampireRevamp.log(Level.WARNING, "An offline player is trying to batusi!");
             return;
@@ -773,7 +747,7 @@ public class UPlayer implements DBObject {
 
     private void disableBatusi() {
         VampireRevamp plugin = VampireRevamp.getInstance();
-        Player sender = offlinePlayer.getPlayer();
+        Player sender = Bukkit.getPlayer(uuid);
 
         if (sender == null || !plugin.batEnabled.getOrDefault(sender.getUniqueId(), false))
             return;
@@ -806,7 +780,7 @@ public class UPlayer implements DBObject {
 
     public void update() {
         VampireRevamp.debugLog(Level.INFO, "Updating...");
-        Player player = offlinePlayer.getPlayer();
+        Player player = Bukkit.getPlayer(uuid);
         PluginConfig conf = VampireRevamp.getVampireConfig();
 
         if (player != null) {
@@ -851,7 +825,7 @@ public class UPlayer implements DBObject {
     public void updatePotionEffects() {
         // VampireRevamp.debugLog(Level.INFO, "Updating potion effects...");
         // Find the player and their conf
-        Player player = offlinePlayer.getPlayer();
+        Player player = Bukkit.getPlayer(uuid);
         if (player == null || player.isDead()) {
             return;
         }
@@ -903,7 +877,7 @@ public class UPlayer implements DBObject {
     }
 
     public void tick(long millis) {
-        Player player = offlinePlayer.getPlayer();
+        Player player = Bukkit.getPlayer(uuid);
         PluginConfig conf = VampireRevamp.getVampireConfig();
         if (player != null && player.getGameMode() != GameMode.SPECTATOR && !conf.general.isBlacklisted(player.getWorld())) {
             if (!isWearingRing(player)) {
@@ -920,7 +894,7 @@ public class UPlayer implements DBObject {
 
     public void tickRadTemp(long millis) {
         // Update rad and temp
-        Player me = offlinePlayer.getPlayer();
+        Player me = Bukkit.getPlayer(uuid);
         if (me != null) {
             PluginConfig conf = VampireRevamp.getVampireConfig();
             if (me.getGameMode() != GameMode.CREATIVE && this.isVampire() && !me.isDead()) {
@@ -948,7 +922,7 @@ public class UPlayer implements DBObject {
     }
 
     public void tickInfection(long millis) {
-        Player me = offlinePlayer.getPlayer();
+        Player me = Bukkit.getPlayer(uuid);
         if (this.isInfected() && me != null) {
             int indexOld = this.infectionGetMessageIndex();
             PluginConfig conf = VampireRevamp.getVampireConfig();
@@ -976,7 +950,7 @@ public class UPlayer implements DBObject {
     }
 
     public void tickRegen(long millis) {
-        Player me = offlinePlayer.getPlayer();
+        Player me = Bukkit.getPlayer(uuid);
         if (me == null) {
             return;
         }
@@ -1011,7 +985,7 @@ public class UPlayer implements DBObject {
     }
 
     public void tickBloodlust(long millis) {
-        Player me = offlinePlayer.getPlayer();
+        Player me = Bukkit.getPlayer(uuid);
         if (me == null) {
             return;
         }
@@ -1031,7 +1005,7 @@ public class UPlayer implements DBObject {
     }
 
     public void tickEffects(long millis) {
-        Player me = offlinePlayer.getPlayer();
+        Player me = Bukkit.getPlayer(uuid);
         if (me != null && !me.isDead()
                 && me.getGameMode() != GameMode.CREATIVE) {
             PluginConfig conf = VampireRevamp.getVampireConfig();
@@ -1083,10 +1057,10 @@ public class UPlayer implements DBObject {
 
     @SuppressWarnings("deprecation")
     public void tradeAccept() {
-        Player me = offlinePlayer.getPlayer();
+        Player me = Bukkit.getPlayer(uuid);
         if (me != null) {
-            UPlayer vyou = this.tradeOfferedFrom;
-            Player you = vyou == null ? null : vyou.offlinePlayer.getPlayer();
+            VPlayer vyou = this.tradeOfferedFrom;
+            Player you = vyou == null ? null : vyou.getPlayer();
             PluginConfig conf = VampireRevamp.getVampireConfig();
 
             // Any offer available?
@@ -1181,9 +1155,9 @@ public class UPlayer implements DBObject {
         }
     }
 
-    public void tradeOffer(Player sender, UPlayer vyou, double amount) {
-        Player you = vyou.offlinePlayer.getPlayer();
-        Player me = offlinePlayer.getPlayer();
+    public void tradeOffer(Player sender, VPlayer vyou, double amount) {
+        Player you = vyou.getPlayer();
+        Player me = Bukkit.getPlayer(uuid);
         if (you != null && me != null) {
             PluginConfig conf = VampireRevamp.getVampireConfig();
             if (!this.withinDistanceOf(vyou, conf.trade.offerMaxDistance)) {
@@ -1225,10 +1199,10 @@ public class UPlayer implements DBObject {
         }
     }
 
-    public boolean withinDistanceOf(UPlayer vyou, double maxDistance) {
+    public boolean withinDistanceOf(VPlayer vyou, double maxDistance) {
         boolean res = false;
-        Player me = offlinePlayer.getPlayer();
-        Player you = vyou.offlinePlayer.getPlayer();
+        Player me = Bukkit.getPlayer(uuid);
+        Player you = vyou.getPlayer();
         if (you != null && me != null && !me.isDead() && !you.isDead()) {
             Location l1 = me.getLocation();
             Location l2 = you.getLocation();
@@ -1258,7 +1232,7 @@ public class UPlayer implements DBObject {
     }
 
     public void truceBreak() {
-        Player player = offlinePlayer.getPlayer();
+        Player player = Bukkit.getPlayer(uuid);
         if (player != null) {
             if (!this.truceIsBroken()) {
                 VampireRevamp.sendMessage(player,
@@ -1272,7 +1246,7 @@ public class UPlayer implements DBObject {
     public void truceRestore() {
         this.truceBreakMillisLeftSet(0);
 
-        Player me = offlinePlayer.getPlayer();
+        Player me = Bukkit.getPlayer(uuid);
         if (me != null) {
             VampireRevamp.sendMessage(me,
                     MessageType.INFO,
@@ -1284,7 +1258,7 @@ public class UPlayer implements DBObject {
                         && entity instanceof Creature) {
                     Creature creature = (Creature) entity;
 
-                    Entity target = creature.getTarget();
+                    LivingEntity target = (LivingEntity) creature.getTarget();
                     if (me.equals(target))
                         creature.setTarget(null);
                 }
@@ -1314,7 +1288,7 @@ public class UPlayer implements DBObject {
 
     public double combatDamageFactor() {
         double damageFactor = 0D;
-        Player me = offlinePlayer.getPlayer();
+        Player me = Bukkit.getPlayer(uuid);
 
         if (me != null) {
             PluginConfig conf = VampireRevamp.getVampireConfig();
@@ -1330,7 +1304,7 @@ public class UPlayer implements DBObject {
     public double combatInfectRisk() {
         double infectRisk = 0D;
 
-        Player me = offlinePlayer.getPlayer();
+        Player me = Bukkit.getPlayer(uuid);
         if (me != null) {
             if (this.isVampire()) {
                 PluginConfig conf = VampireRevamp.getVampireConfig();
@@ -1342,180 +1316,5 @@ public class UPlayer implements DBObject {
         }
 
         return infectRisk;
-    }
-
-    @Override
-    public @NotNull String getTableName() {
-        return "vampire_data";
-    }
-
-    @Override
-    public @NotNull String[] getPrimaryKeyName() {
-        return new String[]{"uuid"};
-    }
-
-    @Override
-    public @NotNull Set<String> getFields() {
-        Set<String> fields = new HashSet<>();
-        fields.add("uuid");
-        fields.add("vampire");
-        fields.add("nosferatu");
-        fields.add("infection");
-        fields.add("reason");
-        fields.add("makerUUID");
-        fields.add("intending");
-        fields.add("usingNightVision");
-        return fields;
-    }
-
-    @Override
-    public Serializable getFieldValue(@NotNull String field) throws IllegalArgumentException {
-        switch (field) {
-            case "uuid":
-                return this.getUuid();
-            case "vampire":
-                return this.isVampire();
-            case "nosferatu":
-                return this.isNosferatu();
-            case "infection":
-                return this.infection;
-            case "reason":
-                return this.reason != null ? this.reason.name() : null;
-            case "makerUUID":
-                return this.makerUUID;
-            case "intending":
-                return this.isIntending();
-            case "usingNightVision":
-                return this.isUsingNightVision();
-            default:
-                throw new IllegalArgumentException("The specified field does not exist");
-        }
-    }
-
-    @Override
-    public boolean isFieldNullable(@NotNull String field) throws IllegalArgumentException {
-        switch (field) {
-            case "uuid":
-            case "vampire":
-            case "nosferatu":
-            case "infection":
-            case "intending":
-            case "usingNightVision":
-                return false;
-            case "reason":
-            case "makerUUID":
-                return true;
-            default:
-                throw new IllegalArgumentException("The specified field does not exist");
-        }
-    }
-
-    @Override
-    public @NotNull List<Set<String>> getUniqueFields() {
-        return new ArrayList<>();
-    }
-
-    @Override
-    public @NotNull Map<String, Pair<String, TableData>> getForeignFields() {
-        return new HashMap<>();
-    }
-
-    @Override
-    public @NotNull String getFieldType(@NotNull String field) throws IllegalArgumentException {
-        switch (field) {
-            case "uuid":
-            case "makerUUID":
-                return "VARCHAR(36)";
-            case "vampire":
-            case "nosferatu":
-            case "intending":
-            case "usingNightVision":
-                return "BOOL";
-            case "infection":
-                return "DOUBLE";
-            case "reason":
-                return "VARCHAR(16)";
-            default:
-                throw new IllegalArgumentException("The specified field does not exist");
-        }
-    }
-
-    @Override
-    public void setFieldValue(@NotNull String field, Serializable value) throws IllegalArgumentException {
-        switch (field) {
-            case "uuid":
-                if (value instanceof String) {
-                    value = UUID.fromString((String) value);
-                }
-                if (!(value instanceof UUID)) {
-                    throw new IllegalArgumentException("uuid field must be a valid UUID");
-                }
-                this.setUUID((UUID) value);
-                break;
-            case "makerUUID":
-                UUID uuid = null;
-                if (value != null) {
-                    if (value instanceof String) {
-                        value = UUID.fromString((String) value);
-                    }
-                    if (!(value instanceof UUID)) {
-                        throw new IllegalArgumentException("makerUUID field must be a valid UUID");
-                    }
-                    uuid = (UUID) value;
-                }
-                this.setMakerUUID(uuid);
-                break;
-            case "infection":
-                if (!(value instanceof Number)) {
-                    throw new IllegalArgumentException("infection field must be a Number");
-                }
-                double infectionVal = ((Number) value).doubleValue();
-                if (infection > 0) {
-                    if (infection < 1) {
-                        this.infection = infectionVal;
-                    }
-                    else {
-                        this.vampire = true;
-                    }
-                }
-                break;
-            case "reason":
-                if (value == null) {
-                    this.reason = null;
-                }
-                else {
-                    if (!(value instanceof String)) {
-                        throw new IllegalArgumentException("reason field must be a valid String");
-                    }
-                    this.reason = InfectionReason.fromName((String) value);
-                }
-                break;
-            case "vampire":
-                if (!(value instanceof Boolean)) {
-                    throw new IllegalArgumentException("vampire field must be a Boolean");
-                }
-                this.vampire = (Boolean) value;
-                break;
-            case "nosferatu":
-                if (!(value instanceof Boolean)) {
-                    throw new IllegalArgumentException("nosferatu field must be a Boolean");
-                }
-                this.nosferatu = (Boolean) value;
-                break;
-            case "intending":
-                if (!(value instanceof Boolean)) {
-                    throw new IllegalArgumentException("intending field must be a Boolean");
-                }
-                this.intending = (Boolean) value;
-                break;
-            case "usingNightVision":
-                if (!(value instanceof Boolean)) {
-                    throw new IllegalArgumentException("usingNightVision field must be a Boolean");
-                }
-                this.usingNightVision = (Boolean) value;
-                break;
-            default:
-                throw new IllegalArgumentException("The specified field does not exist");
-        }
     }
 }

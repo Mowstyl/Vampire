@@ -6,8 +6,8 @@ import co.aikar.commands.MessageType;
 import co.aikar.commands.PaperCommandManager;
 import co.aikar.locales.MessageKey;
 import co.aikar.locales.MessageKeyProvider;
-import com.clanjhoo.dbhandler.collections.DBObjectManager;
-import com.clanjhoo.dbhandler.drivers.StorageType;
+import com.clanjhoo.dbhandler.data.DBObjectManager;
+import com.clanjhoo.dbhandler.data.StorageType;
 import com.clanjhoo.vampire.compat.WerewolfCompat;
 import com.clanjhoo.vampire.listeners.EntryVampiresListener;
 import com.clanjhoo.vampire.listeners.ListenerMain;
@@ -19,7 +19,7 @@ import com.clanjhoo.vampire.cmd.CmdVampire;
 import com.clanjhoo.vampire.compat.VampireExpansion;
 import com.clanjhoo.vampire.compat.WorldGuardCompat;
 import com.clanjhoo.vampire.config.PluginConfig;
-import com.clanjhoo.vampire.entity.UPlayer;
+import com.clanjhoo.vampire.entity.VPlayer;
 
 import com.clanjhoo.vampire.tasks.BatTask;
 import com.clanjhoo.vampire.tasks.TheTask;
@@ -79,7 +79,7 @@ public class VampireRevamp extends JavaPlugin {
 	private EntryVampiresListener dvl;
 	private static Permission perms = null;
 
-	private DBObjectManager<UPlayer> uPlayerColl;
+	private DBObjectManager<VPlayer> vPlayerManager;
 	
 	// -------------------------------------------- //
 	// FIELDS
@@ -264,24 +264,19 @@ public class VampireRevamp extends JavaPlugin {
 		return reloadVampireConfig() && reloadLocales();
 	}
 
-	public static DBObjectManager<UPlayer> getPlayerCollection() {
-		return getInstance().uPlayerColl;
+	public static DBObjectManager<VPlayer> getVPlayerManager() {
+		return getInstance().vPlayerManager;
 	}
 
 	public static void loadPlayerFromDB(Player p) {
-		boolean result = VampireRevamp.getPlayerCollection().getDataSynchronous(
-				new Serializable[]{p.getUniqueId()},
+		boolean result = VampireRevamp.getVPlayerManager().getDataSynchronous(
 				(vPlayer) -> {
-					Player s = vPlayer.getPlayer();
-					if (s == null || s.isValid() != p.isValid()) {
-						vPlayer.setUUID(p.getUniqueId());
-					}
 					if (perms != null && vPlayer.isVampire()) {
 						VampireRevamp.getInstance().setVampireGroup(p, true);
 					}
 				},
 				() -> VampireRevamp.log(Level.SEVERE, "Couldn't load player " + p.getName() + " from DB.")
-				, true);
+				, true, p.getUniqueId());
 		if (!result) {
 			VampireRevamp.log(Level.SEVERE, "Error preparing load for player " + p.getName() + ".");
 		}
@@ -290,8 +285,7 @@ public class VampireRevamp extends JavaPlugin {
 	private boolean loadConfig(boolean loadDefaults) {
 		boolean result = false;
 		try {
-			PluginConfig newconf = new PluginConfig(this.getConfig());
-			this.conf = newconf;
+			this.conf = new PluginConfig(this.getConfig());
 			log(Level.INFO, "Loaded configuration!");
 			debugLog(Level.INFO, this.conf.toString());
 			result = true;
@@ -306,14 +300,14 @@ public class VampireRevamp extends JavaPlugin {
 		}
 		boolean reloadPlayers = false;
 
-		if (uPlayerColl != null) {
+		if (vPlayerManager != null) {
 			reloadPlayers = true;
 			this.getLogger().log(Level.INFO, "Saving player data...");
-			uPlayerColl.saveAll();
+			vPlayerManager.saveAll();
 			this.getLogger().log(Level.INFO, "Saved!");
 		}
 		try {
-			uPlayerColl = new DBObjectManager<>(this, null, StorageType.JSON, (keys) -> new UPlayer(keys != null ? keys[0] : null), "store");
+			vPlayerManager = new DBObjectManager<>(VPlayer.class, null, this, null, StorageType.JSON, "store");
 		}
 		catch (IOException ex) {
 			this.getLogger().log(Level.SEVERE, "Couldn't create storage! Disabling plugin!");
@@ -453,7 +447,7 @@ public class VampireRevamp extends JavaPlugin {
 
 		BukkitScheduler scheduler = getServer().getScheduler();
 
-		cleanTaskId = scheduler.scheduleSyncRepeatingTask(this, uPlayerColl::saveAndRemoveUnactive, 0L, 5 * 60 * 20L);
+		cleanTaskId = scheduler.scheduleSyncRepeatingTask(this, vPlayerManager::saveAndRemoveUnactive, 0L, 5 * 60 * 20L);
 		theTaskId = scheduler.scheduleSyncRepeatingTask(this, new TheTask(), 0L, (this.conf.general.taskDelayMillis * 20) / 1000);
 		batTaskId = scheduler.scheduleSyncRepeatingTask(this, new BatTask(), 0L, (this.conf.general.batTaskDelayMillis * 20) / 1000);
 	}
@@ -539,9 +533,9 @@ public class VampireRevamp extends JavaPlugin {
 		scheduler.cancelTask(theTaskId);
 		scheduler.cancelTask(batTaskId);
 
-		if (uPlayerColl != null) {
+		if (vPlayerManager != null) {
 			this.getLogger().log(Level.INFO, "Saving player data...");
-			uPlayerColl.saveAndRemoveAllSync();
+			vPlayerManager.saveAndRemoveAllSync();
 			this.getLogger().log(Level.INFO, "Saved!");
 		}
 	}

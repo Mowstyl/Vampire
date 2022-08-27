@@ -1,7 +1,7 @@
 package com.clanjhoo.vampire.config;
 
 import com.clanjhoo.vampire.VampireRevamp;
-import com.clanjhoo.vampire.entity.UPlayer;
+import com.clanjhoo.vampire.entity.VPlayer;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.event.EventPriority;
@@ -17,7 +17,7 @@ import java.util.logging.Level;
 public class StateEffectConfig implements Comparable<StateEffectConfig>{
     public final EventPriority priority;
     public final Map<PotionEffectType, Integer> effectToStrength;
-    public Function<UPlayer, Boolean> passesChecks;
+    public Function<VPlayer, Boolean> passesChecks;
 
     public StateEffectConfig(EventPriority priority, Map<PotionEffectType, Integer> effectToStrength) {
         this.priority = priority;

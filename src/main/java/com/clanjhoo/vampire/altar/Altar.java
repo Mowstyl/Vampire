@@ -4,7 +4,7 @@ import co.aikar.commands.MessageType;
 import com.clanjhoo.vampire.keyproviders.AltarMessageKeys;
 import com.clanjhoo.vampire.VampireRevamp;
 import com.clanjhoo.vampire.config.PluginConfig;
-import com.clanjhoo.vampire.entity.UPlayer;
+import com.clanjhoo.vampire.entity.VPlayer;
 import com.clanjhoo.vampire.keyproviders.CommandMessageKeys;
 import com.clanjhoo.vampire.util.EntityUtil;
 import org.bukkit.Material;
@@ -12,7 +12,6 @@ import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -73,8 +72,8 @@ public abstract class Altar {
                 }
                 else {
                     try {
-                        UPlayer uPlayer = VampireRevamp.getPlayerCollection().getDataNow(new Serializable[]{player.getUniqueId()});
-                        blockUse = this.use(uPlayer, player);
+                        VPlayer vPlayer = VampireRevamp.getVPlayerManager().tryGetDataNow(player.getUniqueId());
+                        blockUse = this.use(vPlayer, player);
                     }
                     catch (AssertionError ex) {
                         VampireRevamp.log(Level.WARNING, "Couldn't find data for player " + player.getName() + " on altar click.");
@@ -88,9 +87,9 @@ public abstract class Altar {
         return blockUse;
     }
 
-    public abstract boolean use(UPlayer uplayer, Player player);
+    public abstract boolean use(VPlayer uplayer, Player player);
 
-    public void watch(UPlayer uplayer, Player player) {
+    public void watch(VPlayer uplayer, Player player) {
         VampireRevamp.sendMessage(player,
                 MessageType.INFO,
                 isDark ? AltarMessageKeys.ALTAR_DARK_DESC : AltarMessageKeys.ALTAR_LIGHT_DESC);

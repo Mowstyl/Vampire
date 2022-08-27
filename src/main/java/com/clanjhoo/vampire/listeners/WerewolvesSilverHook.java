@@ -1,8 +1,7 @@
 package com.clanjhoo.vampire.listeners;
 
 import com.clanjhoo.vampire.VampireRevamp;
-import com.clanjhoo.vampire.entity.UPlayer;
-import com.clanjhoo.vampire.event.VampireTypeChangeEvent;
+import com.clanjhoo.vampire.entity.VPlayer;
 import com.clanjhoo.vampire.util.EntityUtil;
 import com.clanjhoo.vampire.util.EventUtil;
 import org.bukkit.Bukkit;
@@ -15,10 +14,7 @@ import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.inventory.ItemStack;
-import us.rfsmassacre.Werewolf.Events.WerewolfInfectionEvent;
-import us.rfsmassacre.Werewolf.WerewolfAPI;
 
-import java.io.Serializable;
 import java.util.logging.Level;
 
 public class WerewolvesSilverHook implements Listener {
@@ -52,7 +48,7 @@ public class WerewolvesSilverHook implements Listener {
             return;
 
         try {
-            UPlayer uplayer = VampireRevamp.getPlayerCollection().getDataNow(new Serializable[]{event.getEntity().getUniqueId()});
+            VPlayer uplayer = VampireRevamp.getVPlayerManager().tryGetDataNow(event.getEntity().getUniqueId());
             if (!uplayer.isVampire())
                 return;
         }

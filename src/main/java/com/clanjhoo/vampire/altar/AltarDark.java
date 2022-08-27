@@ -6,7 +6,7 @@ import com.clanjhoo.vampire.keyproviders.AltarMessageKeys;
 import com.clanjhoo.vampire.Perm;
 import com.clanjhoo.vampire.VampireRevamp;
 import com.clanjhoo.vampire.config.SingleAltarConfig;
-import com.clanjhoo.vampire.entity.UPlayer;
+import com.clanjhoo.vampire.entity.VPlayer;
 import com.clanjhoo.vampire.util.FxUtil;
 import com.clanjhoo.vampire.util.ResourceUtil;
 import org.bukkit.Bukkit;
@@ -26,7 +26,7 @@ public class AltarDark extends Altar {
     }
 
     @Override
-    public boolean use(final UPlayer uplayer, final Player player) {
+    public boolean use(final VPlayer uplayer, final Player player) {
         boolean success = false;
         player.sendMessage("");
         VampireRevamp.sendMessage(player,

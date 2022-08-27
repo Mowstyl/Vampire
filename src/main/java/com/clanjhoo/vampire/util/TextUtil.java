@@ -5,7 +5,7 @@ import co.aikar.commands.RegisteredCommand;
 import com.clanjhoo.vampire.keyproviders.CommandMessageKeys;
 import com.clanjhoo.vampire.Perm;
 import com.clanjhoo.vampire.VampireRevamp;
-import com.clanjhoo.vampire.entity.UPlayer;
+import com.clanjhoo.vampire.entity.VPlayer;
 import com.clanjhoo.vampire.keyproviders.GrammarMessageKeys;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.chat.BaseComponent;
@@ -152,7 +152,7 @@ public class TextUtil {
 
         comps[1] = new TextComponent(" " + command);
         if (sender instanceof Player) {
-            UPlayer uplayer = VampireRevamp.getPlayerCollection().getDataNow(new Serializable[]{((Player) sender).getUniqueId()});
+            VPlayer uplayer = VampireRevamp.getVPlayerManager().tryGetDataNow(((Player) sender).getUniqueId());
             boolean hasRequiredVLevel = requireVampire == 0 || uplayer.isNosferatu() || (uplayer.isVampire() && requireVampire == 1);
             if (!command.equals("vampire") && !command.equals("nosferatu")) {
                 Perm permission = Perm.getPermFromString(command);

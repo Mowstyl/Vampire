@@ -1,6 +1,6 @@
 package com.clanjhoo.vampire.config;
 
-import com.clanjhoo.vampire.entity.UPlayer;
+import com.clanjhoo.vampire.entity.VPlayer;
 import com.clanjhoo.vampire.util.CollectionUtil;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.event.EventPriority;
@@ -22,17 +22,17 @@ public class PotionEffectsConfig {
     public PotionEffectsConfig() {
         seconds = 15;
         bloodlust = getBloodlust();
-        bloodlust.passesChecks = UPlayer::isBloodlusting;
+        bloodlust.passesChecks = VPlayer::isBloodlusting;
         nightvision = getNightvision();
-        nightvision.passesChecks = UPlayer::isUsingNightVision;
+        nightvision.passesChecks = VPlayer::isUsingNightVision;
         nosferatu = getNosferatu();
-        nosferatu.passesChecks = UPlayer::canHaveNosferatuEffects;
+        nosferatu.passesChecks = VPlayer::canHaveNosferatuEffects;
         vampire = getVampire();
-        vampire.passesChecks = UPlayer::canHaveVampireEffects;
+        vampire.passesChecks = VPlayer::canHaveVampireEffects;
         infected = getInfected();
-        infected.passesChecks = UPlayer::isInfected;
+        infected.passesChecks = VPlayer::isInfected;
         human = getHuman();
-        human.passesChecks = UPlayer::isHuman;
+        human.passesChecks = VPlayer::isHuman;
     }
 
     public PotionEffectsConfig(@NotNull ConfigurationSection cs) {
