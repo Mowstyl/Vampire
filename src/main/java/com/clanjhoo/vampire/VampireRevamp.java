@@ -31,6 +31,7 @@ import com.google.common.io.ByteStreams;
 import net.milkbowl.vault.permission.Permission;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.InvalidConfigurationException;
@@ -635,13 +636,13 @@ public class VampireRevamp extends JavaPlugin {
 		return VampireRevamp.getCommandManager().getLocales().getMessage(VampireRevamp.getCommandIssuer(sender), keyProvider);
 	}
 
-	public static String[] getYouAreWere(CommandSender sender, Player target, boolean self) {
+	public static String[] getYouAreWere(CommandSender sender, OfflinePlayer target, boolean self) {
 		String you = getMessage(sender, GrammarMessageKeys.YOU);
 		you = you.substring(0, 1).toUpperCase() + you.substring(1);
 		String are = getMessage(sender, GrammarMessageKeys.TO_BE_2ND);
 		String were = getMessage(sender, GrammarMessageKeys.TO_BE_2ND_PAST);
 		if (!self) {
-			you = target.getDisplayName();
+			you = target.getName();
 			are = getMessage(sender, GrammarMessageKeys.TO_BE_3RD);
 			were = getMessage(sender, GrammarMessageKeys.TO_BE_3RD_PAST);
 		}

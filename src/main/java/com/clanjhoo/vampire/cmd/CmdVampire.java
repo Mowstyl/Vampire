@@ -13,6 +13,7 @@ import com.clanjhoo.vampire.util.*;
 import net.md_5.bungee.api.chat.BaseComponent;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -130,13 +131,20 @@ public class CmdVampire extends BaseCommand {
 	@Syntax("[player=you]")
 	public void onShow(CommandSender sender, @Optional String targetName) {
 		if (sender instanceof Player || targetName != null) {
-			Player player;
+			OfflinePlayer rawPlayer;
 			if (targetName == null) {
-				player = (Player) sender;
+				rawPlayer = (Player) sender;
 			}
 			else {
-				player = Bukkit.getPlayer(targetName);
+				rawPlayer = Bukkit.getPlayer(targetName);
+				if (rawPlayer == null) {
+					rawPlayer = Bukkit.getOfflinePlayer(targetName);
+					if (!rawPlayer.hasPlayedBefore()) {
+						rawPlayer = null;
+					}
+				}
 			}
+			OfflinePlayer player = rawPlayer;
 			if (player != null) {
 				PluginConfig conf = VampireRevamp.getVampireConfig();
 				boolean self = sender instanceof Player && ((Player) sender).getUniqueId().equals(player.getUniqueId());
@@ -154,7 +162,7 @@ public class CmdVampire extends BaseCommand {
 
 						sender.spigot().sendMessage(TextUtil.getPlayerInfoHeader(uplayer.isVampire(),
 								uplayer.isNosferatu(),
-								player.getDisplayName(),
+								player.getName(),
 								sender));
 						if (uplayer.isVampire()) {
 							if (uplayer.isNosferatu())
@@ -206,24 +214,26 @@ public class CmdVampire extends BaseCommand {
 									CommandMessageKeys.SHOW_TEMPERATURE,
 									"{percent}", String.format("%d%%", (int) Math.round(uplayer.getTemp() * 100)));
 
-							int rad = (int) Math.round(100 * uplayer.getRad());
-							int sun = (int) Math.round(100 * SunUtil.calcSolarRad(player.getWorld(), player));
-							double terrain = 1d - SunUtil.calcTerrainOpacity(player.getLocation().getBlock());
-							double armor = 1d - SunUtil.calcArmorOpacity(player);
-							int base = (int) Math.round(100 * conf.radiation.baseRadiation);
+							if (player instanceof Player) {
+								int rad = (int) Math.round(100 * uplayer.getRad());
+								int sun = (int) Math.round(100 * SunUtil.calcSolarRad(((Player) player).getWorld(), ((Player) player)));
+								double terrain = 1d - SunUtil.calcTerrainOpacity(((Player) player).getLocation().getBlock());
+								double armor = 1d - SunUtil.calcArmorOpacity((Player) player);
+								int base = (int) Math.round(100 * conf.radiation.baseRadiation);
 
-							VampireRevamp.sendMessage(sender,
-									MessageType.INFO,
-									CommandMessageKeys.SHOW_RADIATION_KEYS);
+								VampireRevamp.sendMessage(sender,
+										MessageType.INFO,
+										CommandMessageKeys.SHOW_RADIATION_KEYS);
 
-							VampireRevamp.sendMessage(sender,
-									MessageType.INFO,
-									CommandMessageKeys.SHOW_RADIATION_VALUES,
-									"{rads}", String.format("%+d%%", rad),
-									"{sun}", String.format("%d", sun),
-									"{terrain}", String.format("%.2f", terrain),
-									"{armor}", String.format("%.2f", armor),
-									"{base}", String.format("%+d", base));
+								VampireRevamp.sendMessage(sender,
+										MessageType.INFO,
+										CommandMessageKeys.SHOW_RADIATION_VALUES,
+										"{rads}", String.format("%+d%%", rad),
+										"{sun}", String.format("%d", sun),
+										"{terrain}", String.format("%.2f", terrain),
+										"{armor}", String.format("%.2f", armor),
+										"{base}", String.format("%+d", base));
+							}
 						}
 						else if (uplayer.isInfected()) {
 							VampireRevamp.sendMessage(sender,
