@@ -209,12 +209,12 @@ public class CmdVampire extends BaseCommand {
 									CommandMessageKeys.SHOW_NIGHTVISION,
 									"{enabled}", uplayer.isUsingNightVision() ? on : off);
 
-							VampireRevamp.sendMessage(sender,
-									MessageType.INFO,
-									CommandMessageKeys.SHOW_TEMPERATURE,
-									"{percent}", String.format("%d%%", (int) Math.round(uplayer.getTemp() * 100)));
-
 							if (player instanceof Player) {
+								VampireRevamp.sendMessage(sender,
+										MessageType.INFO,
+										CommandMessageKeys.SHOW_TEMPERATURE,
+										"{percent}", String.format("%d%%", (int) Math.round(uplayer.getTemp() * 100)));
+
 								int rad = (int) Math.round(100 * uplayer.getRad());
 								int sun = (int) Math.round(100 * SunUtil.calcSolarRad(((Player) player).getWorld(), ((Player) player)));
 								double terrain = 1d - SunUtil.calcTerrainOpacity(((Player) player).getLocation().getBlock());
