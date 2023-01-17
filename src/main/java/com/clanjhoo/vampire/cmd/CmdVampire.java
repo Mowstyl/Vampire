@@ -749,7 +749,7 @@ public class CmdVampire extends BaseCommand {
 		if (yesno == null || yesno.equalsIgnoreCase("yes") || yesno.equalsIgnoreCase("no")) {
 			VampireRevamp plugin = VampireRevamp.getInstance();
 			boolean success = VampireRevamp.getVPlayerManager().getDataSynchronous((uplayer) -> {
-				if (uplayer.isNosferatu()) {
+				if (!VampireRevamp.getVampireConfig().vampire.batusi.nosferatuOnly || uplayer.isNosferatu()) {
 					boolean activate = !plugin.batEnabled.getOrDefault(sender.getUniqueId(), false);
 
 					if (yesno != null) {
