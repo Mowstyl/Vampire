@@ -79,6 +79,7 @@ vampirism:
     truceBroken: "§cYou temporarily broke your truce with the monsters."
     truceRestored: "§aYour truce with the monsters has been restored."
     combatWoodWarning: "§cOuch!!! §d{item}§r§c is made of §dwood§c and hurt vampires a lot!"
+    cantSleep: "§fYou can only sleep during the day and without thunderstorm"
 infection:
     altar: "§e{player}§r§e {to_be_past}§r§e infected using an §daltar§e."
     combatMistake: "§d{parent}§r §einfected {player}§r§e during combat by mistake."

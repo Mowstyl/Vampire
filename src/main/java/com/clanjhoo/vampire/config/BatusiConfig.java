@@ -44,7 +44,7 @@ public class BatusiConfig {
         result = result && PluginConfig.writeLine(configWriter, "disableOnHit: " + this.disableOnHit, indent, level);
         result = result && PluginConfig.writeLine(configWriter, "# Whether to enable flight when in bat cloud mode or not", indent, level);
         result = result && PluginConfig.writeLine(configWriter, "enableFlight: " + this.enableFlight, indent, level);
-        result = result && PluginConfig.writeLine(configWriter, "# Whether to prevent players in Batusi being disguised/undisguised", indent, level);
+        result = result && PluginConfig.writeLine(configWriter, "# Whether to prevent players in batusi being disguised/undisguised", indent, level);
         result = result && PluginConfig.writeLine(configWriter, "preventDisguise: " + this.enableFlight, indent, level);
 
         return result;

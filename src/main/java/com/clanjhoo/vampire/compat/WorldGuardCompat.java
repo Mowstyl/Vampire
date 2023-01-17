@@ -91,7 +91,7 @@ public class WorldGuardCompat {
     }
 
     public long getTime(Player player, Location location) {
-        long rtime = location.getWorld().getFullTime();
+        long rtime = location.getWorld().getTime();
         String aux = queryFlag(player, location, Flags.TIME_LOCK);
 
         if (aux != null) {

@@ -28,6 +28,7 @@ public class VampireConfig {
     public final int respawnHealth;
     public final HolyItemConfig holyItem;
     public final boolean canEatCake;
+    public final boolean canSleepDaytime;
 
     public VampireConfig() {
         blockDamageFrom = CollectionUtil.set(
@@ -53,6 +54,7 @@ public class VampireConfig {
         respawnHealth = 20;
         holyItem = new HolyItemConfig();
         canEatCake = false;
+        canSleepDaytime = false;
     }
 
     public VampireConfig(@NotNull ConfigurationSection cs) {
@@ -147,6 +149,7 @@ public class VampireConfig {
             holyItem = new HolyItemConfig();
 
         canEatCake = cs.getBoolean("canEatCake", def.canEatCake);
+        canSleepDaytime = cs.getBoolean("canSleepDaytime", def.canSleepDaytime);
     }
 
     protected boolean saveConfigToFile(BufferedWriter configWriter, String indent, int level) {
@@ -178,6 +181,8 @@ public class VampireConfig {
         result = result && this.holyItem.saveConfigToFile(configWriter, indent, level + 1);
         result = result && PluginConfig.writeLine(configWriter, "# Whether vampires can eat cakes or not", indent, level);
         result = result && PluginConfig.writeLine(configWriter, "canEatCake: " + this.canEatCake, indent, level);
+        result = result && PluginConfig.writeLine(configWriter, "# Whether vampires can sleep at daytime or not", indent, level);
+        result = result && PluginConfig.writeLine(configWriter, "canSleepDaytime: " + this.canSleepDaytime, indent, level);
 
         return result;
     }
@@ -199,6 +204,7 @@ public class VampireConfig {
                 ", respawnHealth=" + respawnHealth +
                 ", holyItem=" + holyItem +
                 ", canEatCake=" + canEatCake +
+                ", canSleepDaytime=" + canSleepDaytime +
                 '}';
     }
 }

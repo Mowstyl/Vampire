@@ -79,6 +79,7 @@ vampirism:
     truceBroken: "§cHas roto tu tregua con los monstruos temporalmente."
     truceRestored: "§aTu tregua con los monstruos ha sido restaurada."
     combatWoodWarning: "§c¡Ouch! §c¡§d{item}§r§c está hecho de §dmadera§c y hace mucho daño a los vampiros!"
+    cantSleep: "§fSolo puedes dormir de día y sin tormenta"
 infection:
     altar: "§e{player}§r§e {to_be_past}§r§e infectado usando un §daltar§e."
     combatMistake: "§d{parent}§r §einfectó a {player}§r§e durante un combate por accidente."

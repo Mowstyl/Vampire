@@ -33,7 +33,7 @@ public class SunUtil
 	 */
 	public static int calcMidDeltaTicks(World world, Player player)
 	{
-		long rtime = world.getFullTime();
+		long rtime = world.getTime();
 
 		if (VampireRevamp.isWorldGuardEnabled()) {
 			WorldGuardCompat wg = VampireRevamp.getWorldGuardCompat();

@@ -11,13 +11,12 @@ import com.clanjhoo.vampire.util.*;
 import me.libraryaddict.disguise.disguisetypes.DisguiseType;
 import me.libraryaddict.disguise.events.DisguiseEvent;
 import me.libraryaddict.disguise.events.UndisguiseEvent;
-import org.bukkit.Bukkit;
-import org.bukkit.GameMode;
-import org.bukkit.Location;
-import org.bukkit.Material;
+import org.bukkit.*;
 import org.bukkit.attribute.Attribute;
+import org.bukkit.block.data.type.Bed;
 import org.bukkit.block.Block;
 import org.bukkit.entity.*;
+import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -567,6 +566,66 @@ public class ListenerMain implements Listener {
     }
 
     // -------------------------------------------- //
+    // SLEEP
+    // -------------------------------------------- //
+
+    @EventHandler(priority = EventPriority.NORMAL)
+    public void trySleep(PlayerBedEnterEvent event) {
+        if (VampireRevamp.getVampireConfig().general.isBlacklisted(event.getPlayer().getWorld()))
+            return;
+        Player player = event.getPlayer();
+        PluginConfig conf = VampireRevamp.getVampireConfig();
+        // If day sleeping is allowed for vampires ...
+        if (!EntityUtil.isPlayer(player) || !conf.vampire.canSleepDaytime)
+            return;
+
+        // ... the player is a vampire ...
+        VPlayer vPlayer = VampireRevamp.getVPlayerManager().tryGetDataNow(player.getUniqueId());
+        if (!vPlayer.isVampire())
+            return;
+
+        // ... and tries to sleep at night or storm ...
+        long time = player.getWorld().getTime();
+        boolean storming = player.getWorld().hasStorm();
+        VampireRevamp.log(Level.INFO, "time " + time + " " + (time >= 11834) + " storm " + storming);
+        if (time >= 11834 || storming) {
+            // ... we cancel
+            VampireRevamp.sendMessage(event.getPlayer(),
+                    MessageType.INFO,
+                    VampirismMessageKeys.CANT_SLEEP);
+            event.setCancelled(true);
+        }
+        else {
+            if (!((Bed) event.getBed().getBlockData()).isOccupied())
+                event.setUseBed(Event.Result.ALLOW);
+        }
+    }
+
+    @EventHandler(priority = EventPriority.NORMAL)
+    public void wakeUp(PlayerBedLeaveEvent event) {
+        if (VampireRevamp.getVampireConfig().general.isBlacklisted(event.getPlayer().getWorld()))
+            return;
+        Player player = event.getPlayer();
+        PluginConfig conf = VampireRevamp.getVampireConfig();
+        // If day sleeping is allowed for vampires ...
+        if (!EntityUtil.isPlayer(player) || !conf.vampire.canSleepDaytime)
+            return;
+
+        // ... the player is a vampire ...
+        VPlayer vPlayer = VampireRevamp.getVPlayerManager().tryGetDataNow(player.getUniqueId());
+        if (!vPlayer.isVampire())
+            return;
+
+        // ... and the sleeping was successful ...
+        long rtime = player.getWorld().getTime();
+        if (rtime != 0)
+            return;
+
+        // ... we set time to night
+        player.getWorld().setTime(11834);
+    }
+
+    // -------------------------------------------- //
     // FOOD
     // -------------------------------------------- //
 
@@ -578,7 +637,7 @@ public class ListenerMain implements Listener {
         PluginConfig conf = VampireRevamp.getVampireConfig();
         // If cake eating is not allowed for vampires ...
         if (EntityUtil.isPlayer(player) && !conf.vampire.canEatCake) {
-            // .. and the player right-clicks a cake block ...
+            // ... and the player right-clicks a cake block ...
             if (event.getAction() == Action.RIGHT_CLICK_BLOCK && event.getClickedBlock().getType() == Material.CAKE) {
                 // ... and the player is a vampire ...
                 VPlayer uplayer = VampireRevamp.getVPlayerManager().tryGetDataNow(player.getUniqueId());

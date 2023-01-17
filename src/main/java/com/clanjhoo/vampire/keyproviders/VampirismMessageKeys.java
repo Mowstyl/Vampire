@@ -10,7 +10,8 @@ public enum VampirismMessageKeys implements MessageKeyProvider {
     CANT_EAT_ITEM("vampirism.cantEatItem"),
     TRUCE_BROKEN("vampirism.truceBroken"),
     TRUCE_RESTORED("vampirism.truceRestored"),
-    COMBAT_WOOD_WARNING("vampirism.combatWoodWarning")
+    COMBAT_WOOD_WARNING("vampirism.combatWoodWarning"),
+    CANT_SLEEP("vampirism.cantSleep")
     ;
 
     VampirismMessageKeys(String key) {
