@@ -184,6 +184,7 @@ public class VampireRevamp extends JavaPlugin {
 			ex.printStackTrace();
 		}
 
+		vPlayerManager = null;
 		loadConfig(true);
 
 		// WorldGuard compat
@@ -307,15 +308,16 @@ public class VampireRevamp extends JavaPlugin {
 			vPlayerManager.saveAll();
 			this.getLogger().log(Level.INFO, "Saved!");
 		}
-		try {
-			vPlayerManager = new DBObjectManager<>(VPlayer.class, null, this, null, StorageType.JSON, "store");
-		}
-		catch (IOException ex) {
-			this.getLogger().log(Level.SEVERE, "Couldn't create storage! Disabling plugin!");
-			ex.printStackTrace();
-			this.getPluginLoader().disablePlugin(this);
-			disabled = true;
-			return false;
+		if (vPlayerManager == null) {
+			try {
+				vPlayerManager = new DBObjectManager<>(VPlayer.class, null, this, null, StorageType.JSON, "store");
+			} catch (IOException ex) {
+				this.getLogger().log(Level.SEVERE, "Couldn't create storage! Disabling plugin!");
+				ex.printStackTrace();
+				this.getPluginLoader().disablePlugin(this);
+				disabled = true;
+				return false;
+			}
 		}
 		if (reloadPlayers) {
 			for (Player p : Bukkit.getOnlinePlayers()) {
