@@ -7,10 +7,10 @@ import com.clanjhoo.vampire.keyproviders.SkillMessageKeys;
 import com.clanjhoo.vampire.keyproviders.VampirismMessageKeys;
 import com.clanjhoo.vampire.config.PluginConfig;
 import com.clanjhoo.vampire.entity.VPlayer;
-import com.clanjhoo.vampire.util.EventUtil;
-import com.clanjhoo.vampire.util.FxUtil;
-import com.clanjhoo.vampire.util.EntityUtil;
-import com.clanjhoo.vampire.util.MathUtil;
+import com.clanjhoo.vampire.util.*;
+import me.libraryaddict.disguise.disguisetypes.DisguiseType;
+import me.libraryaddict.disguise.events.DisguiseEvent;
+import me.libraryaddict.disguise.events.UndisguiseEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
@@ -161,6 +161,42 @@ public class ListenerMain implements Listener {
                     entity.setFireTicks(0);
                 }
             }, () -> {}, true, entity.getUniqueId());
+        }
+    }
+
+    @EventHandler(priority = EventPriority.NORMAL)
+    public void onDisguise(DisguiseEvent event) {
+        if (!VampireRevamp.getVampireConfig().vampire.batusi.preventDisguise)
+            return;
+        Entity aux = event.getEntity();
+        if (!EntityUtil.isPlayer(aux))
+            return;
+
+        final Player player = (Player) aux;
+        VPlayer vPlayer = VampireRevamp.getVPlayerManager().tryGetDataNow(player.getUniqueId());
+        if (!vPlayer.isBatusi())
+            return;
+
+        if (!ResourceUtil.hasPermission(event.getCommandSender(), Perm.MODE_BATUSI_DISGUISE)
+                && event.getDisguise().getType() != DisguiseType.BAT) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler(priority = EventPriority.NORMAL)
+    public void onUndisguise(UndisguiseEvent event) {
+        if (!VampireRevamp.getVampireConfig().vampire.batusi.preventDisguise)
+            return;
+        Entity aux = event.getEntity();
+        if (!EntityUtil.isPlayer(aux))
+            return;
+
+        final Player player = (Player) aux;
+        VPlayer vPlayer = VampireRevamp.getVPlayerManager().tryGetDataNow(player.getUniqueId());
+        if (!vPlayer.isBatusi())
+            return;
+        if (!ResourceUtil.hasPermission(event.getCommandSender(), Perm.MODE_BATUSI_DISGUISE)) {
+            event.setCancelled(true);
         }
     }
 

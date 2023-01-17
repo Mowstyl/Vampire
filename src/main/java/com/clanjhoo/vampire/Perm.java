@@ -17,6 +17,7 @@ public enum Perm {
 	MODE_INTENT,
 	MODE_NIGHTVISION,
 	MODE_BATUSI,
+	MODE_BATUSI_DISGUISE,
 	TRADE_OFFER,
 	TRADE_ACCEPT,
 	FLASK,
@@ -73,6 +74,9 @@ public enum Perm {
 					break;
 				case "batusi":
 					perm = Perm.MODE_BATUSI;
+					break;
+				case "disguise batusi":
+					perm = Perm.MODE_BATUSI_DISGUISE;
 					break;
 				case "offer":
 					perm = Perm.TRADE_OFFER;
