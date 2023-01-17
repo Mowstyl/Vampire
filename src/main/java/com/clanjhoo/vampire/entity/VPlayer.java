@@ -315,7 +315,7 @@ public class VPlayer {
     }
 
     public void setReason(InfectionReason reason) {
-        this.reason = reason.name();
+        this.reason = reason == null ? null : reason.name();
     }
 
     public UUID getMakerUUID() {

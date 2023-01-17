@@ -272,8 +272,8 @@ public class VampireRevamp extends JavaPlugin {
 	public static void loadPlayerFromDB(Player p) {
 		boolean result = VampireRevamp.getVPlayerManager().getDataSynchronous(
 				(vPlayer) -> {
-					if (perms != null && vPlayer.isVampire()) {
-						VampireRevamp.getInstance().setVampireGroup(p, true);
+					if (perms != null) {
+						VampireRevamp.getInstance().setVampireGroup(p, vPlayer.isVampire());
 					}
 				},
 				() -> VampireRevamp.log(Level.SEVERE, "Couldn't load player " + p.getName() + " from DB.")
