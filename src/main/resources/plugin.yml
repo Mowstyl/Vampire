@@ -1,4 +1,4 @@
-name: ${project.name}
+name: "VampireRevamp"
 main: ${project.groupId}.${project.artifactId}.${project.name}
 api-version: "1.13"
 version: ${project.version}

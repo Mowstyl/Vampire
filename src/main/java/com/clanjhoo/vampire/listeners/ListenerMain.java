@@ -128,6 +128,13 @@ public class ListenerMain implements Listener {
         VampireRevamp.loadPlayerFromDB(player);
     }
 
+    @EventHandler
+    public void onDamage(EntityDamageByEntityEvent e) {
+        if (!(e.getEntity() instanceof Player && e.getDamager() instanceof Player)) return;
+
+        System.out.println("Hurt!");
+    }
+
     @EventHandler(priority = EventPriority.NORMAL)
     public void updateOnQuit(PlayerQuitEvent event) {
         final Player player = event.getPlayer();

@@ -139,6 +139,10 @@ public class VPlayer {
      */
     private transient long fxEnderMillis = 0;
 
+    @NotNullField
+    @DataField(sqltype = "VARCHAR")
+    private transient int testNumber;
+
 
     // -------------------------------------------- //
     // CONSTRUCTORS
@@ -190,6 +194,7 @@ public class VPlayer {
                 this.setIntending(false);
                 this.setUsingNightVision(false);
                 this.setInfection(0);
+                this.setTestNumber(14);
 
                 Player player = Bukkit.getPlayer(uuid);
                 if (VampireRevamp.getInstance().permissionGroupEnabled())
@@ -240,6 +245,14 @@ public class VPlayer {
 
     public boolean isInfected() {
         return this.infection > 0D;
+    }
+
+    public int getTestNumber() {
+        return this.testNumber;
+    }
+
+    public void setTestNumber(int number) {
+        this.testNumber = number;
     }
 
     public void setInfection(double val) {

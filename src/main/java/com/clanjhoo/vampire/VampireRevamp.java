@@ -9,6 +9,9 @@ import co.aikar.locales.MessageKeyProvider;
 import com.clanjhoo.dbhandler.data.DBObjectManager;
 import com.clanjhoo.dbhandler.data.StorageType;
 import com.clanjhoo.vampire.compat.WerewolfCompat;
+import com.clanjhoo.vampire.jamesstuff.ClanConfigHandler;
+import com.clanjhoo.vampire.jamesstuff.ClanInstance;
+import com.clanjhoo.vampire.jamesstuff.PlayerClanHandler;
 import com.clanjhoo.vampire.listeners.EntryVampiresListener;
 import com.clanjhoo.vampire.listeners.ListenerMain;
 import com.clanjhoo.vampire.listeners.PhantomListener;
@@ -145,6 +148,8 @@ public class VampireRevamp extends JavaPlugin {
 		if (isPapermc) {
 			this.getLogger().info("Using Paper");
 		}
+
+		ClanInstance.getInstance().reload();
 
 		String versionString = this.getServer().getVersion();
 		try {

@@ -3,6 +3,9 @@ package com.clanjhoo.vampire.cmd;
 import co.aikar.commands.*;
 import co.aikar.commands.annotation.*;
 import com.clanjhoo.vampire.*;
+import com.clanjhoo.vampire.jamesstuff.ClanConfigHandler;
+import com.clanjhoo.vampire.jamesstuff.ClanInstance;
+import com.clanjhoo.vampire.jamesstuff.PlayerClanHandler;
 import com.clanjhoo.vampire.keyproviders.CommandMessageKeys;
 import com.clanjhoo.vampire.keyproviders.GrammarMessageKeys;
 import com.clanjhoo.vampire.keyproviders.SkillMessageKeys;
@@ -82,6 +85,7 @@ public class CmdVampire extends BaseCommand {
 				sender.spigot().sendMessage(TextUtil.getCommandHelp("set", commandMap.get("set"), sender, 0));
 				sender.spigot().sendMessage(TextUtil.getCommandHelp("version", commandMap.get("version"), sender, 0));
 				sender.spigot().sendMessage(TextUtil.getCommandHelp("reload", commandMap.get("reload"), sender, 0));
+				sender.sendMessage("/v toggle to toggle infection intent");
 			}
 		}
 		else {
@@ -122,6 +126,8 @@ public class CmdVampire extends BaseCommand {
 						MessageType.ERROR,
 						CommandMessageKeys.RELOAD_FAIL);
 		}
+
+		ClanInstance.getInstance().reload();
 	}
 
 	@Subcommand("show")
@@ -1150,6 +1156,15 @@ public class CmdVampire extends BaseCommand {
 					"{value}", String.format("%d", res));
 		}
 	}
+
+	@Subcommand("clan|c")
+	@CommandPermission("vampire.clan.view")
+	public void onViewClan(CommandSender sender) {
+		if (!(sender instanceof Player)) return;
+		Player player = (Player) sender;
+		player.sendMessage("§e§lVAMPIRE §7- Your vampire clan is " + ClanInstance.getInstance().getPlayerInfo(player.getUniqueId().toString()).getClan().getClanName());
+    }
+
 
 	public String getCommandSyntax(String commandName) {
 		String result = "";
