@@ -7,11 +7,12 @@ import java.util.List;
 public class FileUtil {
     public static List<File> searchJson(final File folder) {
         List<File> result = null;
+        File[] files;
 
-        if (folder != null && folder.isDirectory() && folder.listFiles() != null && folder.listFiles().length > 0) {
+        if (folder != null && folder.isDirectory() && (files = folder.listFiles()) != null && files.length > 0) {
             result = new ArrayList<>();
 
-            for (final File f : folder.listFiles()) {
+            for (final File f : files) {
                 if (f != null && f.isFile() && f.getName().matches(".*\\.json")) {
                     result.add(f);
                 }

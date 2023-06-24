@@ -55,7 +55,8 @@ public class HolyWaterUtil {
         }
 
         PersistentDataContainer itemDC =  meta.getPersistentDataContainer();
-        return itemDC.get(HOLY_WATER_KEY, BooleanTagType.TYPE);
+        Boolean result = itemDC.get(HOLY_WATER_KEY, BooleanTagType.TYPE);
+        return result != null && result;
     }
 
 }

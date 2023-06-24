@@ -12,12 +12,12 @@ import java.util.Map.Entry;
 
 public class Recipe
 {
-	public Map<Material, Integer> materialQuantities;
+	public final Map<Material, Integer> materialQuantities;
 	
 	// GSON needs this noarg constructor;
 	public Recipe()
 	{
-		this(new HashMap<Material, Integer>());
+		this(new HashMap<>());
 	}
 	
 	public Recipe(Map<Material, Integer> materialQuantities)
@@ -25,7 +25,6 @@ public class Recipe
 		this.materialQuantities = materialQuantities;
 	}
 	
-	@SuppressWarnings("deprecation")
 	public void removeFromPlayer(Player player)
 	{
 		Inventory inventory = player.getInventory();

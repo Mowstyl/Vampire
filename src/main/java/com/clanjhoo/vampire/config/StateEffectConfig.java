@@ -85,8 +85,6 @@ public class StateEffectConfig implements Comparable<StateEffectConfig>{
     public void addPotionEffects(LivingEntity entity, int targetDuration)
     {
         for (Map.Entry<PotionEffectType, Integer> entry : effectToStrength.entrySet()) {
-            // if (entity.hasPotionEffect(entry.getKey()))
-            //     entity.removePotionEffect(entry.getKey());
             entity.addPotionEffect(new PotionEffect(entry.getKey(), targetDuration, entry.getValue(), true, false));
         }
     }

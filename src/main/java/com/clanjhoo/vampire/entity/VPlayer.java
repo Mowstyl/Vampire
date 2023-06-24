@@ -81,7 +81,7 @@ public class VPlayer {
     /**
      * TRANSIENT: set of regions this vampire is allowed to enter (worldguard enabled)
      */
-    private transient Set<String> allowedRegions = new ConcurrentSkipListSet<>();
+    private final transient Set<String> allowedRegions = new ConcurrentSkipListSet<>();
     /**
      * TRANSIENT: whether or not the vampire is in bloodlust mode
      */
@@ -532,7 +532,7 @@ public class VPlayer {
         return food;
     }
 
-    public int addFood(double amount) {
+    public Integer addFood(double amount) {
         Integer added = null;
         Player player = Bukkit.getPlayer(uuid);
         if (player != null) {

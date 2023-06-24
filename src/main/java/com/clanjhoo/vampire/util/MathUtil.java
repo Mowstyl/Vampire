@@ -6,7 +6,7 @@ import java.math.RoundingMode;
 import java.util.Random;
 
 public class MathUtil {
-    public static Random random = new Random();
+    public static final Random random = new Random();
 
     public static <T extends Number> T limitNumber(T d, T min, T max) {
         if (d.doubleValue() < min.doubleValue()) {

@@ -222,36 +222,6 @@ public class ListenerMain implements Listener {
         }
     }
 
-    /*
-    private void updateNameColor(Player player) {
-        if (EntityUtil.isPlayer(player)) {
-            PluginConfig conf = VampireRevamp.getVampireConfig();
-            if (mconf.isUpdateNameColor()) {
-                UPlayer uplayer = UPlayer.get(player);
-
-                if (uplayer != null && uplayer.isVampire()) {
-                    player.setDisplayName(mconf.getUpdateNameColorTo().toString() + ChatColor.stripColor(player.getDisplayName()));
-                }
-            }
-        }
-    }
-
-    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
-    public void updateNameColor(AsyncPlayerChatEvent event) {
-        updateNameColor(event.getPlayer());
-    }
-
-    @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
-    public void updateNameColor(PlayerJoinEvent event) {
-        updateNameColor(event.getPlayer());
-    }
-
-    @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
-    public void updateNameColor(PlayerTeleportEvent event) {
-        updateNameColor(event.getPlayer());
-    }
-    */
-
     // -------------------------------------------- //
     // DROP SELF
     // -------------------------------------------- //
@@ -348,15 +318,6 @@ public class ListenerMain implements Listener {
                 // ... that has not recently done something to break the truce...
                 if (uplayer.isVampire() && !uplayer.truceIsBroken()) {
                     VampireRevamp.debugLog(Level.INFO, "Vampire detected, cancelling target");
-                    /*
-                    // ... then if the player is a ghast target nothing ...
-                    if (event.getEntityType() == EntityType.GHAST) {
-                        event.setTarget(null);
-                    } else {
-                        // ... otherwise cancel the event.
-                        event.setCancelled(true);
-                    }
-                    */
                     event.setCancelled(true);
                 }
             }

@@ -2,7 +2,6 @@ package com.clanjhoo.vampire.keyproviders;
 
 import co.aikar.locales.MessageKey;
 import co.aikar.locales.MessageKeyProvider;
-import org.bukkit.ChatColor;
 
 public enum SkillMessageKeys implements MessageKeyProvider {
     BLOODLUST_LOW_FOOD("skills.bloodlust_lowFood"),

@@ -16,7 +16,6 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -125,7 +124,7 @@ public class TextUtil {
         return comps;
     }
 
-    public static BaseComponent[] getCommandHelp(String command, RegisteredCommand regCommand, CommandSender sender, int requireVampire) {
+    public static BaseComponent[] getCommandHelp(String command, RegisteredCommand<?> regCommand, CommandSender sender, int requireVampire) {
         BaseComponent[] comps;
         String commandStr = "/v";
         boolean isSuggestion = true;

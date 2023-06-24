@@ -46,6 +46,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitScheduler;
 
 import java.io.*;
+import java.nio.file.Files;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
@@ -62,9 +63,9 @@ public class VampireRevamp extends JavaPlugin {
 	private int theTaskId = -1;
 	private int batTaskId = -1;
 	public PaperCommandManager manager;
-	public Map<UUID, Boolean> batEnabled = new ConcurrentHashMap<>();
-	public Set<LivingEntity> bats = new HashSet<>();
-	public Map<UUID, List<LivingEntity>> batmap = new ConcurrentHashMap<>();
+	public final Map<UUID, Boolean> batEnabled = new ConcurrentHashMap<>();
+	public final Set<LivingEntity> bats = new HashSet<>();
+	public final Map<UUID, List<LivingEntity>> batmap = new ConcurrentHashMap<>();
 	public boolean isDisguiseEnabled = false;
 	public boolean hasVault = false;
 	private PluginConfig conf = null;
@@ -171,7 +172,7 @@ public class VampireRevamp extends JavaPlugin {
 		} catch (Exception ex) {
 			log(Level.SEVERE, "Error found while detecting server version. Version: " + versionString);
 			ex.printStackTrace();
-			this.getPluginLoader().disablePlugin(this);
+			getServer().getPluginManager().disablePlugin(this);
 			disabled = true;
 			return;
 		}
@@ -205,8 +206,10 @@ public class VampireRevamp extends JavaPlugin {
 				File localeFile = new File(localesFolder, locale);
 				if (!localeFile.exists()) {
 					localeFile.createNewFile();
-					try (InputStream is = getResource("locales/" + locale); OutputStream os = new FileOutputStream(localeFile)) {
-						ByteStreams.copy(is, os); //Copies file from plugin jar into newly created file.
+					try (InputStream is = getResource("locales/" + locale); OutputStream os = Files.newOutputStream(localeFile.toPath())) {
+						if (is != null) {
+							ByteStreams.copy(is, os); //Copies file from plugin jar into newly created file.
+						}
 					}
 				}
 			}
@@ -314,7 +317,7 @@ public class VampireRevamp extends JavaPlugin {
 			} catch (IOException ex) {
 				this.getLogger().log(Level.SEVERE, "Couldn't create storage! Disabling plugin!");
 				ex.printStackTrace();
-				this.getPluginLoader().disablePlugin(this);
+				getServer().getPluginManager().disablePlugin(this);
 				disabled = true;
 				return false;
 			}
@@ -333,33 +336,36 @@ public class VampireRevamp extends JavaPlugin {
 		boolean finalResult = false;
 		try {
 			File folder = new File(this.getDataFolder() + "/locales");
-			for (final File file : folder.listFiles()) {
-				if (file.isFile()) {
-					String[] raw = file.getName().split("\\.");
-					if (raw.length != 2 || (!raw[1].equalsIgnoreCase("yml") && !raw[1].equalsIgnoreCase("yaml")))
-						continue;
-					raw = raw[0].split("_");
-					if (raw.length != 2 || !raw[0].equalsIgnoreCase("lang"))
-						continue;
-					Locale loc = new Locale(raw[1]);
-					manager.addSupportedLanguage(loc);
-					if (conf.general.debug)
-						localeLoader(file, loc);
-					boolean result = manager.getLocales().loadYamlLanguageFile(file, loc);
-					if (result) {
-						log(Level.INFO, "Loaded language: " + loc.toString());
-					}
-					else {
-						log(Level.INFO, "Nothing loaded from " + file.getName());
-					}
-					if (conf.general.defaultLocale.equals(loc) && result) {
-						hasDefaultLocale = true;
-						manager.getLocales().setDefaultLocale(conf.general.defaultLocale);
+			File[] files = folder.listFiles();
+			if (files != null) {
+				for (final File file : files) {
+					if (file.isFile()) {
+						String[] raw = file.getName().split("\\.");
+						if (raw.length != 2 || (!raw[1].equalsIgnoreCase("yml") && !raw[1].equalsIgnoreCase("yaml")))
+							continue;
+						raw = raw[0].split("_");
+						if (raw.length != 2 || !raw[0].equalsIgnoreCase("lang"))
+							continue;
+						Locale loc = new Locale(raw[1]);
+						manager.addSupportedLanguage(loc);
+						if (conf.general.debug)
+							localeLoader(file, loc);
+						boolean result = manager.getLocales().loadYamlLanguageFile(file, loc);
+						if (result) {
+							log(Level.INFO, "Loaded language: " + loc);
+						}
+						else {
+							log(Level.INFO, "Nothing loaded from " + file.getName());
+						}
+						if (conf.general.defaultLocale.equals(loc) && result) {
+							hasDefaultLocale = true;
+							manager.getLocales().setDefaultLocale(conf.general.defaultLocale);
+						}
 					}
 				}
-			}
 
-			finalResult = true;
+				finalResult = true;
+			}
 		}
 		catch (Exception ex) {
 			ex.printStackTrace();
@@ -368,8 +374,9 @@ public class VampireRevamp extends JavaPlugin {
 			if (!hasDefaultLocale) {
 				Level msgLevel = disableOnFail ? Level.SEVERE : Level.WARNING;
 				VampireRevamp.log(msgLevel, "Couldn't load the default locale file!");
-				if (disableOnFail)
-					this.getPluginLoader().disablePlugin(this);
+				if (disableOnFail) {
+					getServer().getPluginManager().disablePlugin(this);
+				}
 				finalResult = false;
 			}
 		}
@@ -451,8 +458,8 @@ public class VampireRevamp extends JavaPlugin {
 		BukkitScheduler scheduler = getServer().getScheduler();
 
 		cleanTaskId = scheduler.scheduleSyncRepeatingTask(this, vPlayerManager::saveAndRemoveUnactive, 0L, 5 * 60 * 20L);
-		theTaskId = scheduler.scheduleSyncRepeatingTask(this, new TheTask(), 0L, (this.conf.general.taskDelayMillis * 20) / 1000);
-		batTaskId = scheduler.scheduleSyncRepeatingTask(this, new BatTask(), 0L, (this.conf.general.batTaskDelayMillis * 20) / 1000);
+		theTaskId = scheduler.scheduleSyncRepeatingTask(this, new TheTask(), 0L, (this.conf.general.taskDelayMillis * 20L) / 1000);
+		batTaskId = scheduler.scheduleSyncRepeatingTask(this, new BatTask(), 0L, (this.conf.general.batTaskDelayMillis * 20L) / 1000);
 	}
 
 	public static YamlConfiguration fileToYamlConfig (File file) throws IOException, InvalidConfigurationException {
@@ -463,30 +470,20 @@ public class VampireRevamp extends JavaPlugin {
 	}
 
 	public static boolean localeLoader(File file, Locale locale) {
+		boolean loaded = false;
 		try {
-			boolean loaded = false;
 			YamlConfiguration config = fileToYamlConfig(file);
-			Iterator var4 = config.getKeys(false).iterator();
 
-			while(true) {
-				String parentKey;
-				ConfigurationSection inner;
-				do {
-					if (!var4.hasNext()) {
-						return loaded;
-					}
+			for (String configKey : config.getKeys(false)) {
+				ConfigurationSection inner = config.getConfigurationSection(configKey);
+				if (inner == null) {
+					continue;
+				}
 
-					parentKey = (String)var4.next();
-					inner = config.getConfigurationSection(parentKey);
-				} while(inner == null);
-
-				Iterator var7 = inner.getKeys(false).iterator();
-
-				while(var7.hasNext()) {
-					String key = (String)var7.next();
+				for (String key : inner.getKeys(false)) {
 					String value = inner.getString(key);
 					if (value != null && !value.isEmpty()) {
-						MessageKey loadedKey = MessageKey.of(parentKey + "." + key);
+						MessageKey loadedKey = MessageKey.of(configKey + "." + key);
 						debugLog(Level.INFO, "[" + locale.toString() +
 								"] Loaded key " + loadedKey.getKey() +
 								" with value " + value);
@@ -499,6 +496,7 @@ public class VampireRevamp extends JavaPlugin {
 			ex.printStackTrace();
 			return false;
 		}
+		return loaded;
 	}
 
 	public static void log(Level level, String message) {
@@ -543,7 +541,8 @@ public class VampireRevamp extends JavaPlugin {
 		}
 	}
 
-	public void setFormatting(CommandManager manager) {
+	@SuppressWarnings("deprecation")
+	public void setFormatting(CommandManager<?, ?, ChatColor, ?, ?, ?> manager) {
 		Set<MessageType> messageTypes = getMessageTypes();
 
 		for (MessageType mtype : messageTypes) {

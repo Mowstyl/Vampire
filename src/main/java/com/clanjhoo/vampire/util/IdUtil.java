@@ -13,7 +13,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 
 public class IdUtil {
-    private static Map<String, CommandSender> registryIdToSender = new ConcurrentHashMap<>();
+    private static final Map<String, CommandSender> registryIdToSender = new ConcurrentHashMap<>();
 
     // -------------------------------------------- //
     // CONSTANTS
@@ -218,8 +218,7 @@ public class IdUtil {
         {
             // Is UUID
             String string = (String)senderObject;
-            UUID uuid = IdUtil.asUuid(string);
-            if (uuid != null) return uuid;
+            return IdUtil.asUuid(string);
 
             // Is Name
             // Handled at "Data"

@@ -478,9 +478,7 @@ public class PluginConfig {
             List<Map<?, ?>> auxLES = cs.getMapList(section);
             auxMap = new HashMap<>();
             for (Map<?, ?> minimap : auxLES) {
-                for (Map.Entry<?, ?> entry : minimap.entrySet()) {
-                    auxMap.put(entry.getKey(), entry.getValue());
-                }
+                auxMap.putAll(minimap);
             }
         }
 

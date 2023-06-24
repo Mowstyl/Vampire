@@ -3,6 +3,7 @@ package com.clanjhoo.vampire.event;
 import com.clanjhoo.vampire.entity.VPlayer;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
+import org.jetbrains.annotations.NotNull;
 
 public class InfectionChangeEvent extends Event {
     // -------------------------------------------- //
@@ -13,7 +14,7 @@ public class InfectionChangeEvent extends Event {
     private boolean cancel;
 
     @Override
-    public HandlerList getHandlers() {
+    public @NotNull HandlerList getHandlers() {
         return handlers;
     }
 

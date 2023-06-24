@@ -485,40 +485,43 @@ public class RadiationConfig {
                 Integer ticks = null;
                 Boolean an = null;
 
+                label:
                 for (Map.Entry<?, ?> entry : minimap.entrySet()) {
                     String key = (String) entry.getKey();
-                    if (key.equals("type")) {
-                        String typeName = (String) entry.getValue();
-                        type = PotionEffectType.getByName(typeName);
+                    switch (key) {
+                        case "type":
+                            String typeName = (String) entry.getValue();
+                            type = PotionEffectType.getByName(typeName);
 
-                        if (type == null) {
-                            VampireRevamp.log(Level.WARNING, "PotionEffectType " + typeName + " doesn't exist!");
+                            if (type == null) {
+                                VampireRevamp.log(Level.WARNING, "PotionEffectType " + typeName + " doesn't exist!");
+                                break label;
+                            }
                             break;
-                        }
-                    }
-                    else if (key.equals("strength")) {
-                        str = (Integer) entry.getValue();
-                    }
-                    else if (key.equals("temperature")) {
-                        temp = (Double) entry.getValue();
+                        case "strength":
+                            str = (Integer) entry.getValue();
+                            break;
+                        case "temperature":
+                            temp = (Double) entry.getValue();
 
-                        if (temp < 0 || temp > 1) {
-                            VampireRevamp.log(Level.WARNING, "Temperature must be between 0 and 1 doesn't exist!");
-                            temp = null;
+                            if (temp < 0 || temp > 1) {
+                                VampireRevamp.log(Level.WARNING, "Temperature must be between 0 and 1 doesn't exist!");
+                                temp = null;
+                                break label;
+                            }
                             break;
-                        }
-                    }
-                    else if (key.equals("ticks")) {
-                        ticks = (Integer) entry.getValue();
+                        case "ticks":
+                            ticks = (Integer) entry.getValue();
 
-                        if (ticks < 1) {
-                            VampireRevamp.log(Level.WARNING, "Ticks must be positive non 0!");
-                            ticks = null;
+                            if (ticks < 1) {
+                                VampireRevamp.log(Level.WARNING, "Ticks must be positive non 0!");
+                                ticks = null;
+                                break label;
+                            }
                             break;
-                        }
-                    }
-                    else if (key.equals("affectNosferatu")) {
-                        an = (Boolean) entry.getValue();
+                        case "affectNosferatu":
+                            an = (Boolean) entry.getValue();
+                            break;
                     }
                 }
 
@@ -588,8 +591,8 @@ public class RadiationConfig {
         List<String> auxData = removeBuffs.getData();
         result = result && PluginConfig.writeLine(configWriter, "# Buffs will be removed from the specified types of vampires when specified temperature is reached", indent, level);
         result = result && PluginConfig.writeLine(configWriter, "removeBuffs:", indent, level);
-        for (int i = 0; i < auxData.size(); i++)
-            result = result && PluginConfig.writeLine(configWriter, auxData.get(i), indent, level + 1);
+        for (String auxDatum : auxData)
+            result = result && PluginConfig.writeLine(configWriter, auxDatum, indent, level + 1);
 
         result = result && PluginConfig.writeLine(configWriter, "effects:", indent, level);
         for (RadiationEffectConfig effectConfig : effects) {
@@ -602,8 +605,8 @@ public class RadiationConfig {
         auxData = burn.getData();
         result = result && PluginConfig.writeLine(configWriter, "# Vampires will start burning when specified temperature is reached", indent, level);
         result = result && PluginConfig.writeLine(configWriter, "burn:", indent, level);
-        for (int i = 0; i < auxData.size(); i++)
-            result = result && PluginConfig.writeLine(configWriter, auxData.get(i), indent, level + 1);
+        for (String auxDatum : auxData)
+            result = result && PluginConfig.writeLine(configWriter, auxDatum, indent, level + 1);
 
         result = result && PluginConfig.writeLine(configWriter, "smokesPerTempAndMilli: " + this.smokesPerTempAndMilli, indent, level);
         result = result && PluginConfig.writeLine(configWriter, "flamesPerTempAndMilli: " + this.flamesPerTempAndMilli, indent, level);

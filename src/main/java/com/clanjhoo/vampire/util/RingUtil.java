@@ -6,7 +6,6 @@ import org.bukkit.NamespacedKey;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataContainer;
-import org.bukkit.persistence.PersistentDataType;
 
 public class RingUtil {
     public static final NamespacedKey SUN_RING_KEY = new NamespacedKey(VampireRevamp.getInstance(), "IgnoreRadiation");
@@ -26,6 +25,8 @@ public class RingUtil {
         }
         ItemMeta itemMeta = item.getItemMeta();
         PersistentDataContainer itemDC =  itemMeta.getPersistentDataContainer();
-        return itemDC.get(SUN_RING_KEY, BooleanTagType.TYPE);
+
+        Boolean result = itemDC.get(SUN_RING_KEY, BooleanTagType.TYPE);
+        return result != null && result;
     }
 }

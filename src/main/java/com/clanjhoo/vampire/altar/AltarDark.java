@@ -42,15 +42,13 @@ public class AltarDark extends Altar {
 
             if (uplayer.isHealthy()) {
                 if (ResourceUtil.playerRemoveAttempt(player, this.resources, AltarMessageKeys.ACTIVATE_SUCCESS, AltarMessageKeys.ACTIVATE_FAIL)) {
-                    Bukkit.getScheduler().scheduleSyncDelayedTask(VampireRevamp.getInstance(), new Runnable() {
-                        public void run() {
-                            VampireRevamp.sendMessage(player,
-                                    MessageType.INFO,
-                                    AltarMessageKeys.ALTAR_DARK_HEALTHY);
-                            player.getWorld().strikeLightningEffect(player.getLocation().add(0, 3, 0));
-                            uplayer.runFxSmokeBurst();
-                            uplayer.addInfection(0.01D, InfectionReason.ALTAR, null);
-                        }
+                    Bukkit.getScheduler().scheduleSyncDelayedTask(VampireRevamp.getInstance(), () -> {
+                        VampireRevamp.sendMessage(player,
+                                MessageType.INFO,
+                                AltarMessageKeys.ALTAR_DARK_HEALTHY);
+                        player.getWorld().strikeLightningEffect(player.getLocation().add(0, 3, 0));
+                        uplayer.runFxSmokeBurst();
+                        uplayer.addInfection(0.01D, InfectionReason.ALTAR, null);
                     }, 1);
                     success = true;
                 }
