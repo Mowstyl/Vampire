@@ -16,15 +16,15 @@ import org.bukkit.permissions.Permissible;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.potion.PotionData;
 import org.bukkit.potion.PotionType;
+import org.jetbrains.annotations.NotNull;
 
-import javax.annotation.Nonnull;
 import java.util.Collection;
 import java.util.logging.Level;
 
 public class ResourceUtil {
 	public static VampireRevamp plugin;
 
-	public static boolean hasPermission(@Nonnull Permissible permissible, @Nonnull Perm permission, boolean verbose)
+	public static boolean hasPermission(@NotNull Permissible permissible, @NotNull Perm permission, boolean verbose)
 	{
 		String permissionId = createPermissionId(plugin, permission.name());
 		boolean hasPerm = false;
@@ -44,12 +44,12 @@ public class ResourceUtil {
 		return hasPerm;
 	}
 
-	public static boolean hasPermission(Permissible permissible, Perm permission)
+	public static boolean hasPermission(@NotNull Permissible permissible, Perm permission)
 	{
 		return hasPermission(permissible, permission, false);
 	}
 
-	public static String createPermissionId(@Nonnull Plugin plugin, @Nonnull String enumName) {
+	public static String createPermissionId(@NotNull Plugin plugin, @NotNull String enumName) {
 		return "vampire." + enumName.toLowerCase().replace('_', '.');
 	}
 

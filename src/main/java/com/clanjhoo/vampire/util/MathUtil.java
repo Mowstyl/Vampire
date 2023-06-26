@@ -1,6 +1,7 @@
 package com.clanjhoo.vampire.util;
 
-import javax.annotation.Nonnull;
+import org.jetbrains.annotations.NotNull;
+
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Random;
@@ -46,7 +47,7 @@ public class MathUtil {
     // EQUALSISH
     // -------------------------------------------- //
 
-    public static boolean equals(@Nonnull Object... objects) {
+    public static boolean equals(@NotNull Object... objects) {
         boolean eq = true;
 
         if (objects.length % 2 == 0) {

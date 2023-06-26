@@ -2,6 +2,7 @@ package com.clanjhoo.vampire;
 
 import com.clanjhoo.vampire.util.ResourceUtil;
 import org.bukkit.permissions.Permissible;
+import org.jetbrains.annotations.NotNull;
 
 public enum Perm {
 	// -------------------------------------------- //
@@ -47,11 +48,11 @@ public enum Perm {
 	// HAS
 	// -------------------------------------------- //
 	
-	public boolean has(Permissible permissible, boolean verboose) {
+	public boolean has(@NotNull Permissible permissible, boolean verboose) {
 		return ResourceUtil.hasPermission(permissible, this, verboose);
 	}
 	
-	public boolean has(Permissible permissible) {
+	public boolean has(@NotNull Permissible permissible) {
 		return ResourceUtil.hasPermission(permissible, this);
 	}
 

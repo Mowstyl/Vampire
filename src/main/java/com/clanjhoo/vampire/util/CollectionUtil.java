@@ -1,6 +1,7 @@
 package com.clanjhoo.vampire.util;
 
-import javax.annotation.Nonnull;
+import org.jetbrains.annotations.NotNull;
+
 import java.util.*;
 
 public class CollectionUtil {
@@ -30,7 +31,7 @@ public class CollectionUtil {
         return new HashMap<>();
     }
 
-    public static <K, V> Map<K, V> map(@Nonnull K key1, @Nonnull V val1, Object... other) {
+    public static <K, V> Map<K, V> map(@NotNull K key1, @NotNull V val1, Object... other) {
         Map<K, V> dict = new HashMap<>();
 
         dict.put(key1, val1);
