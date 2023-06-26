@@ -20,6 +20,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
+import java.util.logging.Level;
 
 public class BloodFlaskUtil {
     public final static PotionEffect BLOOD_FLASK_CUSTOM_EFFECT = new PotionEffect(PotionEffectType.INCREASE_DAMAGE, 20, 0);
@@ -63,12 +64,11 @@ public class BloodFlaskUtil {
     }
 
     public static @Nullable BloodFlaskData getBloodFlaskData(@NotNull ItemStack item) {
-        double amount;
-        boolean isVampiric;
+        Double amount;
+        Boolean isVampiric;
         UUID owner;
 
         PersistentDataContainer flaskTag = item.getItemMeta().getPersistentDataContainer().get(BLOOD_FLASK_KEY, PersistentDataType.TAG_CONTAINER);
-
         if (flaskTag == null) {
             return null;
         }
@@ -76,6 +76,10 @@ public class BloodFlaskUtil {
         amount = flaskTag.get(BLOOD_FLASK_AMOUNT, PersistentDataType.DOUBLE);
         isVampiric = flaskTag.get(BLOOD_FLASK_VAMPIRIC, BooleanTagType.TYPE);
         owner = flaskTag.get(BLOOD_FLASK_OWNER, UUIDTagType.TYPE);
+        if (amount == null || isVampiric == null || owner == null) {
+            VampireRevamp.log(Level.WARNING, "Found incomplete flask tag");
+            return null;
+        }
 
         return new BloodFlaskData(owner, amount, isVampiric);
     }

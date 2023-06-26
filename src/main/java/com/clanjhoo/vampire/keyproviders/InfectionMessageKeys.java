@@ -20,7 +20,7 @@ public enum InfectionMessageKeys implements MessageKeyProvider {
         this.key = MessageKey.of(key);
     }
 
-    private MessageKey key;
+    private final MessageKey key;
 
     @Override
     public MessageKey getMessageKey() {
@@ -28,23 +28,21 @@ public enum InfectionMessageKeys implements MessageKeyProvider {
     }
 
     public static MessageKey getFeeling(int index) {
-        InfectionMessageKeys feel = InfectionMessageKeys.FEELING;
         int maxNum = InfectionMessageKeys.getMaxFeeling();
         index += 1;
         if (index > maxNum || index < 1)
             throw new IllegalArgumentException();
 
-        return MessageKey.of(feel.key.getKey() + index);
+        return MessageKey.of(InfectionMessageKeys.FEELING.key.getKey() + index);
     }
 
     public static MessageKey getHint(int index) {
-        InfectionMessageKeys hint = InfectionMessageKeys.HINT;
         int maxNum = InfectionMessageKeys.getMaxHint();
         index += 1;
         if (index > maxNum || index < 1)
             throw new IllegalArgumentException();
 
-        return MessageKey.of(hint.key.getKey() + index);
+        return MessageKey.of(InfectionMessageKeys.HINT.key.getKey() + index);
     }
 
     public static int getMaxFeeling() {

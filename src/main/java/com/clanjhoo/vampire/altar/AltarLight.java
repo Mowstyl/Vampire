@@ -45,14 +45,12 @@ public class AltarLight extends Altar
 						VampireRevamp.getVampireConfig().holyWater.resources,
 						HolyWaterMessageKeys.CREATE_SUCCESS,
 						HolyWaterMessageKeys.CREATE_FAIL)) {
-					Bukkit.getScheduler().scheduleSyncDelayedTask(VampireRevamp.getInstance(), new Runnable() {
-						public void run() {
-							ResourceUtil.playerAdd(player, HolyWaterUtil.createHolyWater(player));
-							VampireRevamp.sendMessage(player,
-									MessageType.INFO,
-									HolyWaterMessageKeys.CREATE_RESULT);
-							uplayer.runFxEnderBurst();
-						}
+					Bukkit.getScheduler().scheduleSyncDelayedTask(VampireRevamp.getInstance(), () -> {
+						ResourceUtil.playerAdd(player, HolyWaterUtil.createHolyWater(player));
+						VampireRevamp.sendMessage(player,
+								MessageType.INFO,
+								HolyWaterMessageKeys.CREATE_RESULT);
+						uplayer.runFxEnderBurst();
 					}, 1);
 					success = true;
 				}
@@ -68,15 +66,13 @@ public class AltarLight extends Altar
 							this.resources,
 							AltarMessageKeys.ACTIVATE_SUCCESS,
 							AltarMessageKeys.ACTIVATE_FAIL)) {
-						Bukkit.getScheduler().scheduleSyncDelayedTask(VampireRevamp.getInstance(), new Runnable() {
-							public void run() {
-								VampireRevamp.sendMessage(player,
-										MessageType.INFO,
-										AltarMessageKeys.ALTAR_LIGHT_VAMPIRE);
-								player.getWorld().strikeLightningEffect(player.getLocation().add(0, 3, 0));
-								uplayer.runFxEnderBurst();
-								uplayer.setVampire(false);
-							}
+						Bukkit.getScheduler().scheduleSyncDelayedTask(VampireRevamp.getInstance(), () -> {
+							VampireRevamp.sendMessage(player,
+									MessageType.INFO,
+									AltarMessageKeys.ALTAR_LIGHT_VAMPIRE);
+							player.getWorld().strikeLightningEffect(player.getLocation().add(0, 3, 0));
+							uplayer.runFxEnderBurst();
+							uplayer.setVampire(false);
 						}, 1);
 						success = true;
 					}

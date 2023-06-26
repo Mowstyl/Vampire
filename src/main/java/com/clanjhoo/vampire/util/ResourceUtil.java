@@ -86,7 +86,7 @@ public class ResourceUtil {
 	}
 	
 	public static void playerRemove(Player player, Collection<? extends ItemStack> stacks) {
-		playerRemove(player, stacks.toArray(new ItemStack[stacks.size()]));
+		playerRemove(player, stacks.toArray(new ItemStack[0]));
 	}
 	
 	public static void playerRemove(Player player, ItemStack... stacks) {

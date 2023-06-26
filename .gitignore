@@ -2,6 +2,8 @@
 # Home made stuff not present in the gitignore project.
 # Manually forged MassiveCraft stuff.
 
+*.jar
+
 # Eclipse jar description files
 *.jardesc
 
@@ -217,8 +219,6 @@ Temporary Items
 .apdisk
 
 ### https://github.com/github/gitignore/blob/master/Global/Linux.gitignore
-
-*~
 
 # temporary files which can be created if a process still has a handle open of a deleted file
 .fuse_hidden*

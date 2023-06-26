@@ -29,7 +29,7 @@ import java.util.logging.Level;
 @CommandAlias("v|vampire")
 @CommandPermission("vampire.basecommand")
 public class CmdVampire extends BaseCommand {
-	private Map<String, RegisteredCommand> commandMap;
+	private final Map<String, RegisteredCommand> commandMap;
 
 	public CmdVampire() {
 		commandMap = new HashMap<>();
@@ -637,32 +637,7 @@ public class CmdVampire extends BaseCommand {
 	@Syntax("[page=1]")
 	public void onList(CommandSender sender, @Default("1") int page) {
 		List<String> vampiresOnline = new ArrayList<>();
-		// List<String> vampiresOffline = new ArrayList<>();
 		List<String> infectedOnline = new ArrayList<>();
-		// List<String> infectedOffline = new ArrayList<>();
-
-		/*
-		for (UPlayer uplayer : VampireRevamp.getInstance().uPlayerColl.getAll()) {
-			if (uplayer.getOfflinePlayer() != null) {
-				OfflinePlayer p = uplayer.getOfflinePlayer();
-				if (uplayer.isVampire()) {
-					if (p.isOnline()) {
-						vampiresOnline.add(ChatColor.WHITE.toString() + p.getName());
-					}
-					else {
-						vampiresOffline.add(ChatColor.WHITE.toString() +  p.getName());
-					}
-				} else if (uplayer.isInfected()) {
-					if (p.isOnline()) {
-						infectedOnline.add(ChatColor.WHITE.toString() +  p.getName());
-					}
-					else {
-						infectedOffline.add(ChatColor.WHITE.toString() +  p.getName());
-					}
-				}
-			}
-		}
-		 */
 
 		for (Player player : Bukkit.getOnlinePlayers()) {
 			VPlayer uplayer = VampireRevamp.getVPlayerManager().tryGetDataNow(player.getUniqueId());
@@ -678,43 +653,23 @@ public class CmdVampire extends BaseCommand {
 		List<String> lines = new ArrayList<>();
 
 		String vampireType = VampireRevamp.getMessage(sender, GrammarMessageKeys.VAMPIRE_TYPE);
-		vampireType = ("" + vampireType.charAt(0)).toUpperCase() + vampireType.substring(1);
+		vampireType = (String.valueOf(vampireType.charAt(0))).toUpperCase() + vampireType.substring(1);
 		String infectedType = VampireRevamp.getMessage(sender, GrammarMessageKeys.INFECTED_TYPE);
-		infectedType = ("" + infectedType.charAt(0)).toUpperCase() + infectedType.substring(1);
+		infectedType = (String.valueOf(infectedType.charAt(0))).toUpperCase() + infectedType.substring(1);
 		String onlineStr = VampireRevamp.getMessage(sender, GrammarMessageKeys.ONLINE);
 		//String offlineStr = VampireRevamp.getMessage(sender, GrammarMessageKeys.OFFLINE);
 
 		if (vampiresOnline.size() > 0)
 		{
 			lines.add(ChatColor.LIGHT_PURPLE + "=== " + vampireType + "s " + onlineStr + " ===");
-			//lines.add(TextUtil.implodeCommaAndDot(vampiresOnline, "<i>"));
 			lines.add(ChatColor.YELLOW + String.join(", " + ChatColor.YELLOW, vampiresOnline));
 		}
-
-		/*
-		if (vampiresOffline.size() > 0)
-		{
-			lines.add(ChatColor.LIGHT_PURPLE + "=== " + vampireType + "s " + offlineStr + " ===");
-			//lines.add(TextUtil.implodeCommaAndDot(vampiresOffline, "<i>"));
-			lines.add(ChatColor.YELLOW + String.join(", ", vampiresOffline));
-		}
-		 */
 
 		if (infectedOnline.size() > 0)
 		{
 			lines.add(ChatColor.LIGHT_PURPLE + "=== " + infectedType + "s " + onlineStr + " ===");
-			//lines.add(TextUtil.implodeCommaAndDot(infectedOnline, "<i>"));
 			lines.add(ChatColor.YELLOW + String.join(", ", infectedOnline));
 		}
-
-		/*
-		if (infectedOffline.size() > 0)
-		{
-			lines.add(ChatColor.LIGHT_PURPLE + "=== " + infectedType + "s " + offlineStr + " ===");
-			//lines.add(TextUtil.implodeCommaAndDot(infectedOffline, "<i>"));
-			lines.add(ChatColor.YELLOW + String.join(", ", infectedOffline));
-		}
-		 */
 
 		// Send them
 		lines = TextUtil.wrap(lines);

@@ -181,7 +181,7 @@ public class VampireConfig {
         result = result && this.holyItem.saveConfigToFile(configWriter, indent, level + 1);
         result = result && PluginConfig.writeLine(configWriter, "# Whether vampires can eat cakes or not", indent, level);
         result = result && PluginConfig.writeLine(configWriter, "canEatCake: " + this.canEatCake, indent, level);
-        result = result && PluginConfig.writeLine(configWriter, "# Whether vampires can sleep at daytime or not", indent, level);
+        result = result && PluginConfig.writeLine(configWriter, "# [EXPERIMENTAL] Whether vampires can sleep at daytime or not", indent, level);
         result = result && PluginConfig.writeLine(configWriter, "canSleepDaytime: " + this.canSleepDaytime, indent, level);
 
         return result;

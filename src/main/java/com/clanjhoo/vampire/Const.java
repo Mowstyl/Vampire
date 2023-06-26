@@ -11,13 +11,4 @@ public class Const
 
 	public static final String ASPECT_PLAYER = BASENAME_ + "player";
 	public static final String ASPECT_CONF = BASENAME_ + "conf";
-	
-	
-	// OLD NO LONGER USED!
-	
-	/*public final static String playerBasename = "vampire_player";
-	public final static String playerAspectId = "vampire_player";
-	
-	public final static String configBasename = "vampire_config";
-	public final static String configAspectId = "vampire_config";*/
 }

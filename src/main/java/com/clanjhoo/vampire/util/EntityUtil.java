@@ -153,14 +153,12 @@ public class EntityUtil {
                 despawnBats(p);
             }
 
-            List<LivingEntity> entities = new ArrayList<LivingEntity>();
+            List<LivingEntity> entities = new ArrayList<>();
 
             for (int i = 0; i < qty; i++) {
                 Bat fakeBat = (Bat) p.getWorld().spawnEntity(p.getLocation(), EntityType.BAT);
                 if (fakeBat != null) {
                     fakeBat.setCustomName(p.getDisplayName());
-                    //fakeBat.setCustomNameVisible(true);
-                    //fakeBat.getAttribute(Attribute.GENERIC_FLYING_SPEED).setBaseValue(p.getAttribute(Attribute.GENERIC_FLYING_SPEED).getBaseValue());
                     entities.add(fakeBat);
                     plugin.bats.add(fakeBat);
                 }

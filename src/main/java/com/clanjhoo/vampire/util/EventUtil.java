@@ -10,17 +10,13 @@ import org.bukkit.projectiles.ProjectileSource;
 
 public class EventUtil {
     public static boolean isCombatEvent(EntityDamageEvent event) {
-        boolean isCombat = (event.getCause() == DamageCause.ENTITY_ATTACK || event.getCause() == DamageCause.PROJECTILE)
+        return (event.getCause() == DamageCause.ENTITY_ATTACK || event.getCause() == DamageCause.PROJECTILE)
                 && event instanceof EntityDamageByEntityEvent;
-
-        return isCombat;
     }
 
     public static boolean isCloseCombatEvent(EntityDamageEvent event) {
-        boolean isCloseCombat = event.getCause() == DamageCause.ENTITY_ATTACK
+        return event.getCause() == DamageCause.ENTITY_ATTACK
                 && event instanceof EntityDamageByEntityEvent;
-
-        return isCloseCombat;
     }
 
     public static Entity getLiableDamager(EntityDamageEvent event) {

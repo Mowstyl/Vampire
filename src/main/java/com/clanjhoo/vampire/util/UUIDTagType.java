@@ -20,12 +20,12 @@ public class UUIDTagType implements PersistentDataType<long[], UUID> {
     }
 
     @Override
-    public @NotNull long[] toPrimitive(@NotNull UUID complex, @NotNull PersistentDataAdapterContext context) {
+    public long @NotNull [] toPrimitive(@NotNull UUID complex, @NotNull PersistentDataAdapterContext context) {
         return new long[]{complex.getMostSignificantBits(), complex.getLeastSignificantBits()};
     }
 
     @Override
-    public @NotNull UUID fromPrimitive(@NotNull long[] primitive, @NotNull PersistentDataAdapterContext context) {
+    public @NotNull UUID fromPrimitive(long @NotNull [] primitive, @NotNull PersistentDataAdapterContext context) {
         return new UUID(primitive[0], primitive[1]);
     }
 }

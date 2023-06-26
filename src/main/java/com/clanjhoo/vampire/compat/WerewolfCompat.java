@@ -25,7 +25,6 @@ public class WerewolfCompat {
     private Method isWerewolfUUID = null;
     private Method isAlphaUUID = null;
     private Method getWerewolfItemID = null;
-    private Object silverSword = null;
 
     public WerewolfCompat() {
         boolean hybridProtEnabled = VampireRevamp.getVampireConfig().compatibility.preventWerewolfHybrids;
