@@ -138,6 +138,10 @@ public class VPlayer {
      * TRANSIENT FX: ender
      */
     private transient long fxEnderMillis = 0;
+    /**
+     * TRANSIENT: is this player is changing its appearance due to batusi
+     */
+    private transient boolean isDisguising = false;
 
 
     // -------------------------------------------- //
@@ -733,7 +737,9 @@ public class VPlayer {
             plugin.batEnabled.put(me.getUniqueId(), true);
         }
         if (plugin.isDisguiseEnabled) {
+            this.isDisguising = true;
             DisguiseUtil.disguiseBat(me);
+            this.isDisguising = false;
             VampireRevamp.debugLog(Level.INFO, "Disguised enabled!");
         }
         if (conf.vampire.batusi.enableFlight) {
@@ -754,8 +760,11 @@ public class VPlayer {
 
         try {
             EntityUtil.despawnBats(sender);
-            if (plugin.isDisguiseEnabled)
-                DisguiseAPI.undisguiseToAll(sender);
+            if (plugin.isDisguiseEnabled) {
+                this.isDisguising = true;
+                DisguiseAPI.undisguiseToAll(sender, sender);
+                this.isDisguising = false;
+            }
             if (VampireRevamp.getVampireConfig().vampire.batusi.enableFlight) {
                 sender.setAllowFlight(this.hadFlight && sender.getAllowFlight());
                 sender.setFlying(sender.getAllowFlight() && sender.isFlying());
@@ -772,6 +781,10 @@ public class VPlayer {
             plugin.getLogger().log(Level.WARNING, "Error while removing bat cloud!: " + ex.getMessage());
             ex.printStackTrace();
         }
+    }
+
+    public boolean isChangingDisguise() {
+        return this.isDisguising;
     }
 
     // -------------------------------------------- //

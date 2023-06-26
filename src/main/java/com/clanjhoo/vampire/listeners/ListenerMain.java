@@ -173,7 +173,7 @@ public class ListenerMain implements Listener {
 
         final Player player = (Player) aux;
         VPlayer vPlayer = VampireRevamp.getVPlayerManager().tryGetDataNow(player.getUniqueId());
-        if (!vPlayer.isBatusi())
+        if (!vPlayer.isChangingDisguise() || !vPlayer.isBatusi())
             return;
 
         if (!ResourceUtil.hasPermission(event.getCommandSender(), Perm.MODE_BATUSI_DISGUISE)
@@ -192,7 +192,7 @@ public class ListenerMain implements Listener {
 
         final Player player = (Player) aux;
         VPlayer vPlayer = VampireRevamp.getVPlayerManager().tryGetDataNow(player.getUniqueId());
-        if (!vPlayer.isBatusi())
+        if (!vPlayer.isChangingDisguise() || !vPlayer.isBatusi())
             return;
         if (!ResourceUtil.hasPermission(event.getCommandSender(), Perm.MODE_BATUSI_DISGUISE)) {
             event.setCancelled(true);
