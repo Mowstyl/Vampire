@@ -761,9 +761,7 @@ public class VPlayer {
             EntityUtil.despawnBats(sender);
             if (plugin.isDisguiseEnabled) {
                 this.isDisguising = true;
-                sender.sendMessage("Myah!");
                 DisguiseUtil.undisguise(sender);
-                sender.sendMessage("Bwah!");
                 this.isDisguising = false;
             }
             if (VampireRevamp.getVampireConfig().vampire.batusi.enableFlight) {
