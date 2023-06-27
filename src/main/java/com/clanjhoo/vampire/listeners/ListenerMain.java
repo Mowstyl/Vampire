@@ -173,11 +173,9 @@ public class ListenerMain implements Listener {
 
         final Player player = (Player) aux;
         VPlayer vPlayer = VampireRevamp.getVPlayerManager().tryGetDataNow(player.getUniqueId());
-        if (!vPlayer.isChangingDisguise() || !vPlayer.isBatusi())
+        if (!vPlayer.isChangingDisguise())
             return;
-
-        if (!ResourceUtil.hasPermission(event.getCommandSender(), Perm.MODE_BATUSI_DISGUISE)
-                && event.getDisguise().getType() != DisguiseType.BAT) {
+        if (!ResourceUtil.hasPermission(player, Perm.MODE_BATUSI_DISGUISE)) {
             event.setCancelled(true);
         }
     }
@@ -192,9 +190,11 @@ public class ListenerMain implements Listener {
 
         final Player player = (Player) aux;
         VPlayer vPlayer = VampireRevamp.getVPlayerManager().tryGetDataNow(player.getUniqueId());
-        if (!vPlayer.isChangingDisguise() || !vPlayer.isBatusi())
+        if (!vPlayer.isChangingDisguise())
             return;
-        if (!ResourceUtil.hasPermission(event.getCommandSender(), Perm.MODE_BATUSI_DISGUISE)) {
+        // This event is also called when the player already has a disguise before using batusi.
+        // We don't care about it in that case.
+        if (!ResourceUtil.hasPermission(player, Perm.MODE_BATUSI_DISGUISE)) {
             event.setCancelled(true);
         }
     }
@@ -418,7 +418,7 @@ public class ListenerMain implements Listener {
             Player damagee = (Player) event.getEntity();
             VampireRevamp.getVPlayerManager().getDataSynchronous((udamagee) -> {
                 if (udamagee.isVampire() && udamagee.isBatusi()) {
-                    udamagee.setBatusi(false);
+                    udamagee.setBatusi(false, 0);
                 }
             }, () -> {}, true, damagee.getUniqueId());
         }

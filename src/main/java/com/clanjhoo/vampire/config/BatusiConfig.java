@@ -8,6 +8,7 @@ import java.io.BufferedWriter;
 public class BatusiConfig {
     public final boolean enabled;
     public final int numberOfBats;
+    public final int maxBats;
     public final boolean nosferatuOnly;
     public final boolean disableOnHit;
     public final boolean enableFlight;
@@ -15,7 +16,8 @@ public class BatusiConfig {
 
     public BatusiConfig() {
         enabled = true;
-        numberOfBats = 9;
+        numberOfBats = 4;
+        maxBats = 9;
         nosferatuOnly = true;
         disableOnHit = true;
         enableFlight = true;
@@ -27,6 +29,7 @@ public class BatusiConfig {
 
         enabled = cs.getBoolean("enabled", def.enabled);
         numberOfBats = cs.getInt("numberOfBats", def.numberOfBats);
+        maxBats = cs.getInt("maxBats", def.maxBats);
         nosferatuOnly = cs.getBoolean("nosferatuOnly", def.nosferatuOnly);
         disableOnHit = cs.getBoolean("disableOnHit", def.disableOnHit);
         enableFlight = cs.getBoolean("enableFlight", def.enableFlight);
@@ -36,8 +39,10 @@ public class BatusiConfig {
     protected boolean saveConfigToFile(BufferedWriter configWriter, String indent, int level) {
         boolean result = PluginConfig.writeLine(configWriter, "# Whether to enable batusi or not", indent, level);
         result = result && PluginConfig.writeLine(configWriter, "enabled: " + this.enabled, indent, level);
-        result = result && PluginConfig.writeLine(configWriter, "# Number of bats to spawn", indent, level);
+        result = result && PluginConfig.writeLine(configWriter, "# Number of bats to spawn by default", indent, level);
         result = result && PluginConfig.writeLine(configWriter, "numberOfBats: " + this.numberOfBats, indent, level);
+        result = result && PluginConfig.writeLine(configWriter, "# Maximum of bats to spawn", indent, level);
+        result = result && PluginConfig.writeLine(configWriter, "maxBats: " + this.maxBats, indent, level);
         result = result && PluginConfig.writeLine(configWriter, "# Whether only nosferatu can use batusi or not", indent, level);
         result = result && PluginConfig.writeLine(configWriter, "nosferatuOnly: " + this.nosferatuOnly, indent, level);
         result = result && PluginConfig.writeLine(configWriter, "# Whether to enable flight when in bat cloud mode or not", indent, level);
@@ -55,6 +60,7 @@ public class BatusiConfig {
         return "BloodlustConfig{" +
                 "enabled=" + enabled +
                 ", numberOfBats=" + numberOfBats +
+                ", maxBats=" + maxBats +
                 ", nosferatuOnly=" + nosferatuOnly +
                 ", disableOnHit=" + disableOnHit +
                 ", enableFlight=" + enableFlight +

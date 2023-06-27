@@ -692,8 +692,8 @@ public class CmdVampire extends BaseCommand {
 	@CommandCompletion("@yesno")
 	@CommandPermission("vampire.mode.batusi")
 	@Description("{@@commands.batusi_description}")
-	@Syntax("[yes/no=toggle]")
-	public void onModeBatusi(Player sender, @Optional String yesno) {
+	@Syntax("[yes/no=toggle] [numberOfBats=config_default]")
+	public void onModeBatusi(Player sender, @Optional String yesno, @Optional Integer numberOfBats) {
 		if (VampireRevamp.getVampireConfig().general.isBlacklisted(sender.getWorld())) {
 			VampireRevamp.sendMessage(sender,
 					MessageType.ERROR,
@@ -706,12 +706,54 @@ public class CmdVampire extends BaseCommand {
 			boolean success = VampireRevamp.getVPlayerManager().getDataSynchronous((uplayer) -> {
 				if (!VampireRevamp.getVampireConfig().vampire.batusi.nosferatuOnly || uplayer.isNosferatu()) {
 					boolean activate = !plugin.batEnabled.getOrDefault(sender.getUniqueId(), false);
+					int numBats = 0;
 
 					if (yesno != null) {
 						activate = yesno.equals("yes");
 					}
 
-					uplayer.setBatusi(activate);
+					if (activate) {
+						int defNumBats = VampireRevamp.getVampireConfig().vampire.batusi.numberOfBats;
+						int maxNumBats = VampireRevamp.getVampireConfig().vampire.batusi.maxBats;
+						if (defNumBats < 0) {
+							VampireRevamp.sendMessage(sender,
+									MessageType.ERROR,
+									CommandMessageKeys.BATUSI_DEFVALUE_ERROR);
+							defNumBats = 0;
+						}
+						if (maxNumBats < 0) {
+							VampireRevamp.sendMessage(sender,
+									MessageType.ERROR,
+									CommandMessageKeys.BATUSI_DEFVALUE_ERROR);
+							maxNumBats = defNumBats;
+						}
+						if (numberOfBats == null) {
+							numBats = defNumBats;
+						}
+						else {
+							numBats = numberOfBats;
+							if (numBats < 0) {
+								VampireRevamp.sendMessage(sender,
+										MessageType.ERROR,
+										CommandMessageKeys.BATUSI_NEGATIVE_BATS);
+								return;
+							}
+							if (numBats > maxNumBats) {
+								VampireRevamp.sendMessage(sender,
+										MessageType.ERROR,
+										CommandMessageKeys.BATUSI_TOO_MANY,
+										"{default_bats}", Integer.toString(maxNumBats));
+								numBats = maxNumBats;
+							}
+						}
+					}
+					else if (numberOfBats != null) {
+						VampireRevamp.sendMessage(sender,
+								MessageType.INFO,
+								CommandMessageKeys.BATUSI_IGNORED_BATS);
+					}
+
+					uplayer.setBatusi(activate, numBats);
 				} else {
 					String nosferatuType = VampireRevamp.getMessage(sender, GrammarMessageKeys.NOSFERATU_TYPE);
 					String batusiAction = VampireRevamp.getMessage(sender, GrammarMessageKeys.BATUSI);

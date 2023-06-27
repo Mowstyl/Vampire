@@ -15,7 +15,6 @@ import com.clanjhoo.vampire.config.StateEffectConfig;
 import com.clanjhoo.vampire.event.InfectionChangeEvent;
 import com.clanjhoo.vampire.event.VampireTypeChangeEvent;
 import com.clanjhoo.vampire.util.*;
-import me.libraryaddict.disguise.DisguiseAPI;
 import org.bukkit.*;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.Creature;
@@ -694,9 +693,9 @@ public class VPlayer {
         }
     }
 
-    public void setBatusi(boolean activate) {
+    public void setBatusi(boolean activate, int numberOfBats) {
         if (activate)
-            enableBatusi();
+            enableBatusi(numberOfBats);
         else
             disableBatusi();
     }
@@ -708,7 +707,7 @@ public class VPlayer {
         return VampireRevamp.getInstance().batEnabled.getOrDefault(player.getUniqueId(), false);
     }
 
-    private void enableBatusi() {
+    private void enableBatusi(int numberOfBats) {
         Player me = Bukkit.getPlayer(uuid);
         if (me == null) {
             VampireRevamp.log(Level.WARNING, "An offline player is trying to batusi!");
@@ -730,7 +729,7 @@ public class VPlayer {
         CommandMessageKeys messageKey = CommandMessageKeys.BATUSI_ALREADY_USED;
         if (!plugin.batEnabled.getOrDefault(me.getUniqueId(), false)) {
             VampireRevamp.debugLog(Level.INFO, "Enabling batusi!");
-            EntityUtil.spawnBats(me, conf.vampire.batusi.numberOfBats);
+            EntityUtil.spawnBats(me, numberOfBats);
             VampireRevamp.debugLog(Level.INFO, "Bats spawned!");
             messageKey = CommandMessageKeys.BATUSI_TOGGLED_ON;
             this.hadFlight = me.getAllowFlight();
@@ -762,7 +761,9 @@ public class VPlayer {
             EntityUtil.despawnBats(sender);
             if (plugin.isDisguiseEnabled) {
                 this.isDisguising = true;
-                DisguiseAPI.undisguiseToAll(sender, sender);
+                sender.sendMessage("Myah!");
+                DisguiseUtil.undisguise(sender);
+                sender.sendMessage("Bwah!");
                 this.isDisguising = false;
             }
             if (VampireRevamp.getVampireConfig().vampire.batusi.enableFlight) {
@@ -808,7 +809,7 @@ public class VPlayer {
                 this.setBloodlusting(false);
                 this.setUsingNightVision(false);
                 this.setIntending(false);
-                this.setBatusi(false);
+                this.setBatusi(false, 0);
                 this.setRad(0);
                 this.setTemp(0);
             }
