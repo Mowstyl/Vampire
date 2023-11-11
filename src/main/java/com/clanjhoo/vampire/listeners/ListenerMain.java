@@ -8,7 +8,6 @@ import com.clanjhoo.vampire.keyproviders.VampirismMessageKeys;
 import com.clanjhoo.vampire.config.PluginConfig;
 import com.clanjhoo.vampire.entity.VPlayer;
 import com.clanjhoo.vampire.util.*;
-import me.libraryaddict.disguise.disguisetypes.DisguiseType;
 import me.libraryaddict.disguise.events.DisguiseEvent;
 import me.libraryaddict.disguise.events.UndisguiseEvent;
 import org.bukkit.*;
