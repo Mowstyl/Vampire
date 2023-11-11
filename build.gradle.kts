@@ -112,7 +112,7 @@ tasks.named<ShadowJar>("shadowJar").configure {
     include("co/aikar/**")
     include("co/aikar/**")
     include("com/clanjhoo/**")
-    //include("org/mariadb/**")
+    include("org/mariadb/**")
     include("*.yml")
     include("locales/*.yml")
 }

@@ -9,6 +9,7 @@ import co.aikar.locales.MessageKeyProvider;
 import com.clanjhoo.dbhandler.data.DBObjectManager;
 import com.clanjhoo.dbhandler.data.StorageType;
 import com.clanjhoo.vampire.compat.WerewolfCompat;
+import com.clanjhoo.vampire.config.StorageConfig;
 import com.clanjhoo.vampire.listeners.EntryVampiresListener;
 import com.clanjhoo.vampire.listeners.ListenerMain;
 import com.clanjhoo.vampire.listeners.PhantomListener;
@@ -313,7 +314,12 @@ public class VampireRevamp extends JavaPlugin {
 		}
 		if (vPlayerManager == null) {
 			try {
-				vPlayerManager = new DBObjectManager<>(VPlayer.class, null, this, null, StorageType.JSON, "store");
+				StorageConfig sconf = conf.storage;
+				if (conf.storage.storageType == StorageType.JSON) {
+					vPlayerManager = new DBObjectManager<>(VPlayer.class, null, this, null, StorageType.JSON, "store");
+				} else {
+					vPlayerManager = new DBObjectManager<>(VPlayer.class, null, this, null, StorageType.MARIADB, sconf.address, sconf.port, sconf.database, sconf.username, sconf.password, sconf.prefix);
+				}
 			} catch (IOException ex) {
 				this.getLogger().log(Level.SEVERE, "Couldn't create storage! Disabling plugin!");
 				ex.printStackTrace();

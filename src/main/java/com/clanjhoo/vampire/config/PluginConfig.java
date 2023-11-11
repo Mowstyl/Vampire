@@ -33,6 +33,7 @@ public class PluginConfig {
     public final HolyWaterConfig holyWater;
     public final AltarConfig altar;
     public final RadiationConfig radiation;
+    public final StorageConfig storage;
 
     private static final double NO_BLOOD = 0;
     private static final double NON_HUMAN = 0.25;
@@ -231,6 +232,8 @@ public class PluginConfig {
         result = result && this.altar.saveConfigToFile(configWriter, indent, level + 1);
         result = result && PluginConfig.writeLine(configWriter, "radiation:", indent, level);
         result = result && this.radiation.saveConfigToFile(configWriter, indent, level + 1);
+        result = result && PluginConfig.writeLine(configWriter, "storage:", indent, level);
+        result = result && this.storage.saveConfigToFile(configWriter, indent, level + 1);
 
 
         return result;
@@ -347,6 +350,7 @@ public class PluginConfig {
         holyWater = new HolyWaterConfig();
         altar = new AltarConfig();
         radiation = new RadiationConfig();
+        storage = new StorageConfig();
     }
 
     public PluginConfig(FileConfiguration config) {
@@ -468,6 +472,14 @@ public class PluginConfig {
         }
         else {
             radiation = new RadiationConfig();
+        }
+
+        aux = config.getConfigurationSection("storage");
+        if (aux != null) {
+            storage = new StorageConfig(aux);
+        }
+        else {
+            storage = new StorageConfig();
         }
     }
 
