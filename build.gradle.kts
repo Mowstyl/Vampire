@@ -62,7 +62,7 @@ dependencies {
     implementation("com.clanjhoo:DBHandler:2.1.4") {
         isTransitive = false
     }
-    implementation("io.papermc.paper:paper-api:1.20.2-R0.1-SNAPSHOT") {
+    implementation("io.papermc.paper:paper-api:1.20.4-R0.1-SNAPSHOT") {
         isTransitive = false
     }
     implementation("com.sk89q.worldedit:worldedit-core:7.3.0-SNAPSHOT") {
@@ -116,4 +116,3 @@ tasks.named<ShadowJar>("shadowJar").configure {
     include("*.yml")
     include("locales/*.yml")
 }
-
