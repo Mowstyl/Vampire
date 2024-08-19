@@ -47,22 +47,17 @@ public class WerewolvesSilverHook implements Listener {
         if (!EventUtil.isCloseCombatEvent(event))
             return;
 
-        try {
-            VPlayer uplayer = VampireRevamp.getVPlayerManager().tryGetDataNow(event.getEntity().getUniqueId());
-            if (!uplayer.isVampire())
-                return;
-        }
-        catch (AssertionError ex) {
+        VPlayer vPlayer = VampireRevamp.getVPlayerNow((Player) event.getEntity());
+        if (vPlayer == null) {
             VampireRevamp.log(Level.WARNING, "Couldn't get data of player " + event.getEntity().getName());
             return;
         }
-
-        Entity rawDamager = EventUtil.getLiableDamager(event);
-        if (!(rawDamager instanceof LivingEntity))
+        if (!vPlayer.isVampire())
             return;
 
-        LivingEntity damager = (LivingEntity) rawDamager;
-
+        Entity rawDamager = EventUtil.getLiableDamager(event);
+        if (!(rawDamager instanceof LivingEntity damager))
+            return;
         if (damager.getEquipment() == null)
             return;
         ItemStack weapon = damager.getEquipment().getItemInMainHand();

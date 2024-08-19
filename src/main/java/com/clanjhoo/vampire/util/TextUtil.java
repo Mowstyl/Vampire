@@ -151,8 +151,9 @@ public class TextUtil {
 
         comps[1] = new TextComponent(" " + command);
         if (sender instanceof Player) {
-            VPlayer uplayer = VampireRevamp.getVPlayerManager().tryGetDataNow(((Player) sender).getUniqueId());
-            boolean hasRequiredVLevel = requireVampire == 0 || uplayer.isNosferatu() || (uplayer.isVampire() && requireVampire == 1);
+            VPlayer vPlayer = VampireRevamp.getVPlayerNow(((Player) sender));
+            int vampireLevel = (vPlayer == null || vPlayer.isHuman()) ? 0 : (vPlayer.isNosferatu() ? 2 : 1);
+            boolean hasRequiredVLevel = requireVampire <= vampireLevel;
             if (!command.equals("vampire") && !command.equals("nosferatu")) {
                 Perm permission = Perm.getPermFromString(command);
                 if (permission == null) {

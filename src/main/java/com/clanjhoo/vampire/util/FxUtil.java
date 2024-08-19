@@ -6,6 +6,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
+import java.util.concurrent.ThreadLocalRandom;
+
 public class FxUtil
 {
 	// -------------------------------------------- //
@@ -38,7 +40,7 @@ public class FxUtil
 	
 	public static void smoke(Location location)
 	{
-		smoke(location, MathUtil.random.nextInt(9));
+		smoke(location, ThreadLocalRandom.current().nextInt(9));
 	}
 	
 	public static void smoke(Player player)
@@ -82,7 +84,7 @@ public class FxUtil
 
 	public static Location getRandomPlayerLocation(Player player)
 	{
-		if (MathUtil.random.nextBoolean())
+		if (ThreadLocalRandom.current().nextBoolean())
 		{
 			return player.getLocation();
 		}
@@ -107,7 +109,7 @@ public class FxUtil
 	
 	public static int getRandomDelta(int randomMaxLen)
 	{
-		return MathUtil.random.nextInt(randomMaxLen*2+1) - randomMaxLen;
+		return ThreadLocalRandom.current().nextInt(randomMaxLen*2+1) - randomMaxLen;
 	}
 	
 }

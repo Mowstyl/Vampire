@@ -49,7 +49,10 @@ import org.bukkit.scheduler.BukkitScheduler;
 import java.io.*;
 import java.nio.file.Files;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -270,22 +273,62 @@ public class VampireRevamp extends JavaPlugin {
 		return reloadVampireConfig() && reloadLocales();
 	}
 
-	public static DBObjectManager<VPlayer> getVPlayerManager() {
-		return getInstance().vPlayerManager;
+	// public static DBObjectManager<VPlayer> getVPlayerManager() {
+	//	return getInstance().vPlayerManager;
+	//}
+
+	public static void saveVPlayer(Player p) {
+		VampireRevamp.getInstance().vPlayerManager.save(p.getUniqueId());
 	}
 
-	public static void loadPlayerFromDB(Player p) {
-		boolean result = VampireRevamp.getVPlayerManager().getDataSynchronous(
-				(vPlayer) -> {
-					if (perms != null) {
-						VampireRevamp.getInstance().setVampireGroup(p, vPlayer.isVampire());
-					}
-				},
-				() -> VampireRevamp.log(Level.SEVERE, "Couldn't load player " + p.getName() + " from DB.")
-				, true, p.getUniqueId());
-		if (!result) {
-			VampireRevamp.log(Level.SEVERE, "Error preparing load for player " + p.getName() + ".");
+	public static CompletableFuture<VPlayer> syncTaskVPlayer(OfflinePlayer p, Consumer<? super VPlayer> accept, Consumer<Throwable> exception) {
+		CompletableFuture<VPlayer> future = VampireRevamp.getInstance().vPlayerManager.getFutureData(p.getUniqueId());
+		if (future.isCompletedExceptionally()) {
+			future = loadPlayerFromDB(p);
 		}
+		return future.handle((vPlayer, ex) -> {
+			if (accept != null || exception != null)
+				Bukkit.getScheduler().runTask(plugin, () -> {
+					if (exception != null && ex != null) {
+						exception.accept(ex);
+					}
+					if (vPlayer != null && accept != null)
+						accept.accept(vPlayer);
+				});
+			if (ex != null)
+				loadPlayerFromDB(p);
+			return ex == null ? vPlayer : null;
+		});
+	}
+
+	public static VPlayer getVPlayerNow(OfflinePlayer p) {
+		try {
+			return VampireRevamp.getInstance().vPlayerManager.tryGetDataNow(p.getUniqueId());
+		}
+		catch (AssertionError ignore) {}
+		catch (RuntimeException ex) {
+			loadPlayerFromDB(p);
+		}
+		return null;
+	}
+
+	private static CompletableFuture<VPlayer> loadPlayerFromDB(OfflinePlayer p) {
+		return VampireRevamp.getInstance().vPlayerManager
+				.getFutureData(p.getUniqueId())
+				.exceptionally((ex) -> {
+					VampireRevamp.log(Level.SEVERE, "Couldn't load player " + p.getName() + " from DB.");
+					ex.printStackTrace();
+					return null;
+				});
+	}
+
+	private static void afterTask(VPlayer vPlayer) {
+		Bukkit.getScheduler().runTask(plugin, () -> {
+			Player p = vPlayer.getPlayer();
+			if (p != null) {
+				VampireRevamp.getInstance().setVampireGroup(p, vPlayer.isVampire());
+			}
+		});
 	}
 
 	private boolean loadConfig(boolean loadDefaults) {
@@ -316,9 +359,27 @@ public class VampireRevamp extends JavaPlugin {
 			try {
 				StorageConfig sconf = conf.storage;
 				if (conf.storage.storageType == StorageType.JSON) {
-					vPlayerManager = new DBObjectManager<>(VPlayer.class, null, this, null, StorageType.JSON, "store");
+					vPlayerManager = new DBObjectManager<>(
+							VPlayer.class,
+							VampireRevamp::afterTask,
+							(vPlayer) -> !vPlayer.isHealthy(),
+							this, null,
+							StorageType.JSON,
+							"store");
 				} else {
-					vPlayerManager = new DBObjectManager<>(VPlayer.class, null, this, null, StorageType.MARIADB, sconf.address, sconf.port, sconf.database, sconf.username, sconf.password, sconf.prefix);
+					vPlayerManager = new DBObjectManager<>(
+							VPlayer.class,
+							VampireRevamp::afterTask,
+							(vPlayer) -> !vPlayer.isHealthy(),
+							this,
+							null,
+							StorageType.MARIADB,
+							sconf.address,
+							sconf.port,
+							sconf.database,
+							sconf.username,
+							sconf.password,
+							sconf.prefix);
 				}
 			} catch (IOException ex) {
 				this.getLogger().log(Level.SEVERE, "Couldn't create storage! Disabling plugin!");
@@ -506,7 +567,7 @@ public class VampireRevamp extends JavaPlugin {
 	}
 
 	public static void log(Level level, String message) {
-		Bukkit.getLogger().log(level, "[" + VampireRevamp.getInstance().getName() + "] " + message);
+		plugin.getLogger().log(level, message);
 	}
 
 	public static void debugLog(Level level, String message) {

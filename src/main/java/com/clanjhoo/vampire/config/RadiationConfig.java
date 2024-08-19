@@ -102,7 +102,8 @@ public class RadiationConfig {
                 Material.AIR, AIR, //AIR
                 Material.WHEAT, LEAVES,
                 Material.FIRE, AIR,
-                Material.GRASS, LEAVES,
+                Material.SHORT_GRASS, LEAVES,
+                Material.TALL_GRASS, LEAVES,
                 Material.BROWN_MUSHROOM, LEAVES,
                 Material.RED_MUSHROOM, LEAVES,
                 Material.STRUCTURE_VOID, AIR,
@@ -572,7 +573,7 @@ public class RadiationConfig {
                     }
                 }
             }
-            if (auxOp.size() == 0) {
+            if (auxOp.isEmpty()) {
                 auxOp = null;
                 VampireRevamp.log(Level.WARNING, "Occlusion values restored to default values");
             }

@@ -26,6 +26,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentSkipListSet;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.logging.Level;
 
 @Entity(table = "vampire_data")
@@ -114,9 +115,9 @@ public class VPlayer {
      */
     private transient long lastShriekWaitMessageMillis = 0;
     /**
-     * TRANSIENT: milliseconds to wait before restoring the truce
+     * TRANSIENT: when will the truce be restored
      */
-    private transient long truceBreakMillisLeft = 0;
+    private transient long truceRestoreTimestamp = 0;
     /**
      * TRANSIENT: the player who offered the blood in a trade
      */
@@ -279,10 +280,14 @@ public class VPlayer {
     }
 
     public void addInfection(double val, InfectionReason reason, VPlayer maker) {
+        addInfection(val, reason, maker == null ? null : maker.getUuid());
+    }
+
+    public void addInfection(double val, InfectionReason reason, UUID makerUUID) {
         Player player = Bukkit.getPlayer(uuid);
         if (!vampire) {
             this.setReason(reason);
-            this.setMakerUUID(maker == null ? null : maker.getUuid());
+            this.setMakerUUID(makerUUID);
 
             String parent = null;
             if (reason.isMaker()) {
@@ -555,7 +560,8 @@ public class VPlayer {
     }
 
     public void setLastDamageMillis(long lastDamageMillis) {
-        this.lastDamageMillis = lastDamageMillis;
+        if (lastDamageMillis > this.lastDamageMillis)
+            this.lastDamageMillis = lastDamageMillis;
     }
 
     public long getLastShriekMillis() {
@@ -563,7 +569,8 @@ public class VPlayer {
     }
 
     public void setLastShriekMillis(long lastShriekMillis) {
-        this.lastShriekMillis = lastShriekMillis;
+        if (lastShriekMillis > this.lastShriekMillis)
+            this.lastShriekMillis = lastShriekMillis;
     }
 
     public long getLastShriekWaitMessageMillis() {
@@ -571,7 +578,8 @@ public class VPlayer {
     }
 
     public void setLastShriekWaitMessageMillis(long lastShriekWaitMessageMillis) {
-        this.lastShriekWaitMessageMillis = lastShriekWaitMessageMillis;
+        if (lastShriekWaitMessageMillis > this.lastShriekWaitMessageMillis)
+            this.lastShriekWaitMessageMillis = lastShriekWaitMessageMillis;
     }
 
     public long getFxSmokeMillis() {
@@ -791,19 +799,14 @@ public class VPlayer {
     // -------------------------------------------- //
 
     public void update() {
-        VampireRevamp.debugLog(Level.INFO, "Updating...");
         Player player = Bukkit.getPlayer(uuid);
         PluginConfig conf = VampireRevamp.getVampireConfig();
 
         if (player != null) {
-            VampireRevamp.debugLog(Level.INFO, "Not null...");
             if (!conf.general.isBlacklisted(player.getWorld())) {
-                VampireRevamp.debugLog(Level.INFO, "Not blacklisted!");
-                //this.updatePermissions();
                 this.updatePotionEffects();
             }
             else {
-                VampireRevamp.debugLog(Level.INFO, "Another blacklist!");
                 this.setBloodlusting(false);
                 this.setUsingNightVision(false);
                 this.setIntending(false);
@@ -900,7 +903,6 @@ public class VPlayer {
             this.tickBloodlust(millis);
             this.tickPotionEffects(millis);
             this.tickEffects(millis);
-            this.tickTruce(millis);
         }
     }
 
@@ -952,7 +954,7 @@ public class VPlayer {
                         InfectionMessageKeys.getFeeling(indexNew));
                 VampireRevamp.sendMessage(me,
                         MessageType.INFO,
-                        InfectionMessageKeys.getHint(MathUtil.random.nextInt(InfectionMessageKeys.getMaxHint())));
+                        InfectionMessageKeys.getHint(ThreadLocalRandom.current().nextInt(InfectionMessageKeys.getMaxHint())));
             }
         }
     }
@@ -1123,7 +1125,7 @@ public class VPlayer {
                             this.addInfection(0.01D);
                         }
                         else if (me.hasPermission("vampire.trade.contract")
-                                && MathUtil.random.nextDouble() * 20 < amount) {
+                                && ThreadLocalRandom.current().nextDouble() * 20 < amount) {
                             this.addInfection(0.05D, InfectionReason.TRADE, vyou);
                         }
                     }
@@ -1228,70 +1230,50 @@ public class VPlayer {
     // TRUCE
     // -------------------------------------------- //
 
-    public void tickTruce(long millis) {
-        if (this.isVampire() && this.truceIsBroken()) {
-
-            this.truceBreakMillisLeftAlter(-millis);
-
-            if (!this.truceIsBroken()) {
-                this.truceRestore();
-            }
+    public void updateTruce(long now, long before) {
+        if (this.isVampire() && this.truceIsBroken(before) && !this.truceIsBroken(now)) {
+            this.truceRestore();
         }
     }
 
-    public boolean truceIsBroken() {
-        return this.truceBreakMillisLeft != 0;
+    public boolean truceIsBroken(long when) {
+        return when < truceRestoreTimestamp;
     }
 
-    public void truceBreak() {
+    public void truceBreak(long when) {
         Player player = Bukkit.getPlayer(uuid);
         if (player != null) {
-            if (!this.truceIsBroken()) {
+            if (!this.truceIsBroken(when)) {
                 VampireRevamp.sendMessage(player,
                         MessageType.INFO,
                         VampirismMessageKeys.TRUCE_BROKEN);
             }
-            this.truceBreakMillisLeftSet(VampireRevamp.getVampireConfig().truce.breakMillis);
+            this.setTruceRestoreTimestamp(when);
         }
     }
 
     public void truceRestore() {
-        this.truceBreakMillisLeftSet(0);
-
         Player me = Bukkit.getPlayer(uuid);
         if (me != null) {
             VampireRevamp.sendMessage(me,
                     MessageType.INFO,
                     VampirismMessageKeys.TRUCE_RESTORED);
-
             // Untarget the player.
-            for (LivingEntity entity : me.getWorld().getLivingEntities()) {
-                if (VampireRevamp.getVampireConfig().truce.entityTypes.contains(entity.getType())
-                        && entity instanceof Creature) {
-                    Creature creature = (Creature) entity;
-
-                    LivingEntity target = (LivingEntity) creature.getTarget();
-                    if (me.equals(target))
-                        creature.setTarget(null);
-                }
-            }
+            me.getLocation()
+                    .getNearbyLivingEntities(
+                            50,
+                            (le) -> VampireRevamp.getVampireConfig().truce.entityTypes.contains(le.getType())
+                                    && le instanceof Creature
+                                    && me.equals(((Creature) le).getTarget()))
+                    .forEach((le) -> ((Creature) le).setTarget(null));
         }
     }
 
-    public long truceBreakMillisLeftGet() {
-        return this.truceBreakMillisLeft;
-    }
-
-    private void truceBreakMillisLeftSet(long ticks) {
-        if (ticks < 0) {
-            this.truceBreakMillisLeft = 0;
-        } else {
-            this.truceBreakMillisLeft = ticks;
+    private void setTruceRestoreTimestamp(long timeBroken) {
+        long aux = timeBroken + VampireRevamp.getVampireConfig().truce.breakMillis;
+        if (truceRestoreTimestamp < aux) {
+            this.truceRestoreTimestamp = aux;
         }
-    }
-
-    private void truceBreakMillisLeftAlter(long delta) {
-        this.truceBreakMillisLeftSet(this.truceBreakMillisLeftGet() + delta);
     }
 
     // -------------------------------------------- //

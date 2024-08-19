@@ -6,35 +6,37 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.concurrent.CompletableFuture;
+
 public class VampireAPI {
-    public static boolean isHealthy(@NotNull Player player) {
-        VPlayer uplayer = VampireRevamp.getVPlayerManager().tryGetDataNow(player.getUniqueId());
-        return uplayer.isHealthy();
+    public static CompletableFuture<Boolean> isHealthy(@NotNull Player player) {
+        return VampireRevamp.syncTaskVPlayer(player, null, null)
+                .thenApply((VPlayer::isHealthy));
     }
 
-    public static boolean isUnhealthy(@NotNull Player player) {
-        VPlayer uplayer = VampireRevamp.getVPlayerManager().tryGetDataNow(player.getUniqueId());
-        return uplayer.isUnhealthy();
+    public static CompletableFuture<Boolean> isUnhealthy(@NotNull Player player) {
+        return VampireRevamp.syncTaskVPlayer(player, null, null)
+                .thenApply((VPlayer::isUnhealthy));
     }
 
-    public static boolean isHuman(@NotNull Player player) {
-        VPlayer uplayer = VampireRevamp.getVPlayerManager().tryGetDataNow(player.getUniqueId());
-        return uplayer.isHuman();
+    public static CompletableFuture<Boolean> isHuman(@NotNull Player player) {
+        return VampireRevamp.syncTaskVPlayer(player, null, null)
+                .thenApply((VPlayer::isHuman));
     }
 
-    public static boolean isInfected(@NotNull Player player) {
-        VPlayer uplayer = VampireRevamp.getVPlayerManager().tryGetDataNow(player.getUniqueId());
-        return uplayer.isInfected();
+    public static CompletableFuture<Boolean> isInfected(@NotNull Player player) {
+        return VampireRevamp.syncTaskVPlayer(player, null, null)
+                .thenApply((VPlayer::isInfected));
     }
 
-    public static boolean isVampire(@NotNull Player player) {
-        VPlayer uplayer = VampireRevamp.getVPlayerManager().tryGetDataNow(player.getUniqueId());
-        return uplayer.isVampire();
+    public static CompletableFuture<Boolean> isVampire(@NotNull Player player) {
+        return VampireRevamp.syncTaskVPlayer(player, null, null)
+                .thenApply((VPlayer::isVampire));
     }
 
-    public static boolean isNosferatu(@NotNull Player player) {
-        VPlayer uplayer = VampireRevamp.getVPlayerManager().tryGetDataNow(player.getUniqueId());
-        return uplayer.isNosferatu();
+    public static CompletableFuture<Boolean> isNosferatu(@NotNull Player player) {
+        return VampireRevamp.syncTaskVPlayer(player, null, null)
+                .thenApply((VPlayer::isNosferatu));
     }
 
     public static boolean isSunRing(@NotNull ItemStack item) {

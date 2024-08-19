@@ -71,11 +71,11 @@ public abstract class Altar {
                     }
                 }
                 else {
-                    try {
-                        VPlayer vPlayer = VampireRevamp.getVPlayerManager().tryGetDataNow(player.getUniqueId());
+                    VPlayer vPlayer = VampireRevamp.getVPlayerNow(player);
+                    if (vPlayer != null) {
                         blockUse = this.use(vPlayer, player);
                     }
-                    catch (AssertionError ex) {
+                    else {
                         VampireRevamp.log(Level.WARNING, "Couldn't find data for player " + player.getName() + " on altar click.");
                         VampireRevamp.sendMessage(player,
                                 MessageType.ERROR,
@@ -87,9 +87,9 @@ public abstract class Altar {
         return blockUse;
     }
 
-    public abstract boolean use(VPlayer uplayer, Player player);
+    public abstract boolean use(VPlayer vPlayer, Player player);
 
-    public void watch(VPlayer uplayer, Player player) {
+    public void watch(VPlayer vPlayer, Player player) {
         VampireRevamp.sendMessage(player,
                 MessageType.INFO,
                 isDark ? AltarMessageKeys.ALTAR_DARK_DESC : AltarMessageKeys.ALTAR_LIGHT_DESC);

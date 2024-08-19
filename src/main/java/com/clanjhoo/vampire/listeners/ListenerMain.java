@@ -14,6 +14,8 @@ import org.bukkit.*;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.block.data.type.Bed;
 import org.bukkit.block.Block;
+import org.bukkit.damage.DamageSource;
+import org.bukkit.damage.DamageType;
 import org.bukkit.entity.*;
 import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
@@ -28,6 +30,7 @@ import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.projectiles.ProjectileSource;
 
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.logging.Level;
 
 public class ListenerMain implements Listener {
@@ -39,20 +42,26 @@ public class ListenerMain implements Listener {
     // FX
     // -------------------------------------------- //
 
-    @EventHandler(priority = EventPriority.NORMAL)
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void fxOnDeath(EntityDeathEvent event) {
         if (VampireRevamp.getVampireConfig().general.isBlacklisted(event.getEntity().getWorld()))
             return;
         // If a vampire dies ...
         if (EntityUtil.isPlayer(event.getEntity())) {
-            VampireRevamp.getVPlayerManager().getDataSynchronous((uplayer) -> {
-                if (uplayer.isVampire()) {
-                    // ... burns up with a violent scream ;,,;
-                    uplayer.runFxShriek();
-                    uplayer.runFxFlameBurst();
-                    uplayer.runFxSmokeBurst();
-                }
-            }, () -> {} , true, event.getEntity().getUniqueId());
+            VampireRevamp.syncTaskVPlayer(
+                    (Player) event.getEntity(),
+                    (vPlayer) -> {
+                        if (vPlayer.isVampire()) {
+                            // ... burns up with a violent scream ;,,;
+                            vPlayer.runFxShriek();
+                            vPlayer.runFxFlameBurst();
+                            vPlayer.runFxSmokeBurst();
+                        }
+                    },
+                    (ex) -> {
+                        VampireRevamp.log(Level.WARNING, "There was an error while loading " + event.getEntity().getName() + " data");
+                        ex.printStackTrace();
+                    });
         }
     }
 
@@ -60,7 +69,7 @@ public class ListenerMain implements Listener {
     // MISC
     // -------------------------------------------- //
 
-    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.LOW)
     public void blockDamage(EntityDamageEvent event) {
         if (VampireRevamp.getVampireConfig().general.isBlacklisted(event.getEntity().getWorld()))
             return;
@@ -69,18 +78,18 @@ public class ListenerMain implements Listener {
 
         if (conf.vampire.blockDamageFrom.contains(event.getCause())) {
             if (EntityUtil.isPlayer(entity)) {
-                try {
-                    VPlayer uplayer = VampireRevamp.getVPlayerManager().tryGetDataNow(entity.getUniqueId());
-                    if (uplayer.isVampire()) {
-                        event.setCancelled(true);
-                    }
+                VPlayer vPlayer = VampireRevamp.getVPlayerNow((Player) entity);
+                if (vPlayer == null)
+                    return;
+                if (vPlayer.isVampire()) {
+                    event.setDamage(0);
+                    event.setCancelled(true);
                 }
-                catch (AssertionError ignore) {}
             }
         }
     }
 
-    @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.LOW)
     public void blockRegainHealth(EntityRegainHealthEvent event) {
         if (VampireRevamp.getVampireConfig().general.isBlacklisted(event.getEntity().getWorld()))
             return;
@@ -89,31 +98,31 @@ public class ListenerMain implements Listener {
 
         if (conf.vampire.blockHealthFrom.contains(event.getRegainReason())) {
             if (EntityUtil.isPlayer(entity)) {
-                try {
-                    VPlayer uplayer = VampireRevamp.getVPlayerManager().tryGetDataNow(entity.getUniqueId());
-                    if (uplayer.isVampire()) {
-                        event.setCancelled(true);
-                    }
+                VPlayer vPlayer = VampireRevamp.getVPlayerNow((Player) entity);
+                if (vPlayer == null)
+                    return;
+                if (vPlayer.isVampire()) {
+                    event.setAmount(0);
+                    event.setCancelled(true);
                 }
-                catch (AssertionError ignore) {}
             }
         }
     }
 
-    @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.LOW)
     public void blockFoodChange(FoodLevelChangeEvent event) {
         if (VampireRevamp.getVampireConfig().general.isBlacklisted(event.getEntity().getWorld()))
             return;
         Entity entity = event.getEntity();
         if (EntityUtil.isPlayer(entity)) {
-            try {
-                VPlayer uplayer = VampireRevamp.getVPlayerManager().tryGetDataNow(entity.getUniqueId());
-                if (uplayer.isVampire()) {
-                    event.setFoodLevel(((Player) entity).getFoodLevel());
-                    // EntityUtil.sendHealthFoodUpdatePacket((Player) entity);
-                }
+            VPlayer vPlayer = VampireRevamp.getVPlayerNow((Player) entity);
+            if (vPlayer == null)
+                return;
+            if (vPlayer.isVampire()) {
+                event.setFoodLevel(((Player) entity).getFoodLevel());
+                event.setCancelled(true);
+                // EntityUtil.sendHealthFoodUpdatePacket((Player) entity);
             }
-            catch (AssertionError ignore) {}
         }
     }
 
@@ -121,48 +130,58 @@ public class ListenerMain implements Listener {
     // UPDATE
     // -------------------------------------------- //
 
-    @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void updateOnJoin(PlayerJoinEvent event) {
-        final Player player = event.getPlayer();
-        VampireRevamp.loadPlayerFromDB(player);
+        VampireRevamp.syncTaskVPlayer(event.getPlayer(), null, null);
     }
 
-    @EventHandler(priority = EventPriority.NORMAL)
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void updateOnQuit(PlayerQuitEvent event) {
-        final Player player = event.getPlayer();
-        VampireRevamp.getVPlayerManager().save(player.getUniqueId());
+        VampireRevamp.saveVPlayer(event.getPlayer());
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void updateOnTeleport(PlayerTeleportEvent event) {
         final Player player = event.getPlayer();
         if (EntityUtil.isPlayer(player)) {
-            Bukkit.getScheduler().scheduleSyncDelayedTask(VampireRevamp.getInstance(), () -> {
-                VPlayer uplayer = VampireRevamp.getVPlayerManager().tryGetDataNow(player.getUniqueId());
-                uplayer.update();
-            });
+            VampireRevamp.syncTaskVPlayer(
+                    player,
+                    (vPlayer) -> Bukkit.getScheduler()
+                            .runTask(
+                                    VampireRevamp.getInstance(),
+                                    vPlayer::update),
+                    (ex) -> {
+                        VampireRevamp.log(Level.WARNING, "There was an error while loading " + player.getName() + " data");
+                        ex.printStackTrace();
+                    });
         }
     }
 
-    @EventHandler(priority = EventPriority.NORMAL)
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void updateOnDeath(PlayerDeathEvent event) {
         if (VampireRevamp.getVampireConfig().general.isBlacklisted(event.getEntity().getWorld()))
             return;
         // If a vampire dies ...
         Player entity = event.getEntity();
         if (EntityUtil.isPlayer(entity)) {
-            VampireRevamp.getVPlayerManager().getDataSynchronous((uplayer) -> {
-                if (uplayer.isVampire()) {
-                    // Close down bloodlust.
-                    uplayer.setRad(0);
-                    uplayer.setBloodlusting(false);
-                    entity.setFireTicks(0);
-                }
-            }, () -> {}, true, entity.getUniqueId());
+            VampireRevamp.syncTaskVPlayer(
+                    entity,
+                    (vPlayer) -> {
+                        if (vPlayer.isVampire()) {
+                            // Close down bloodlust.
+                            vPlayer.setRad(0);
+                            vPlayer.setBloodlusting(false);
+                            entity.setFireTicks(0);
+                        }
+                    },
+                    (ex) -> {
+                        VampireRevamp.log(Level.WARNING, "There was an error while loading " + entity.getName() + " data");
+                        ex.printStackTrace();
+                    });
         }
     }
 
-    @EventHandler(priority = EventPriority.NORMAL)
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onDisguise(DisguiseEvent event) {
         if (!VampireRevamp.getVampireConfig().vampire.batusi.preventDisguise)
             return;
@@ -171,15 +190,14 @@ public class ListenerMain implements Listener {
             return;
 
         final Player player = (Player) aux;
-        VPlayer vPlayer = VampireRevamp.getVPlayerManager().tryGetDataNow(player.getUniqueId());
-        if (!vPlayer.isChangingDisguise())
+        VPlayer vPlayer = VampireRevamp.getVPlayerNow(player);
+        if (vPlayer == null || !vPlayer.isChangingDisguise())
             return;
-        if (!ResourceUtil.hasPermission(player, Perm.MODE_BATUSI_DISGUISE)) {
+        if (!ResourceUtil.hasPermission(player, Perm.MODE_BATUSI_DISGUISE))
             event.setCancelled(true);
-        }
     }
 
-    @EventHandler(priority = EventPriority.NORMAL)
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onUndisguise(UndisguiseEvent event) {
         if (!VampireRevamp.getVampireConfig().vampire.batusi.preventDisguise)
             return;
@@ -188,8 +206,8 @@ public class ListenerMain implements Listener {
             return;
 
         final Player player = (Player) aux;
-        VPlayer vPlayer = VampireRevamp.getVPlayerManager().tryGetDataNow(player.getUniqueId());
-        if (!vPlayer.isChangingDisguise())
+        VPlayer vPlayer = VampireRevamp.getVPlayerNow(player);
+        if (vPlayer == null || !vPlayer.isChangingDisguise())
             return;
         // This event is also called when the player already has a disguise before using batusi.
         // We don't care about it in that case.
@@ -198,7 +216,7 @@ public class ListenerMain implements Listener {
         }
     }
 
-    @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void updateOnRespawn(PlayerRespawnEvent event) {
         if (VampireRevamp.getVampireConfig().general.isBlacklisted(event.getPlayer().getWorld()))
             return;
@@ -206,16 +224,17 @@ public class ListenerMain implements Listener {
         Player player = event.getPlayer();
 
         if (EntityUtil.isPlayer(player)) {
-            VPlayer uplayer = VampireRevamp.getVPlayerManager().tryGetDataNow(player.getUniqueId());
-
-            if (uplayer.isVampire()) {
+            VPlayer vPlayer = VampireRevamp.getVPlayerNow(player);
+            if (vPlayer == null)
+                return;
+            if (vPlayer.isVampire()) {
                 // ... modify food and health levels and force another speed-update.
-                Bukkit.getScheduler().scheduleSyncDelayedTask(VampireRevamp.getInstance(), () -> {
+                Bukkit.getScheduler().runTask(VampireRevamp.getInstance(), () -> {
                     PluginConfig conf = VampireRevamp.getVampireConfig();
                     player.setFoodLevel(conf.vampire.respawnFood);
                     player.setHealth(conf.vampire.respawnHealth);
                     EntityUtil.sendHealthFoodUpdatePacket(player);
-                    uplayer.update();
+                    vPlayer.update();
                 });
             }
         }
@@ -238,8 +257,8 @@ public class ListenerMain implements Listener {
             if (conf.general.dropSelfMaterials.contains(material)) {
                 // ... then we make it drop itself.
                 event.setCancelled(true);
-                event.getBlock().getWorld().dropItemNaturally(event.getBlock().getLocation(), new ItemStack(material, 1));
                 event.getBlock().setType(Material.AIR);
+                event.getBlock().getWorld().dropItemNaturally(event.getBlock().getLocation(), new ItemStack(material, 1));
             }
         }
     }
@@ -259,11 +278,12 @@ public class ListenerMain implements Listener {
             Block from = event.getFrom().getBlock();
             Block to = event.getTo().getBlock();
             if (!from.equals(to)) {
-                VPlayer uplayer = VampireRevamp.getVPlayerManager().tryGetDataNow(player.getUniqueId());
-
+                VPlayer vPlayer = VampireRevamp.getVPlayerNow(player);
+                if (vPlayer == null)
+                    return;
                 // ... and that player is a vampire ...
                 // ... that has bloodlust on ...
-                if (uplayer.isVampire() && uplayer.isBloodlusting()) {
+                if (vPlayer.isVampire() && vPlayer.isBloodlusting()) {
                     // ... then spawn smoke trail.
                     PluginConfig conf = VampireRevamp.getVampireConfig();
                     Location one = event.getFrom().clone();
@@ -286,11 +306,12 @@ public class ListenerMain implements Listener {
             // ... turn of bloodlust ...
             Player player = event.getPlayer();
             if (EntityUtil.isPlayer(player)) {
-                VampireRevamp.getVPlayerManager().getDataSynchronous((uplayer) -> {
-                    if (uplayer.isBloodlusting()) {
-                        uplayer.setBloodlusting(false);
-                    }
-                }, () -> {}, true, player.getUniqueId());
+                VPlayer vPlayer = VampireRevamp.getVPlayerNow(player);
+                if (vPlayer == null)
+                    return;
+                if (vPlayer.isBloodlusting()) {
+                    vPlayer.setBloodlusting(false);
+                }
             }
         }
     }
@@ -299,7 +320,7 @@ public class ListenerMain implements Listener {
     // TRUCE
     // -------------------------------------------- //
 
-    @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.LOW)
     public void truceTarget(EntityTargetEvent event) {
         if (VampireRevamp.getVampireConfig().general.isBlacklisted(event.getEntity().getWorld()))
             return;
@@ -312,11 +333,14 @@ public class ListenerMain implements Listener {
             // ... by creature that cares about the truce with vampires ...
             if (player != null && conf.truce.entityTypes.contains(event.getEntityType())) {
                 VampireRevamp.debugLog(Level.INFO, "Entity in truce list");
-                VPlayer uplayer = VampireRevamp.getVPlayerManager().tryGetDataNow(player.getUniqueId());
+                VPlayer vPlayer = VampireRevamp.getVPlayerNow(player);
+                if (vPlayer == null)
+                    return;
                 // ... and that player is a vampire ...
                 // ... that has not recently done something to break the truce...
-                if (uplayer.isVampire() && !uplayer.truceIsBroken()) {
+                if (vPlayer.isVampire() && !vPlayer.truceIsBroken(System.currentTimeMillis())) {
                     VampireRevamp.debugLog(Level.INFO, "Vampire detected, cancelling target");
+                    event.setTarget(null);
                     event.setCancelled(true);
                 }
             }
@@ -338,14 +362,19 @@ public class ListenerMain implements Listener {
                 if (EntityUtil.isPlayer(damager)) {
                     if (conf.truce.checkGamemode && ((Player) damager).getGameMode() == GameMode.CREATIVE)
                         return;
-
-
-                    VampireRevamp.getVPlayerManager().getDataSynchronous((vpdamager) -> {
-                        if (vpdamager.isVampire()) {
-                            // Then that vampire broke the truce.
-                            vpdamager.truceBreak();
-                        }
-                    }, () -> {}, true, damager.getUniqueId());
+                    long now = System.currentTimeMillis();
+                    VampireRevamp.syncTaskVPlayer(
+                            (Player) damager,
+                            (vpDamager) -> {
+                                if (vpDamager.isVampire()) {
+                                    // Then that vampire broke the truce.
+                                    vpDamager.truceBreak(now);
+                                }
+                            },
+                            (ex) -> {
+                                VampireRevamp.log(Level.WARNING, "There was an error while loading " + damager.getName() + " data");
+                                ex.printStackTrace();
+                            });
                 }
             }
         }
@@ -364,12 +393,18 @@ public class ListenerMain implements Listener {
 
         if (EntityUtil.isPlayer(entity)) {
             final long timestamp = System.currentTimeMillis();
-            VampireRevamp.getVPlayerManager().getDataSynchronous((vampire) -> {
-                if (vampire.isVampire()) {
-                    // ... mark now as lastDamageMillis
-                    vampire.setLastDamageMillis(timestamp);
-                }
-            }, () -> {}, false, entity.getUniqueId());
+            VampireRevamp.syncTaskVPlayer(
+                    (Player) entity,
+                    (vampire) -> {
+                        if (vampire.isVampire()) {
+                            // ... mark now as lastDamageMillis
+                            vampire.setLastDamageMillis(timestamp);
+                        }
+                    },
+                    (ex) -> {
+                        VampireRevamp.log(Level.WARNING, "There was an error while loading " + entity.getName() + " data");
+                        ex.printStackTrace();
+                    });
         }
     }
 
@@ -377,7 +412,7 @@ public class ListenerMain implements Listener {
     // COMBAT
     // -------------------------------------------- //
 
-    @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
     public void combatVulnerability(EntityDamageEvent event) {
         if (VampireRevamp.getVampireConfig().general.isBlacklisted(event.getEntity().getWorld()))
             return;
@@ -388,13 +423,13 @@ public class ListenerMain implements Listener {
             // ... and the damagee is a player ...
             Entity entity = event.getEntity();
 
-            if (damagerEntity instanceof HumanEntity && EntityUtil.isPlayer(entity)) {
-                HumanEntity damager = (HumanEntity) damagerEntity;
+            if (damagerEntity instanceof HumanEntity damager && EntityUtil.isPlayer(entity)) {
                 PluginConfig conf = VampireRevamp.getVampireConfig();
-
                 // ... and the damagee is a vampire ...
-                VPlayer vampire = VampireRevamp.getVPlayerManager().tryGetDataNow(entity.getUniqueId());
-                if (vampire.isVampire()) {
+                VPlayer vPlayer = VampireRevamp.getVPlayerNow((Player) entity);
+                if (vPlayer == null)
+                    return;
+                if (vPlayer.isVampire()) {
                     // ... and a wooden item was used ...
                     ItemStack item = EntityUtil.getWeapon(damager);
                     if (item != null && conf.vampire.holyItem.materials.contains(item.getType())) {
@@ -410,20 +445,26 @@ public class ListenerMain implements Listener {
     // Batusi
     // -------------------------------------------- //
 
-    @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void disableBatusiCheck(EntityDamageEvent event) {
         if (VampireRevamp.getVampireConfig().vampire.batusi.disableOnHit
                 && EntityUtil.isPlayer(event.getEntity())) {
             Player damagee = (Player) event.getEntity();
-            VampireRevamp.getVPlayerManager().getDataSynchronous((udamagee) -> {
-                if (udamagee.isVampire() && udamagee.isBatusi()) {
-                    udamagee.setBatusi(false, 0);
-                }
-            }, () -> {}, true, damagee.getUniqueId());
+            VampireRevamp.syncTaskVPlayer(
+                    damagee,
+                    (vdamagee) -> {
+                        if (vdamagee.isVampire() && vdamagee.isBatusi()) {
+                            vdamagee.setBatusi(false, 0);
+                        }
+                    },
+                    (ex) -> {
+                        VampireRevamp.log(Level.WARNING, "There was an error while loading " + damagee.getName() + " data");
+                        ex.printStackTrace();
+                    });
         }
     }
 
-    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
     public void combatStrength(EntityDamageEvent event) {
         if (VampireRevamp.getVampireConfig().general.isBlacklisted(event.getEntity().getWorld()))
             return;
@@ -432,15 +473,16 @@ public class ListenerMain implements Listener {
             // ... and the liable damager is a vampire ...
             Entity damager = EventUtil.getLiableDamager(event);
             if (EntityUtil.isPlayer(damager)) {
-                VPlayer vampire = VampireRevamp.getVPlayerManager().tryGetDataNow(damager.getUniqueId());
-
-                if (vampire.isVampire()) {
+                VPlayer vPlayer = VampireRevamp.getVPlayerNow((Player) damager);
+                if (vPlayer == null)
+                    return;
+                if (vPlayer.isVampire()) {
                     PluginConfig conf = VampireRevamp.getVampireConfig();
                     // ... and this event isn't a forbidden mcmmo one ...
                     if (conf.compatibility.damageWithMcmmo
                             || !event.getClass().getName().equals("com.gmail.nossr50.events.fake.FakeEntityDamageByEntityEvent")) {
                         // ... Then modify damage!
-                        EventUtil.scaleDamage(event, vampire.combatDamageFactor());
+                        EventUtil.scaleDamage(event, vPlayer.combatDamageFactor());
                     }
                 }
             }
@@ -461,30 +503,40 @@ public class ListenerMain implements Listener {
             Entity damagee = event.getEntity();
             Entity damager = EventUtil.getLiableDamager(event);
             if (EntityUtil.isPlayer(damagee) && EntityUtil.isPlayer(damager)) {
-                VampireRevamp.getVPlayerManager().getDataSynchronous((vampiree) -> {
-                    final VPlayer[] vampire = {vampiree};
-                    VampireRevamp.getVPlayerManager().getDataSynchronous((human) -> {
-                        if ((vampire[0].isVampire() && human.isHuman())
-                                || (human.isVampire() && vampire[0].isHuman())) {
-                            if (human.isVampire()) {
-                                VPlayer aux = vampire[0];
-                                vampire[0] = human;
-                                human = aux;
-                            }
-
-                            // ... and the vampire is allowed to infect through combat ...
-                            // ... and the human is allowed to contract through combat ...
-                            // ... Then there is a risk for infection ...
-                            if (Perm.COMBAT_INFECT.has(vampire[0].getPlayer())
-                                    && Perm.COMBAT_CONTRACT.has(human.getPlayer())
-                                    && MathUtil.random.nextDouble() < vampire[0].combatInfectRisk()) {
-                                InfectionReason reason = vampire[0].isIntending() ? InfectionReason.COMBAT_INTENDED : InfectionReason.COMBAT_MISTAKE;
-                                human.addInfection(0.01D, reason, vampire[0]);
-                            }
-                        }
-                    }, () -> {}, true, damager.getUniqueId());
-                }, () -> {}, true, damagee.getUniqueId());
-
+                VampireRevamp.syncTaskVPlayer(
+                        (Player) damagee,
+                        (vampiree) -> {
+                            VampireRevamp.syncTaskVPlayer(
+                                    (Player) damager,
+                                    (human) -> {
+                                        VPlayer vampire = vampiree;
+                                        if ((vampire.isVampire() && human.isHuman())
+                                                || (human.isVampire() && vampire.isHuman())) {
+                                            if (human.isVampire()) {
+                                                VPlayer aux = vampire;
+                                                vampire = human;
+                                                human = aux;
+                                            }
+                                            // ... and the vampire is allowed to infect through combat ...
+                                            // ... and the human is allowed to contract through combat ...
+                                            // ... Then there is a risk for infection ...
+                                            if (Perm.COMBAT_INFECT.has(vampire.getPlayer())
+                                                    && Perm.COMBAT_CONTRACT.has(human.getPlayer())
+                                                    && ThreadLocalRandom.current().nextDouble() < vampire.combatInfectRisk()) {
+                                                InfectionReason reason = vampire.isIntending() ? InfectionReason.COMBAT_INTENDED : InfectionReason.COMBAT_MISTAKE;
+                                                human.addInfection(0.01D, reason, vampire);
+                                            }
+                                        }
+                                    },
+                                    (ex) -> {
+                                        VampireRevamp.log(Level.WARNING, "There was an error while loading " + damager.getName() + " data");
+                                        ex.printStackTrace();
+                                    });
+                        },
+                        (ex) -> {
+                            VampireRevamp.log(Level.WARNING, "There was an error while loading " + damagee.getName() + " data");
+                            ex.printStackTrace();
+                        });
             }
         }
     }
@@ -506,21 +558,30 @@ public class ListenerMain implements Listener {
             Entity damager = EventUtil.getLiableDamager(event);
             // only horses, no mules donkeys or undead ones
             if (EntityUtil.isPlayer(damager) && event.getEntity() instanceof Horse) {
-                VampireRevamp.getVPlayerManager().getDataSynchronous((vampire) -> {
-                    // ... and the vampire is allowed to infect through combat ...
-                    if (vampire.isVampire() && Perm.COMBAT_INFECT.has(vampire.getPlayer())) {
-                        Horse horse = (Horse) event.getEntity();
+                VampireRevamp.syncTaskVPlayer(
+                        (Player) damager,
+                        (vPlayer) -> {
+                            // ... and the vampire is allowed to infect through combat ...
+                            if (vPlayer.isVampire() && Perm.COMBAT_INFECT.has(vPlayer.getPlayer())) {
+                                Horse horse = (Horse) event.getEntity();
+                                // If the horse has already died we exit
+                                if (!horse.isValid() || horse.isDead()) {
+                                    return;
+                                }
+                                // ... Then there is a risk for infection ...
+                                if (ThreadLocalRandom.current().nextDouble() < vPlayer.combatInfectRisk()) {
+                                    // ... then we spawn the new horse ...
+                                    horse.getWorld().spawnEntity(horse.getLocation(), ThreadLocalRandom.current().nextDouble() > 0.5 ? EntityType.SKELETON_HORSE : EntityType.ZOMBIE_HORSE);
 
-                        // ... Then there is a risk for infection ...
-                        if (MathUtil.random.nextDouble() < vampire.combatInfectRisk()) {
-                            // ... then we spawn the new horse ...
-                            horse.getWorld().spawnEntity(horse.getLocation(), MathUtil.random.nextDouble() > 0.5 ? EntityType.SKELETON_HORSE : EntityType.ZOMBIE_HORSE);
-
-                            // ... and we Thanos the old one ...
-                            horse.remove();
-                        }
-                    }
-                }, () -> {}, true, damager.getUniqueId());
+                                    // ... and we Thanos the old one ...
+                                    horse.remove();
+                                }
+                            }
+                        },
+                        (ex) -> {
+                            VampireRevamp.log(Level.WARNING, "There was an error while loading " + damager.getName() + " data");
+                            ex.printStackTrace();
+                        });
             }
         }
     }
@@ -529,7 +590,7 @@ public class ListenerMain implements Listener {
     // SLEEP
     // -------------------------------------------- //
 
-    @EventHandler(priority = EventPriority.NORMAL)
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = false)
     public void trySleep(PlayerBedEnterEvent event) {
         if (VampireRevamp.getVampireConfig().general.isBlacklisted(event.getPlayer().getWorld()))
             return;
@@ -540,10 +601,9 @@ public class ListenerMain implements Listener {
             return;
 
         // ... the player is a vampire ...
-        VPlayer vPlayer = VampireRevamp.getVPlayerManager().tryGetDataNow(player.getUniqueId());
-        if (!vPlayer.isVampire())
+        VPlayer vPlayer = VampireRevamp.getVPlayerNow(player);
+        if (vPlayer == null || !vPlayer.isVampire())
             return;
-
         // ... and tries to sleep at night or storm ...
         long time = player.getWorld().getTime();
         boolean storming = player.getWorld().hasStorm();
@@ -556,12 +616,14 @@ public class ListenerMain implements Listener {
             event.setCancelled(true);
         }
         else {
-            if (!((Bed) event.getBed().getBlockData()).isOccupied())
+            if (!((Bed) event.getBed().getBlockData()).isOccupied()) {
                 event.setUseBed(Event.Result.ALLOW);
+                event.setCancelled(false);
+            }
         }
     }
 
-    @EventHandler(priority = EventPriority.NORMAL)
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void wakeUp(PlayerBedLeaveEvent event) {
         if (VampireRevamp.getVampireConfig().general.isBlacklisted(event.getPlayer().getWorld()))
             return;
@@ -572,8 +634,8 @@ public class ListenerMain implements Listener {
             return;
 
         // ... the player is a vampire ...
-        VPlayer vPlayer = VampireRevamp.getVPlayerManager().tryGetDataNow(player.getUniqueId());
-        if (!vPlayer.isVampire())
+        VPlayer vPlayer = VampireRevamp.getVPlayerNow(player);
+        if (vPlayer == null || !vPlayer.isVampire())
             return;
 
         // ... and the sleeping was successful ...
@@ -589,7 +651,7 @@ public class ListenerMain implements Listener {
     // FOOD
     // -------------------------------------------- //
 
-    @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void foodCake(PlayerInteractEvent event) {
         if (VampireRevamp.getVampireConfig().general.isBlacklisted(event.getPlayer().getWorld()))
             return;
@@ -600,15 +662,15 @@ public class ListenerMain implements Listener {
             // ... and the player right-clicks a cake block ...
             if (event.getAction() == Action.RIGHT_CLICK_BLOCK && event.getClickedBlock().getType() == Material.CAKE) {
                 // ... and the player is a vampire ...
-                VPlayer uplayer = VampireRevamp.getVPlayerManager().tryGetDataNow(player.getUniqueId());
-                if (uplayer.isVampire()) {
-                    // ... we deny!
-                    event.setCancelled(true);
-                    VampireRevamp.sendMessage(player,
-                            MessageType.ERROR,
-                            VampirismMessageKeys.CANT_EAT_ITEM,
-                            "{item}", event.getClickedBlock().getType().name());
-                }
+                VPlayer vPlayer = VampireRevamp.getVPlayerNow(player);
+                if (vPlayer == null || !vPlayer.isVampire())
+                    return;
+                // ... we deny!
+                event.setCancelled(true);
+                VampireRevamp.sendMessage(player,
+                        MessageType.ERROR,
+                        VampirismMessageKeys.CANT_EAT_ITEM,
+                        "{item}", event.getClickedBlock().getType().name());
             }
         }
     }
@@ -619,10 +681,8 @@ public class ListenerMain implements Listener {
             return;
         // If this is a close combat event ...
         // ... to a living entity ...
-        if (EventUtil.isCloseCombatEvent(event) && event.getEntity() instanceof LivingEntity) {
-            LivingEntity damagee = (LivingEntity) event.getEntity();
+        if (EventUtil.isCloseCombatEvent(event) && event.getEntity() instanceof LivingEntity damagee) {
             PluginConfig conf = VampireRevamp.getVampireConfig();
-
             // ... of a tasty type ...
             double fullFoodQuotient = conf.fullFoodQuotient.getOrDefault(damagee.getType(), 0D);
             if (fullFoodQuotient != 0) {
@@ -631,22 +691,28 @@ public class ListenerMain implements Listener {
                     // ... and the liable damager is a vampire ...
                     Entity damager = EventUtil.getLiableDamager(event);
                     if (EntityUtil.isPlayer(damager)) {
-                        VampireRevamp.getVPlayerManager().getDataSynchronous((vampire) -> {
-                            // ... and the player is still retrievable ...
-                            if (vampire.isVampire() && vampire.getPlayer() != null) {
-                                // ... drink blood! ;,,;
-                                double damage = event.getFinalDamage();
-                                if (conf.general.useOldFoodFormula)
-                                    damage = event.getDamage();
-                                if (damagee.getHealth() < damage)
-                                    damage = damagee.getHealth();
-                                double food = damage * fullFoodQuotient;
-                                if (conf.general.useOldFoodFormula)
-                                    food = damage / damagee.getAttribute(Attribute.GENERIC_MAX_HEALTH).getBaseValue() * fullFoodQuotient * vampire.getPlayer().getAttribute(Attribute.GENERIC_MAX_HEALTH).getBaseValue();
+                        VampireRevamp.syncTaskVPlayer(
+                                (Player) damager,
+                                (vampire) -> {
+                                    // ... and the player is still retrievable ...
+                                    if (vampire.isVampire()) {
+                                        // ... drink blood! ;,,;
+                                        double damage = event.getFinalDamage();
+                                        if (conf.general.useOldFoodFormula)
+                                            damage = event.getDamage();
+                                        if (damagee.getHealth() < damage)
+                                            damage = damagee.getHealth();
+                                        double food = damage * fullFoodQuotient;
+                                        if (conf.general.useOldFoodFormula)
+                                            food = damage / damagee.getAttribute(Attribute.GENERIC_MAX_HEALTH).getBaseValue() * fullFoodQuotient * vampire.getPlayer().getAttribute(Attribute.GENERIC_MAX_HEALTH).getBaseValue();
 
-                                vampire.addFood(food);
-                            }
-                        }, () -> {}, true, damager.getUniqueId());
+                                        vampire.addFood(food);
+                                    }
+                                },
+                                (ex) -> {
+                                    VampireRevamp.log(Level.WARNING, "There was an error while loading " + damager.getName() + " data");
+                                    ex.printStackTrace();
+                                });
                     }
                 }
             }
@@ -657,7 +723,7 @@ public class ListenerMain implements Listener {
     // BLOOD FLASK
     // -------------------------------------------- //
 
-    @EventHandler(priority = EventPriority.NORMAL)
+    @EventHandler(priority = EventPriority.LOW)
     public void bloodFlaskConsume(PlayerItemConsumeEvent event) {
         if (VampireRevamp.getVampireConfig().general.isBlacklisted(event.getPlayer().getWorld()))
             return;
@@ -678,24 +744,26 @@ public class ListenerMain implements Listener {
         boolean isVampiric = bloodFlaskData.isVampiric();
 
         // ... get the player ...
-        VPlayer uplayer = VampireRevamp.getVPlayerManager().tryGetDataNow(event.getPlayer().getUniqueId());
+        VPlayer vPlayer = VampireRevamp.getVPlayerNow(event.getPlayer());
+        if (vPlayer == null)
+            return;
 
         // ... are they bloodlusting? ...
-        if (!uplayer.isBloodlusting()) {
+        if (!vPlayer.isBloodlusting()) {
             // ... calculate and add the blood amount to the player ...
             double lacking;
-            if (uplayer.isVampire()) {
+            if (vPlayer.isVampire()) {
                 // Vampires drink blood to replenish food.
-                lacking = (20 - uplayer.getFood());
+                lacking = (20 - vPlayer.getFood());
                 if (amount > lacking) amount = Math.ceil(lacking);
-                uplayer.addFood(amount);
+                vPlayer.addFood(amount);
             } else if (isVampiric) {
                 // ... finally, if the player is human did they contract the dark disease from vampiric blood?
-                if (uplayer.isInfected()) {
-                    uplayer.addInfection(0.01D);
+                if (vPlayer.isInfected()) {
+                    vPlayer.addInfection(0.01D);
                 } else if (event.getPlayer().hasPermission("vampire.flask.contract")
-                        && MathUtil.random.nextDouble() * 20 < amount) {
-                    uplayer.addInfection(0.05D, InfectionReason.FLASK, uplayer);
+                        && ThreadLocalRandom.current().nextDouble() * 20 < amount) {
+                    vPlayer.addInfection(0.05D, InfectionReason.FLASK, bloodFlaskData.getOwner());
                 }
             }
         } else {
@@ -715,7 +783,7 @@ public class ListenerMain implements Listener {
      * That event is not triggered. This potion has no vanilla effects.
      * Thus only this projectile hit event is triggered.
      */
-    @EventHandler(priority = EventPriority.NORMAL)
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void holyWater(ProjectileHitEvent event) {
         // If this projectile is a thrown potion ...
         Projectile projectile = event.getEntity();
@@ -737,36 +805,51 @@ public class ListenerMain implements Listener {
                     for (Player player : splashLocation.getWorld().getPlayers()) {
                         if (EntityUtil.isPlayer(player)
                                 && player.getLocation().distance(splashLocation) <= conf.holyWater.splashRadius) {
-                            VampireRevamp.getVPlayerManager().getDataSynchronous((uplayer) -> {
-                                VampireRevamp.sendMessage(player,
-                                        MessageType.INFO,
-                                        HolyWaterMessageKeys.COMMON_REACT,
-                                        "{player}", shooter.getDisplayName());
-                                uplayer.runFxEnderBurst();
+                            Location loc = player.getLocation();
+                            VampireRevamp.syncTaskVPlayer(
+                                    player,
+                                    (vPlayer) -> {
+                                        VampireRevamp.sendMessage(player,
+                                                MessageType.INFO,
+                                                HolyWaterMessageKeys.COMMON_REACT,
+                                                "{player}", shooter.getDisplayName());
+                                        vPlayer.runFxEnderBurst();
 
-                                // Trigger a damage event so other plugins can cancel this.
-                                EntityDamageByEntityEvent triggeredEvent = new EntityDamageByEntityEvent(shooter, player, DamageCause.CUSTOM, 1D);
-                                Bukkit.getPluginManager().callEvent(triggeredEvent);
-                                if (!triggeredEvent.isCancelled()) {
-                                    if (uplayer.isHealthy()) {
-                                        VampireRevamp.sendMessage(player,
-                                                MessageType.INFO,
-                                                HolyWaterMessageKeys.HEALTHY_REACT);
-                                    } else if (uplayer.isInfected()) {
-                                        VampireRevamp.sendMessage(player,
-                                                MessageType.INFO,
-                                                HolyWaterMessageKeys.INFECTED_REACT);
-                                        uplayer.setInfection(0);
-                                        uplayer.runFxEnder();
-                                    } else if (uplayer.isVampire()) {
-                                        VampireRevamp.sendMessage(player,
-                                                MessageType.INFO,
-                                                HolyWaterMessageKeys.VAMPIRE_REACT);
-                                        uplayer.addTemp(conf.holyWater.temperature);
-                                        uplayer.runFxFlameBurst();
-                                    }
-                                }
-                            }, () -> {}, true, player.getUniqueId());
+                                        // Trigger a damage event so other plugins can cancel this.
+                                        EntityDamageByEntityEvent triggeredEvent = new EntityDamageByEntityEvent(
+                                                shooter,
+                                                player,
+                                                DamageCause.CUSTOM,
+                                                DamageSource.builder(DamageType.MAGIC)
+                                                        .withCausingEntity(shooter)
+                                                        .withDamageLocation(loc)
+                                                        .build(),
+                                                1D);
+                                        Bukkit.getPluginManager().callEvent(triggeredEvent);
+                                        if (!triggeredEvent.isCancelled()) {
+                                            if (vPlayer.isHealthy()) {
+                                                VampireRevamp.sendMessage(player,
+                                                        MessageType.INFO,
+                                                        HolyWaterMessageKeys.HEALTHY_REACT);
+                                            } else if (vPlayer.isInfected()) {
+                                                VampireRevamp.sendMessage(player,
+                                                        MessageType.INFO,
+                                                        HolyWaterMessageKeys.INFECTED_REACT);
+                                                vPlayer.setInfection(0);
+                                                vPlayer.runFxEnder();
+                                            } else if (vPlayer.isVampire()) {
+                                                VampireRevamp.sendMessage(player,
+                                                        MessageType.INFO,
+                                                        HolyWaterMessageKeys.VAMPIRE_REACT);
+                                                vPlayer.addTemp(conf.holyWater.temperature);
+                                                vPlayer.runFxFlameBurst();
+                                            }
+                                        }
+                                    },
+                                    (ex) -> {
+                                        VampireRevamp.log(Level.WARNING, "There was an error while loading " + player.getName() + " data");
+                                        ex.printStackTrace();
+                                    });
                         }
                     }
                 }
@@ -778,7 +861,7 @@ public class ListenerMain implements Listener {
     // ALTARS
     // -------------------------------------------- //
 
-    @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = false)
     public void altars(PlayerInteractEvent event) {
         if (VampireRevamp.getVampireConfig().general.isBlacklisted(event.getPlayer().getWorld()))
             return;

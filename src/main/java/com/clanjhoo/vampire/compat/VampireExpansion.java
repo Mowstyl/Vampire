@@ -93,110 +93,116 @@ public class VampireExpansion extends PlaceholderExpansion {
             return "";
         }
 
-        VPlayer uplayer = VampireRevamp.getVPlayerManager().tryGetDataNow(player.getUniqueId());
-
-        // %vampire_temperature%
-        if(identifier.equals("temperature")){
-            return String.format("%f", uplayer.getTemp());
+        VPlayer vPlayer = VampireRevamp.getVPlayerNow(player);
+        if (vPlayer == null){
+            return "";
         }
 
-        // %vampire_radiation%
-        if(identifier.equals("radiation")){
-            return String.format("%f", uplayer.getRad());
-        }
-
-        // %vampire_infectionlevel%
-        if(identifier.equals("infectionlevel")){
-            return String.format("%f", uplayer.getInfection());
-        }
-
-        // %vampire_maker%
-        if(identifier.equals("maker")){
-            String name = null;
-
-            if (uplayer.isHuman()) {
-                name = "None";
+        switch (identifier) {
+            // %vampire_temperature%
+            case "temperature" -> {
+                return String.format("%f", vPlayer.getTemp());
             }
-            else {
-                try {
-                    name = uplayer.getMakerName();
-                } catch (Exception ignored) {
 
-                }
 
-                if (name == null) {
-                    InfectionReason reason = uplayer.getReason();
-                    switch (reason) {
-                        case UNKNOWN:
-                        case COMBAT_INTENDED:
-                        case COMBAT_MISTAKE:
-                        case TRADE:
-                            name = "Unknown";
-                            break;
-                        case FLASK:
-                            name = "Blood flask";
-                            break;
-                        case OPERATOR:
-                            name = "Dark magic";
-                            break;
-                        case ALTAR:
-                            name = "Altar of darkness";
-                            break;
+            // %vampire_radiation%
+            case "radiation" -> {
+                return String.format("%f", vPlayer.getRad());
+            }
+
+
+            // %vampire_infectionlevel%
+            case "infectionlevel" -> {
+                return String.format("%f", vPlayer.getInfection());
+            }
+
+
+            // %vampire_maker%
+            case "maker" -> {
+                String name = null;
+
+                if (vPlayer.isHuman()) {
+                    name = "None";
+                } else {
+                    try {
+                        name = vPlayer.getMakerName();
+                    } catch (Exception ignored) {
+
+                    }
+
+                    if (name == null) {
+                        InfectionReason reason = vPlayer.getReason();
+                        name = switch (reason) {
+                            case UNKNOWN, COMBAT_INTENDED, COMBAT_MISTAKE, TRADE -> "Unknown";
+                            case FLASK -> "Blood flask";
+                            case OPERATOR -> "Dark magic";
+                            case ALTAR -> "Altar of darkness";
+                        };
                     }
                 }
+
+                return name;
             }
 
-            return name;
-        }
 
-        // %vampire_bloodlust%
-        if(identifier.equals("bloodlust")){
-            return String.format("%b", uplayer.isBloodlusting());
-        }
+            // %vampire_bloodlust%
+            case "bloodlust" -> {
+                return String.format("%b", vPlayer.isBloodlusting());
+            }
 
-        // %vampire_intend%
-        if(identifier.equals("intend")){
-            return String.format("%b", uplayer.isIntending());
-        }
 
-        // %vampire_nightvision%
-        if(identifier.equals("nightvision")){
-            return String.format("%b", uplayer.isUsingNightVision());
-        }
+            // %vampire_intend%
+            case "intend" -> {
+                return String.format("%b", vPlayer.isIntending());
+            }
 
-        // %vampire_batusi%
-        if(identifier.equals("batusi")){
-            return String.format("%b", uplayer.isBatusi());
-        }
 
-        // %vampire_healthy%
-        if(identifier.equals("healthy")){
-            return String.format("%b", uplayer.isHealthy());
-        }
+            // %vampire_nightvision%
+            case "nightvision" -> {
+                return String.format("%b", vPlayer.isUsingNightVision());
+            }
 
-        // %vampire_unhealthy%
-        if(identifier.equals("unhealthy")){
-            return String.format("%b", uplayer.isUnhealthy());
-        }
 
-        // %vampire_human%
-        if(identifier.equals("human")){
-            return String.format("%b", uplayer.isHuman());
-        }
+            // %vampire_batusi%
+            case "batusi" -> {
+                return String.format("%b", vPlayer.isBatusi());
+            }
 
-        // %vampire_infected%
-        if(identifier.equals("infected")){
-            return String.format("%b", uplayer.isInfected());
-        }
 
-        // %vampire_vampire%
-        if(identifier.equals("vampire")){
-            return String.format("%b", uplayer.isVampire());
-        }
+            // %vampire_healthy%
+            case "healthy" -> {
+                return String.format("%b", vPlayer.isHealthy());
+            }
 
-        // %vampire_nosferatu%
-        if(identifier.equals("nosferatu")){
-            return String.format("%b", uplayer.isNosferatu());
+
+            // %vampire_unhealthy%
+            case "unhealthy" -> {
+                return String.format("%b", vPlayer.isUnhealthy());
+            }
+
+
+            // %vampire_human%
+            case "human" -> {
+                return String.format("%b", vPlayer.isHuman());
+            }
+
+
+            // %vampire_infected%
+            case "infected" -> {
+                return String.format("%b", vPlayer.isInfected());
+            }
+
+
+            // %vampire_vampire%
+            case "vampire" -> {
+                return String.format("%b", vPlayer.isVampire());
+            }
+
+
+            // %vampire_nosferatu%
+            case "nosferatu" -> {
+                return String.format("%b", vPlayer.isNosferatu());
+            }
         }
 
         // We return null if an invalid placeholder (f.e. %someplugin_placeholder3%)

@@ -2,7 +2,9 @@ package com.clanjhoo.vampire.listeners;
 
 import com.clanjhoo.vampire.VampireRevamp;
 import com.clanjhoo.vampire.entity.VPlayer;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Phantom;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -19,11 +21,11 @@ public class PhantomListener implements Listener {
 
     @EventHandler(priority = EventPriority.NORMAL)
     public void onPhantomSpawn(CreatureSpawnEvent e) {
-        if ((e.getEntity() instanceof Phantom) && e.getSpawnReason() == CreatureSpawnEvent.SpawnReason.NATURAL) {
-            Phantom phan = (Phantom) e.getEntity();
+        if ((e.getEntity() instanceof Phantom phan) && e.getSpawnReason() == CreatureSpawnEvent.SpawnReason.NATURAL) {
             if (phan.getSpawningEntity() != null) {
-                VPlayer vPlayer = VampireRevamp.getVPlayerManager().tryGetDataNow(phan.getSpawningEntity());
-                if (vPlayer.isVampire() && !vPlayer.truceIsBroken()) {
+                Player player = Bukkit.getPlayer(phan.getSpawningEntity());
+                VPlayer vPlayer = VampireRevamp.getVPlayerNow(player);
+                if (vPlayer != null && vPlayer.isVampire() && !vPlayer.truceIsBroken(System.currentTimeMillis())) {
                     e.setCancelled(true);
                 }
             }

@@ -4,11 +4,9 @@ import org.jetbrains.annotations.NotNull;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class MathUtil {
-    public static final Random random = new Random();
-
     public static <T extends Number> T limitNumber(T d, T min, T max) {
         if (d.doubleValue() < min.doubleValue()) {
             return min;
@@ -24,14 +22,14 @@ public class MathUtil {
     public static long probabilityRound(double value) {
         long ret = (long) Math.floor(value);
         double probability = value % 1;
-        if (random.nextDouble() < probability) ret += 1;
+        if (ThreadLocalRandom.current().nextDouble() < probability) ret += 1;
         return ret;
     }
 
     public static int probabilityRound(float value) {
         int ret = (int) Math.floor(value);
         float probability = value % 1;
-        if (random.nextFloat() < probability) ret += 1;
+        if (ThreadLocalRandom.current().nextFloat() < probability) ret += 1;
         return ret;
     }
 

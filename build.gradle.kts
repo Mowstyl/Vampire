@@ -1,92 +1,109 @@
-import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+import java.io.ByteArrayOutputStream;
 
 
 plugins {
     java
     `maven-publish`
-    id("com.github.johnrengelman.shadow") version "8.1.1"
+    alias(libs.plugins.shadowPlugin)
 }
 
 group = "com.clanjhoo"
-version = "1.0.BETA-20"
+version = "1.0.0-SNAPSHOT"
 description = "Anyone can become a vampire, but do you want to? During daytime vampires cower from sunlight. During the night the humans reach for their holy water and wooden stakes as the vampires roam the lands with inhuman strength, speed and levitation-powers. Driven by their endless bloodlust, they devour all living in their way."
-java.sourceCompatibility = JavaVersion.VERSION_11
-java.targetCompatibility = JavaVersion.VERSION_17
 
-tasks {
-    shadowJar.get().archiveFileName.set("${rootProject.name}Revamp-${version}.jar")
-    build.get().dependsOn(shadowJar)
+val getGitHash: String by lazy {
+    val stdout = ByteArrayOutputStream()
+    rootProject.exec {
+        commandLine("git", "rev-parse", "--short", "HEAD")
+        standardOutput = stdout
+    }
+    stdout.toString().trim()
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+        vendor = JvmVendorSpec.ORACLE
+    }
 }
 
 repositories {
-    gradlePluginPortal()
+    gradlePluginPortal {
+        content {
+            includeGroup("com.gradleup")
+        }
+    }
+    maven("https://papermc.io/repo/repository/maven-public/") {
+        content {
+            includeGroup("io.papermc.paper")
+        }
+    }
+    maven("https://repo.aikar.co/content/groups/aikar/") {
+        content {
+            includeGroup("co.aikar")
+            includeGroup("net.md-5")
+        }
+    }
+    maven("https://maven.enginehub.org/repo/") {
+        content {
+            includeGroup("com.sk89q.worldedit")
+            includeGroup("com.sk89q.worldguard")
+        }
+    }
+    maven("https://repo.extendedclip.com/content/repositories/placeholderapi/") {
+        content {
+            includeGroup("me.clip")
+        }
+    }
+    maven("https://jitpack.io") {
+        content {
+            includeGroupByRegex("com\\.github\\..*")
+        }
+    }
+    maven("https://nexus.clanjhoo.com/repository/maven-public/") {
+        content {
+            includeGroup("com.clanjhoo")
+        }
+    }
+    maven("https://mvn.lumine.io/repository/maven-public/") {
+        content {
+            includeGroup("LibsDisguises")
+        }
+    }
+    mavenCentral()
     mavenLocal()
-    maven {
-        url = uri("https://papermc.io/repo/repository/maven-public/")
-    }
-
-    maven {
-        url = uri("https://maven.enginehub.org/repo/")
-    }
-
-    maven {
-        url = uri("https://repo.md-5.net/content/groups/public/")
-    }
-
-    maven {
-        url = uri("https://repo.aikar.co/content/groups/aikar/")
-    }
-
-    maven {
-        url = uri("https://repo.extendedclip.com/content/repositories/placeholderapi/")
-    }
-
-    maven {
-        url = uri("https://jitpack.io")
-    }
-
-    maven {
-        url = uri("https://nexus.clanjhoo.com/repository/maven-public/")
-    }
-
-    maven {
-        url = uri("https://repo.maven.apache.org/maven2/")
-    }
 }
 
 dependencies {
-    compileOnly("io.papermc.paper:paper-api:1.20.2-R0.1-SNAPSHOT")
-    implementation("co.aikar:acf-paper:0.5.1-SNAPSHOT") {
+    compileOnly(libs.papermc.paperapi)
+    implementation(libs.aikar.acfpaper) {
         isTransitive = false
     }
-    implementation("com.clanjhoo:DBHandler:2.1.4") {
+    implementation(libs.clanjhoo.dbhandler) {
         isTransitive = false
     }
-    implementation("io.papermc.paper:paper-api:1.20.4-R0.1-SNAPSHOT") {
+    implementation(libs.sk89q.worldedit.core) {
         isTransitive = false
     }
-    implementation("com.sk89q.worldedit:worldedit-core:7.3.0-SNAPSHOT") {
+    implementation(libs.sk89q.worldedit.bukkit) {
         isTransitive = false
     }
-    implementation("com.sk89q.worldedit:worldedit-bukkit:7.3.0-SNAPSHOT") {
+    implementation(libs.sk89q.worldguard.core) {
         isTransitive = false
     }
-    implementation("com.sk89q.worldguard:worldguard-core:7.1.0-SNAPSHOT") {
+    implementation(libs.sk89q.worldguard.bukkit) {
         isTransitive = false
     }
-    implementation("com.sk89q.worldguard:worldguard-bukkit:7.1.0-SNAPSHOT") {
+    implementation(libs.libraryaddict.libsdisguises) {
         isTransitive = false
     }
-    implementation("LibsDisguises:LibsDisguises:10.0.38") {
+    implementation(libs.clip.placeholderapi) {
         isTransitive = false
     }
-    implementation("me.clip:placeholderapi:2.11.4") {
+    implementation(libs.milkbowl.vaultapi) {
         isTransitive = false
     }
-    implementation("com.github.MilkBowl:VaultAPI:1.7.1") {
-        isTransitive = false
-    }
-    implementation(files("./lib/Werewolf-1.7.2-SNAPSHOT.jar"))
+    implementation(files("./lib/Werewolf-1.7.1-SNAPSHOT.jar"))
 }
 
 publishing {
@@ -95,24 +112,34 @@ publishing {
     }
 }
 
-tasks.processResources {
-    filesMatching("**/plugin.yml") {
-        expand( project.properties )
-    }
+tasks.withType<JavaCompile>() {
+    options.encoding = "UTF-8"
 }
 
-// Configure Shadow to output with normal jar file name:
-tasks.named<ShadowJar>("shadowJar").configure {
-    relocate("co.aikar.commands", "co.aikar.${rootProject.name.lowercase()}.acf")
-    relocate("co.aikar.locales", "co.aikar.${rootProject.name.lowercase()}.locales")
-    relocate("com.clanjhoo.dbhandler", "com.clanjhoo.${rootProject.name.lowercase()}.dbhandler")
-    include("acf-paper-*-SNAPSHOT.jar")
-    include("DBHandler-*.jar")
-    include("acf-core_*.properties")
-    include("co/aikar/**")
-    include("co/aikar/**")
-    include("com/clanjhoo/**")
-    include("org/mariadb/**")
-    include("*.yml")
-    include("locales/*.yml")
+tasks.withType<Javadoc>() {
+    options.encoding = "UTF-8"
+}
+
+tasks {
+    processResources {
+        filesMatching("**/plugin.yml") {
+            expand( project.properties )
+        }
+    }
+
+    shadowJar {
+        archiveFileName.set("${rootProject.name}Revamp-${version}.jar".replace("SNAPSHOT", getGitHash))
+        relocate("co.aikar.commands", "co.aikar.${rootProject.name.lowercase()}.acf")
+        relocate("co.aikar.locales", "co.aikar.${rootProject.name.lowercase()}.locales")
+        relocate("com.clanjhoo.dbhandler", "com.clanjhoo.${rootProject.name.lowercase()}.dbhandler")
+        include("acf-paper-*-SNAPSHOT.jar")
+        include("DBHandler-*.jar")
+        include("acf-core_*.properties")
+        include("co/aikar/**")
+        include("co/aikar/**")
+        include("com/clanjhoo/**")
+        include("com/zaxxer/hikari/**")
+        include("*.yml")
+        include("locales/*.yml")
+    }
 }

@@ -13,6 +13,8 @@ import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.potion.PotionEffectType;
 
+import java.util.UUID;
+
 public class AltarDark extends Altar {
     public AltarDark() {
         SingleAltarConfig darkAltar = VampireRevamp.getVampireConfig().altar.darkAltar;
@@ -48,7 +50,7 @@ public class AltarDark extends Altar {
                                 AltarMessageKeys.ALTAR_DARK_HEALTHY);
                         player.getWorld().strikeLightningEffect(player.getLocation().add(0, 3, 0));
                         uplayer.runFxSmokeBurst();
-                        uplayer.addInfection(0.01D, InfectionReason.ALTAR, null);
+                        uplayer.addInfection(0.01D, InfectionReason.ALTAR, (UUID) null);
                     }, 1);
                     success = true;
                 }
