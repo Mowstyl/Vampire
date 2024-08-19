@@ -63,6 +63,7 @@ repositories {
     maven("https://nexus.clanjhoo.com/repository/maven-public/") {
         content {
             includeGroup("com.clanjhoo")
+            includeGroup("us.rfsmassacre")
         }
     }
     maven("https://mvn.lumine.io/repository/maven-public/") {
@@ -106,7 +107,10 @@ dependencies {
     implementation(libs.milkbowl.vaultapi) {
         isTransitive = false
     }
-    implementation(files("./lib/Werewolf-1.7.1-SNAPSHOT.jar"))
+    //implementation(files("./lib/Werewolf-1.7.2-SNAPSHOT.jar"))
+    implementation(libs.rfsmassacre.werewolves) {
+        isTransitive = false
+    }
 }
 
 publishing {
@@ -115,11 +119,11 @@ publishing {
     }
 }
 
-tasks.withType<JavaCompile>() {
+tasks.withType<JavaCompile> {
     options.encoding = "UTF-8"
 }
 
-tasks.withType<Javadoc>() {
+tasks.withType<Javadoc> {
     options.encoding = "UTF-8"
 }
 
@@ -135,14 +139,14 @@ tasks {
         relocate("co.aikar.commands", "co.aikar.${rootProject.name.lowercase()}.acf")
         relocate("co.aikar.locales", "co.aikar.${rootProject.name.lowercase()}.locales")
         relocate("com.clanjhoo.dbhandler", "com.clanjhoo.${rootProject.name.lowercase()}.dbhandler")
-        relocate("com.zaxxer.hikari", "com.zaxxer.${rootProject.name.lowercase()}.hikari")
+        //relocate("com.zaxxer.hikari", "com.zaxxer.${rootProject.name.lowercase()}.hikari")
         include("acf-paper-*-SNAPSHOT.jar")
         include("DBHandler-*.jar")
-        include("HikariCP-*.jar")
+        //include("HikariCP-*.jar")
         include("acf-core_*.properties")
         include("co/aikar/**")
         include("com/clanjhoo/**")
-        include("com/zaxxer/hikari/**")
+        include("com/zaxxer/dbhandler/hikari/**")
         include("*.yml")
         include("locales/*.yml")
     }

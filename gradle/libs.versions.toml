@@ -1,3 +1,6 @@
+[plugins]
+shadowPlugin = { id = "com.gradleup.shadow", version.ref = "shadowGradlePlugin" }
+
 [versions]
 shadowGradlePlugin = "8.3.0"
 paperAPI = "1.20.4-R0.1-SNAPSHOT"
@@ -24,6 +27,3 @@ clip-placeholderapi = { group = "me.clip", name = "placeholderapi", version.ref 
 milkbowl-vaultapi = { group = "com.github.MilkBowl", name = "VaultAPI", version.ref = "vaultAPI" }
 rfsmassacre-werewolves = { group = "us.rfsmassacre", name = "Werewolf", version.ref = "werewolves" }
 zaxxer-hikaricp = { group = "com.zaxxer", name = "HikariCP", version.ref = "hikariCP" }
-
-[plugins]
-shadowPlugin = { id = "com.gradleup.shadow", version.ref = "shadowGradlePlugin" }
