@@ -325,7 +325,7 @@ public class VampireRevamp extends JavaPlugin {
 	private static void afterTask(VPlayer vPlayer) {
 		Bukkit.getScheduler().runTask(plugin, () -> {
 			Player p = vPlayer.getPlayer();
-			if (p != null) {
+			if (p != null && perms != null) {
 				VampireRevamp.getInstance().setVampireGroup(p, vPlayer.isVampire());
 			}
 		});
@@ -457,7 +457,7 @@ public class VampireRevamp extends JavaPlugin {
 			return false;
 		}
 		perms = rsp.getProvider();
-		return perms != null;
+		return true;
 	}
 
 	@Override
