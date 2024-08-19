@@ -71,7 +71,7 @@ repositories {
         }
     }
     mavenCentral()
-    mavenLocal()
+    //mavenLocal()
 }
 
 dependencies {
@@ -80,6 +80,9 @@ dependencies {
         isTransitive = false
     }
     implementation(libs.clanjhoo.dbhandler) {
+        isTransitive = false
+    }
+    implementation(libs.zaxxer.hikaricp) {
         isTransitive = false
     }
     implementation(libs.sk89q.worldedit.core) {
@@ -132,10 +135,11 @@ tasks {
         relocate("co.aikar.commands", "co.aikar.${rootProject.name.lowercase()}.acf")
         relocate("co.aikar.locales", "co.aikar.${rootProject.name.lowercase()}.locales")
         relocate("com.clanjhoo.dbhandler", "com.clanjhoo.${rootProject.name.lowercase()}.dbhandler")
+        relocate("com.zaxxer.hikari", "com.zaxxer.${rootProject.name.lowercase()}.hikari")
         include("acf-paper-*-SNAPSHOT.jar")
         include("DBHandler-*.jar")
+        include("HikariCP-*.jar")
         include("acf-core_*.properties")
-        include("co/aikar/**")
         include("co/aikar/**")
         include("com/clanjhoo/**")
         include("com/zaxxer/hikari/**")

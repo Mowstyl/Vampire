@@ -75,6 +75,7 @@ public class VPlayer {
     /**
      * PERSISTENT: whether or not to apply night vision effects to a vampire
      */
+    @NotNullField
     @DataField(sqltype = "BOOL")
     private boolean usingNightVision = false;
 

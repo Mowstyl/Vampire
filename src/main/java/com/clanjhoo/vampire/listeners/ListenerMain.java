@@ -8,8 +8,6 @@ import com.clanjhoo.vampire.keyproviders.VampirismMessageKeys;
 import com.clanjhoo.vampire.config.PluginConfig;
 import com.clanjhoo.vampire.entity.VPlayer;
 import com.clanjhoo.vampire.util.*;
-import me.libraryaddict.disguise.events.DisguiseEvent;
-import me.libraryaddict.disguise.events.UndisguiseEvent;
 import org.bukkit.*;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.block.data.type.Bed;
@@ -178,41 +176,6 @@ public class ListenerMain implements Listener {
                         VampireRevamp.log(Level.WARNING, "There was an error while loading " + entity.getName() + " data");
                         ex.printStackTrace();
                     });
-        }
-    }
-
-    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
-    public void onDisguise(DisguiseEvent event) {
-        if (!VampireRevamp.getVampireConfig().vampire.batusi.preventDisguise)
-            return;
-        Entity aux = event.getEntity();
-        if (!EntityUtil.isPlayer(aux))
-            return;
-
-        final Player player = (Player) aux;
-        VPlayer vPlayer = VampireRevamp.getVPlayerNow(player);
-        if (vPlayer == null || !vPlayer.isChangingDisguise())
-            return;
-        if (!ResourceUtil.hasPermission(player, Perm.MODE_BATUSI_DISGUISE))
-            event.setCancelled(true);
-    }
-
-    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
-    public void onUndisguise(UndisguiseEvent event) {
-        if (!VampireRevamp.getVampireConfig().vampire.batusi.preventDisguise)
-            return;
-        Entity aux = event.getEntity();
-        if (!EntityUtil.isPlayer(aux))
-            return;
-
-        final Player player = (Player) aux;
-        VPlayer vPlayer = VampireRevamp.getVPlayerNow(player);
-        if (vPlayer == null || !vPlayer.isChangingDisguise())
-            return;
-        // This event is also called when the player already has a disguise before using batusi.
-        // We don't care about it in that case.
-        if (!ResourceUtil.hasPermission(player, Perm.MODE_BATUSI_DISGUISE)) {
-            event.setCancelled(true);
         }
     }
 

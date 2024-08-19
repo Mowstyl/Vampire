@@ -1,7 +1,7 @@
 [versions]
 shadowGradlePlugin = "8.3.0"
 paperAPI = "1.20.4-R0.1-SNAPSHOT"
-dbHandler = "3.0.0-SNAPSHOT"
+dbHandler = "3.0.0"
 acfPaper = "0.5.1-SNAPSHOT"
 worldEdit = "7.2.0-SNAPSHOT"
 worldGuard = "7.1.0-SNAPSHOT"
@@ -9,6 +9,7 @@ libsDisguises = "10.0.42"
 placeholderAPI = "2.11.6"
 vaultAPI = "1.7.1"
 werewolves = "1.7.2"
+hikariCP = "5.1.0"
 
 [libraries]
 papermc-paperapi = { group = "io.papermc.paper", name = "paper-api", version.ref = "paperAPI" }
@@ -22,6 +23,7 @@ libraryaddict-libsdisguises = { group = "LibsDisguises", name = "LibsDisguises",
 clip-placeholderapi = { group = "me.clip", name = "placeholderapi", version.ref = "placeholderAPI" }
 milkbowl-vaultapi = { group = "com.github.MilkBowl", name = "VaultAPI", version.ref = "vaultAPI" }
 rfsmassacre-werewolves = { group = "us.rfsmassacre", name = "Werewolf", version.ref = "werewolves" }
+zaxxer-hikaricp = { group = "com.zaxxer", name = "HikariCP", version.ref = "hikariCP" }
 
 [plugins]
 shadowPlugin = { id = "com.gradleup.shadow", version.ref = "shadowGradlePlugin" }

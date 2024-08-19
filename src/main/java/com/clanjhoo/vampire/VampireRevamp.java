@@ -10,6 +10,7 @@ import com.clanjhoo.dbhandler.data.DBObjectManager;
 import com.clanjhoo.dbhandler.data.StorageType;
 import com.clanjhoo.vampire.compat.WerewolfCompat;
 import com.clanjhoo.vampire.config.StorageConfig;
+import com.clanjhoo.vampire.listeners.DisguiseListener;
 import com.clanjhoo.vampire.listeners.EntryVampiresListener;
 import com.clanjhoo.vampire.listeners.ListenerMain;
 import com.clanjhoo.vampire.listeners.PhantomListener;
@@ -52,7 +53,6 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -81,6 +81,7 @@ public class VampireRevamp extends JavaPlugin {
 	private WorldGuardCompat wg;
 	private WerewolfCompat ww;
 	private VampireExpansion expansionPAPI;
+	private DisguiseListener dl;
 	private PhantomListener pl;
 	private EntryVampiresListener dvl;
 	private static Permission perms = null;
@@ -252,6 +253,18 @@ public class VampireRevamp extends JavaPlugin {
 	public void loadCompat() {
 		// Werewolves compat
 		ww = new WerewolfCompat();
+		if (pl != null) {
+			HandlerList.unregisterAll(pl);
+			pl = null;
+		}
+		if (dvl != null) {
+			HandlerList.unregisterAll(dvl);
+			dvl = null;
+		}
+		if (dl != null) {
+			HandlerList.unregisterAll(dl);
+			dl = null;
+		}
 
 		// Paper compat
 		if (isPapermc && new SemVer(1, 13).compareTo(serverVersion) < 0 && this.conf.truce.entityTypes.contains(EntityType.PHANTOM)) {
@@ -262,6 +275,11 @@ public class VampireRevamp extends JavaPlugin {
 		if (wg != null && wg.useWG) {
 			dvl = new EntryVampiresListener();
 			Bukkit.getPluginManager().registerEvents(dvl, this);
+		}
+
+		if (isDisguiseEnabled) {
+			dl = new DisguiseListener();
+			Bukkit.getPluginManager().registerEvents(dl, this);
 		}
 	}
 
