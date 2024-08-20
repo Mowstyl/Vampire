@@ -118,7 +118,7 @@ public class BedListener implements Listener {
         if (player.isDeeplySleeping()) {
             sleepers.add(player);
         }
-        int worldPlayerCount = world.getPlayerCount();
+        long worldPlayerCount = world.getPlayers().stream().filter((p) -> EntityUtil.isPlayer(p) && !p.isSleepingIgnored()).count();
         Integer percentage = player.getWorld().getGameRuleValue(GameRule.PLAYERS_SLEEPING_PERCENTAGE);
         if (percentage == null) {
             percentage = player.getWorld().getGameRuleDefault(GameRule.PLAYERS_SLEEPING_PERCENTAGE);
@@ -130,15 +130,12 @@ public class BedListener implements Listener {
 
         // Enough people sleeping
         if (time < 12000 && sleepingPlayers >= (percentage / 100.0) * worldPlayerCount) {
-            VampireRevamp.log(Level.INFO, "Asleep: " + sleepingPlayers);
-            VampireRevamp.log(Level.INFO, "Total: " + worldPlayerCount);
-            VampireRevamp.log(Level.INFO, "Percented: " + ((percentage / 100.0) * worldPlayerCount));
             // ... and the daylight cycle is enabled ...
             Boolean doDayLightCycle = player.getWorld().getGameRuleValue(GameRule.DO_DAYLIGHT_CYCLE);
             if (doDayLightCycle == null) {
                 doDayLightCycle = player.getWorld().getGameRuleDefault(GameRule.DO_DAYLIGHT_CYCLE);
             }
-            if (Boolean.TRUE.equals(doDayLightCycle)) {
+            if (!Boolean.FALSE.equals(doDayLightCycle)) {
                 // ... we set time to night
                 //player.getWorld().setTime(11834);
                 world.setTime(12000);
