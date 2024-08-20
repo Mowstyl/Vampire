@@ -5,7 +5,7 @@ version: ${version}
 website: https://clanjhoo.com
 description: ${description}
 authors: [Cayorion, Mowstyl]
-softdepend: [WorldEdit, WorldGuard, LibsDisguises, PlaceholderAPI, Vault]
+softdepend: [WorldEdit, WorldGuard, LibsDisguises, PlaceholderAPI, Vault, ProtocolLib]
 loadbefore: [Werewolf]
 permissions:
 # -------------------------------------------- #

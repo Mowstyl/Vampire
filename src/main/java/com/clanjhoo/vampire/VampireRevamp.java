@@ -8,12 +8,10 @@ import co.aikar.locales.MessageKey;
 import co.aikar.locales.MessageKeyProvider;
 import com.clanjhoo.dbhandler.data.DBObjectManager;
 import com.clanjhoo.dbhandler.data.StorageType;
+import com.clanjhoo.vampire.compat.ProtocolLibCompat;
 import com.clanjhoo.vampire.compat.WerewolfCompat;
 import com.clanjhoo.vampire.config.StorageConfig;
-import com.clanjhoo.vampire.listeners.DisguiseListener;
-import com.clanjhoo.vampire.listeners.EntryVampiresListener;
-import com.clanjhoo.vampire.listeners.ListenerMain;
-import com.clanjhoo.vampire.listeners.PhantomListener;
+import com.clanjhoo.vampire.listeners.*;
 import com.clanjhoo.vampire.keyproviders.GrammarMessageKeys;
 import com.clanjhoo.vampire.altar.AltarDark;
 import com.clanjhoo.vampire.altar.AltarLight;
@@ -78,12 +76,14 @@ public class VampireRevamp extends JavaPlugin {
 	private AltarLight altarLight;
 	private SemVer serverVersion;
 	private boolean disabled = false;
-	private WorldGuardCompat wg;
+	private WorldGuardCompat wg = null;
+	private ProtocolLibCompat plc = null;
 	private WerewolfCompat ww;
 	private VampireExpansion expansionPAPI;
 	private DisguiseListener dl;
 	private PhantomListener pl;
 	private EntryVampiresListener dvl;
+	private BedListener bl;
 	private static Permission perms = null;
 
 	private DBObjectManager<VPlayer> vPlayerManager;
@@ -194,13 +194,16 @@ public class VampireRevamp extends JavaPlugin {
 		loadConfig(true);
 
 		// WorldGuard compat
-		if (Bukkit.getPluginManager().getPlugin("WorldGuard") != null) {
+		if (Bukkit.getPluginManager().getPlugin("WorldGuard") != null)
 			wg = new WorldGuardCompat();
-		}
-		else {
-			wg = null;
-			VampireRevamp.log(Level.WARNING, "WorldGuard plugin not detected. Disabling WorldGuard hooks.");
-		}
+		else
+			log(Level.WARNING, "WorldGuard plugin not detected. Disabled WorldGuard compat.");
+
+		// ProtocolLib compat
+		if (Bukkit.getPluginManager().getPlugin("ProtocolLib") != null)
+			plc = new ProtocolLibCompat();
+		else
+			log(Level.WARNING, "ProtocolLib plugin not detected. Disabled ProtocolLib compat.");
 
 		try {
 			File localesFolder = new File(this.getDataFolder() + "/locales");
@@ -220,7 +223,7 @@ public class VampireRevamp extends JavaPlugin {
 			}
 		}
 		catch (Exception ex) {
-			log(Level.WARNING, "Error found while creating default locale files");
+			log(Level.WARNING, "Error found while creating default locale files.");
 			ex.printStackTrace();
 		}
 	}
@@ -265,6 +268,11 @@ public class VampireRevamp extends JavaPlugin {
 			HandlerList.unregisterAll(dl);
 			dl = null;
 		}
+		if (bl != null) {
+			HandlerList.unregisterAll(bl);
+			plc.removePacketListener(bl.leaveButtonListener);
+			bl = null;
+		}
 
 		// Paper compat
 		if (isPapermc && new SemVer(1, 13).compareTo(serverVersion) < 0 && this.conf.truce.entityTypes.contains(EntityType.PHANTOM)) {
@@ -280,6 +288,22 @@ public class VampireRevamp extends JavaPlugin {
 		if (isDisguiseEnabled) {
 			dl = new DisguiseListener();
 			Bukkit.getPluginManager().registerEvents(dl, this);
+		}
+
+		if (conf.vampire.canSleepDaytime) {
+			if (plc != null) {
+				if (isPapermc) {
+					bl = new BedListener();
+					Bukkit.getPluginManager().registerEvents(bl, this);
+					plc.addPacketListener(bl.leaveButtonListener);
+				}
+				else {
+					log(Level.WARNING, "You need to be running a Paper server to enable sleep during daytime");
+				}
+			}
+			else {
+				log(Level.WARNING, "You need the ProtocolLib plugin to enable sleep during daytime");
+			}
 		}
 	}
 

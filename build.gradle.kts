@@ -5,6 +5,7 @@ plugins {
     java
     `maven-publish`
     alias(libs.plugins.shadowPlugin)
+    // id("io.papermc.paperweight.userdev") version "1.7.2"
 }
 
 group = "com.clanjhoo"
@@ -33,42 +34,55 @@ repositories {
             includeGroup("com.gradleup")
         }
     }
-    maven("https://papermc.io/repo/repository/maven-public/") {
+    maven {
+        url = uri("https://papermc.io/repo/repository/maven-public/")
         content {
             includeGroup("io.papermc.paper")
         }
     }
-    maven("https://repo.aikar.co/content/groups/aikar/") {
+    maven {
+        url = uri("https://repo.aikar.co/content/groups/aikar/")
         content {
             includeGroup("co.aikar")
             includeGroup("net.md-5")
         }
     }
-    maven("https://maven.enginehub.org/repo/") {
+    maven {
+        url = uri("https://maven.enginehub.org/repo/")
         content {
             includeGroup("com.sk89q.worldedit")
             includeGroup("com.sk89q.worldguard")
         }
     }
-    maven("https://repo.extendedclip.com/content/repositories/placeholderapi/") {
+    maven {
+        url = uri("https://repo.extendedclip.com/content/repositories/placeholderapi/")
         content {
             includeGroup("me.clip")
         }
     }
-    maven("https://jitpack.io") {
+    maven {
+        url = uri("https://jitpack.io")
         content {
             includeGroupByRegex("com\\.github\\..*")
         }
     }
-    maven("https://nexus.clanjhoo.com/repository/maven-public/") {
+    maven {
+        url = uri("https://nexus.clanjhoo.com/repository/maven-public/")
         content {
             includeGroup("com.clanjhoo")
             includeGroup("us.rfsmassacre")
         }
     }
-    maven("https://mvn.lumine.io/repository/maven-public/") {
+    maven {
+        url = uri("https://mvn.lumine.io/repository/maven-public/")
         content {
             includeGroup("LibsDisguises")
+        }
+    }
+    maven {
+        url = uri("https://repo.dmulloy2.net/repository/public/")
+        content {
+            includeGroup("com.comphenix.protocol")
         }
     }
     mavenCentral()
@@ -76,6 +90,7 @@ repositories {
 }
 
 dependencies {
+    // paperweight.paperDevBundle("1.20.4-R0.1-SNAPSHOT")
     compileOnly(libs.papermc.paperapi)
     implementation(libs.aikar.acfpaper) {
         isTransitive = false
@@ -109,6 +124,9 @@ dependencies {
     }
     //implementation(files("./lib/Werewolf-1.7.2-SNAPSHOT.jar"))
     implementation(libs.rfsmassacre.werewolves) {
+        isTransitive = false
+    }
+    implementation(libs.comphenix.protocollib) {
         isTransitive = false
     }
 }
@@ -151,3 +169,25 @@ tasks {
         include("locales/*.yml")
     }
 }
+
+// 1)
+// For >=1.20.5 when you don't care about supporting spigot
+// paperweight.reobfArtifactConfiguration = io.papermc.paperweight.userdev.ReobfArtifactConfiguration.MOJANG_PRODUCTION
+
+// 2)
+// For 1.20.4 or below, or when you care about supporting Spigot on >=1.20.5
+// Configure reobfJar to run when invoking the build task
+//tasks.assemble {
+//    dependsOn(tasks.reobfJar)
+//}
+
+// Configure plugin.yml generation
+// - name, version, and description are inherited from the Gradle project.
+/*
+bukkitPluginYaml {
+    main = "io.papermc.paperweight.testplugin.TestPlugin"
+    load = BukkitPluginYaml.PluginLoadOrder.STARTUP
+    authors.add("Author")
+    apiVersion = "1.21"
+}
+*/

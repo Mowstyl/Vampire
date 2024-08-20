@@ -534,7 +534,7 @@ public class ListenerMain implements Listener {
                                 // ... Then there is a risk for infection ...
                                 if (ThreadLocalRandom.current().nextDouble() < vPlayer.combatInfectRisk()) {
                                     // ... then we spawn the new horse ...
-                                    horse.getWorld().spawnEntity(horse.getLocation(), ThreadLocalRandom.current().nextDouble() > 0.5 ? EntityType.SKELETON_HORSE : EntityType.ZOMBIE_HORSE);
+                                    horse.getWorld().spawnEntity(horse.getLocation(), ThreadLocalRandom.current().nextDouble() >= conf.infection.zombieHorseChance ? EntityType.SKELETON_HORSE : EntityType.ZOMBIE_HORSE);
 
                                     // ... and we Thanos the old one ...
                                     horse.remove();
@@ -547,67 +547,6 @@ public class ListenerMain implements Listener {
                         });
             }
         }
-    }
-
-    // -------------------------------------------- //
-    // SLEEP
-    // -------------------------------------------- //
-
-    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = false)
-    public void trySleep(PlayerBedEnterEvent event) {
-        if (VampireRevamp.getVampireConfig().general.isBlacklisted(event.getPlayer().getWorld()))
-            return;
-        Player player = event.getPlayer();
-        PluginConfig conf = VampireRevamp.getVampireConfig();
-        // If day sleeping is allowed for vampires ...
-        if (!EntityUtil.isPlayer(player) || !conf.vampire.canSleepDaytime)
-            return;
-
-        // ... the player is a vampire ...
-        VPlayer vPlayer = VampireRevamp.getVPlayerNow(player);
-        if (vPlayer == null || !vPlayer.isVampire())
-            return;
-        // ... and tries to sleep at night or storm ...
-        long time = player.getWorld().getTime();
-        boolean storming = player.getWorld().hasStorm();
-        VampireRevamp.log(Level.INFO, "time " + time + " " + (time >= 11834) + " storm " + storming);
-        if (time >= 11834 || storming) {
-            // ... we cancel
-            VampireRevamp.sendMessage(event.getPlayer(),
-                    MessageType.INFO,
-                    VampirismMessageKeys.CANT_SLEEP);
-            event.setCancelled(true);
-        }
-        else {
-            if (!((Bed) event.getBed().getBlockData()).isOccupied()) {
-                event.setUseBed(Event.Result.ALLOW);
-                event.setCancelled(false);
-            }
-        }
-    }
-
-    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-    public void wakeUp(PlayerBedLeaveEvent event) {
-        if (VampireRevamp.getVampireConfig().general.isBlacklisted(event.getPlayer().getWorld()))
-            return;
-        Player player = event.getPlayer();
-        PluginConfig conf = VampireRevamp.getVampireConfig();
-        // If day sleeping is allowed for vampires ...
-        if (!EntityUtil.isPlayer(player) || !conf.vampire.canSleepDaytime)
-            return;
-
-        // ... the player is a vampire ...
-        VPlayer vPlayer = VampireRevamp.getVPlayerNow(player);
-        if (vPlayer == null || !vPlayer.isVampire())
-            return;
-
-        // ... and the sleeping was successful ...
-        long rtime = player.getWorld().getTime();
-        if (rtime != 0)
-            return;
-
-        // ... we set time to night
-        player.getWorld().setTime(11834);
     }
 
     // -------------------------------------------- //
@@ -785,6 +724,7 @@ public class ListenerMain implements Listener {
                                                 DamageCause.CUSTOM,
                                                 DamageSource.builder(DamageType.MAGIC)
                                                         .withCausingEntity(shooter)
+                                                        .withDirectEntity(projectile)
                                                         .withDamageLocation(loc)
                                                         .build(),
                                                 1D);
