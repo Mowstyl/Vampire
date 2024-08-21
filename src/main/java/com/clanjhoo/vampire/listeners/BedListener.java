@@ -24,7 +24,6 @@ import org.bukkit.event.player.PlayerQuitEvent;
 
 import java.util.HashSet;
 import java.util.Set;
-import java.util.logging.Level;
 
 public class BedListener implements Listener {
     private final Set<Player> sleepers = new HashSet<>();

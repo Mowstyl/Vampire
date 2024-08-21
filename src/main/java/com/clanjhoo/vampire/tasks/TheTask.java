@@ -40,13 +40,13 @@ public class TheTask implements Runnable {
 
         // Tick each online player
         for (Player player : Bukkit.getOnlinePlayers()) {
-            VPlayer uPlayer = VampireRevamp.getVPlayerNow(player);
-            if (uPlayer == null)
+            VPlayer vPlayer = VampireRevamp.getVPlayerNow(player);
+            if (vPlayer == null)
                 continue;
             try {
                 // VampireRevamp.debugLog(Level.INFO, "Ticking " + player.getName());
-                uPlayer.tick(now - this.getPreviousMillis());
-                uPlayer.updateTruce(now, this.getPreviousMillis());
+                vPlayer.tick(now - this.getPreviousMillis());
+                vPlayer.updateTruce(now, this.getPreviousMillis());
             } catch (NullPointerException ex) {
                 VampireRevamp.log(Level.SEVERE, "While executing Vampire.TheTask: " + ex.getMessage());
                 ex.printStackTrace();

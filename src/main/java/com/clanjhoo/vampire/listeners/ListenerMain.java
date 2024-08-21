@@ -10,12 +10,10 @@ import com.clanjhoo.vampire.entity.VPlayer;
 import com.clanjhoo.vampire.util.*;
 import org.bukkit.*;
 import org.bukkit.attribute.Attribute;
-import org.bukkit.block.data.type.Bed;
 import org.bukkit.block.Block;
 import org.bukkit.damage.DamageSource;
 import org.bukkit.damage.DamageType;
 import org.bukkit.entity.*;
-import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -144,10 +142,10 @@ public class ListenerMain implements Listener {
         if (EntityUtil.isPlayer(player)) {
             VampireRevamp.syncTaskVPlayer(
                     player,
-                    (vPlayer) -> Bukkit.getScheduler()
-                            .runTask(
-                                    VampireRevamp.getInstance(),
-                                    vPlayer::update),
+                    (vPlayer) -> Bukkit.getScheduler().runTask(
+                            VampireRevamp.getInstance(),
+                            vPlayer::update
+                    ),
                     (ex) -> {
                         VampireRevamp.log(Level.WARNING, "There was an error while loading " + player.getName() + " data");
                         ex.printStackTrace();
@@ -190,16 +188,16 @@ public class ListenerMain implements Listener {
             VPlayer vPlayer = VampireRevamp.getVPlayerNow(player);
             if (vPlayer == null)
                 return;
-            if (vPlayer.isVampire()) {
-                // ... modify food and health levels and force another speed-update.
-                Bukkit.getScheduler().runTask(VampireRevamp.getInstance(), () -> {
+            // ... modify food and health levels and force another speed-update.
+            Bukkit.getScheduler().runTask(VampireRevamp.getInstance(), () -> {
+                if (vPlayer.isVampire()) {
                     PluginConfig conf = VampireRevamp.getVampireConfig();
                     player.setFoodLevel(conf.vampire.respawnFood);
                     player.setHealth(conf.vampire.respawnHealth);
                     EntityUtil.sendHealthFoodUpdatePacket(player);
-                    vPlayer.update();
-                });
-            }
+                }
+                vPlayer.update();
+            });
         }
     }
 
