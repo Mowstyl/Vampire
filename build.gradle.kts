@@ -5,7 +5,6 @@ plugins {
     java
     `maven-publish`
     alias(libs.plugins.shadowPlugin)
-    // id("io.papermc.paperweight.userdev") version "1.7.2"
 }
 
 group = "com.clanjhoo"
@@ -90,15 +89,11 @@ repositories {
 }
 
 dependencies {
-    // paperweight.paperDevBundle("1.20.4-R0.1-SNAPSHOT")
     compileOnly(libs.papermc.paperapi)
     implementation(libs.aikar.acfpaper) {
         isTransitive = false
     }
     implementation(libs.clanjhoo.dbhandler) {
-        isTransitive = false
-    }
-    implementation(libs.zaxxer.hikaricp) {
         isTransitive = false
     }
     implementation(libs.sk89q.worldedit.core) {
@@ -157,10 +152,8 @@ tasks {
         relocate("co.aikar.commands", "co.aikar.${rootProject.name.lowercase()}.acf")
         relocate("co.aikar.locales", "co.aikar.${rootProject.name.lowercase()}.locales")
         relocate("com.clanjhoo.dbhandler", "com.clanjhoo.${rootProject.name.lowercase()}.dbhandler")
-        //relocate("com.zaxxer.hikari", "com.zaxxer.${rootProject.name.lowercase()}.hikari")
         include("acf-paper-*-SNAPSHOT.jar")
         include("DBHandler-*.jar")
-        //include("HikariCP-*.jar")
         include("acf-core_*.properties")
         include("co/aikar/**")
         include("com/clanjhoo/**")
@@ -169,25 +162,3 @@ tasks {
         include("locales/*.yml")
     }
 }
-
-// 1)
-// For >=1.20.5 when you don't care about supporting spigot
-// paperweight.reobfArtifactConfiguration = io.papermc.paperweight.userdev.ReobfArtifactConfiguration.MOJANG_PRODUCTION
-
-// 2)
-// For 1.20.4 or below, or when you care about supporting Spigot on >=1.20.5
-// Configure reobfJar to run when invoking the build task
-//tasks.assemble {
-//    dependsOn(tasks.reobfJar)
-//}
-
-// Configure plugin.yml generation
-// - name, version, and description are inherited from the Gradle project.
-/*
-bukkitPluginYaml {
-    main = "io.papermc.paperweight.testplugin.TestPlugin"
-    load = BukkitPluginYaml.PluginLoadOrder.STARTUP
-    authors.add("Author")
-    apiVersion = "1.21"
-}
-*/

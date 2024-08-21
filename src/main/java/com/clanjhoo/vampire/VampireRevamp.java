@@ -315,11 +315,7 @@ public class VampireRevamp extends JavaPlugin {
 		return reloadVampireConfig() && reloadLocales();
 	}
 
-	// public static DBObjectManager<VPlayer> getVPlayerManager() {
-	//	return getInstance().vPlayerManager;
-	//}
-
-	public static void saveVPlayer(Player p) {
+	public static void saveVPlayer(OfflinePlayer p) {
 		VampireRevamp.getInstance().vPlayerManager.save(p.getUniqueId());
 	}
 

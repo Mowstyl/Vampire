@@ -12,7 +12,6 @@ libsDisguises = "10.0.42"
 placeholderAPI = "2.11.6"
 vaultAPI = "1.7.1"
 werewolves = "1.7.2"
-hikariCP = "5.1.0"
 protocolLib = "5.2.0-SNAPSHOT"
 
 [libraries]
@@ -27,5 +26,4 @@ libraryaddict-libsdisguises = { group = "LibsDisguises", name = "LibsDisguises",
 clip-placeholderapi = { group = "me.clip", name = "placeholderapi", version.ref = "placeholderAPI" }
 milkbowl-vaultapi = { group = "com.github.MilkBowl", name = "VaultAPI", version.ref = "vaultAPI" }
 rfsmassacre-werewolves = { group = "us.rfsmassacre", name = "Werewolf", version.ref = "werewolves" }
-zaxxer-hikaricp = { group = "com.zaxxer", name = "HikariCP", version.ref = "hikariCP" }
 comphenix-protocollib = { group = "com.comphenix.protocol", name = "ProtocolLib", version.ref = "protocolLib" }
