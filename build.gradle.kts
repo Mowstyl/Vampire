@@ -34,6 +34,13 @@ repositories {
         }
     }
     maven {
+        url = uri("https://hub.spigotmc.org/nexus/content/repositories/snapshots/")
+        content {
+            includeGroup("org.bukkit")
+            includeGroup("org.spigotmc")
+        }
+    }
+    maven {
         url = uri("https://papermc.io/repo/repository/maven-public/")
         content {
             includeGroup("io.papermc.paper")
@@ -89,6 +96,7 @@ repositories {
 }
 
 dependencies {
+    //compileOnly(libs.spigotmc.spigotapi)
     compileOnly(libs.papermc.paperapi)
     implementation(libs.aikar.acfpaper) {
         isTransitive = false
@@ -124,6 +132,10 @@ dependencies {
     implementation(libs.comphenix.protocollib) {
         isTransitive = false
     }
+    implementation(libs.kyori.adventure.minimessage)
+    implementation(libs.kyori.adventure.gson)
+    implementation(libs.kyori.adventure.ansi)
+    implementation(libs.kyori.platform.bukkit)
 }
 
 publishing {
@@ -152,12 +164,14 @@ tasks {
         relocate("co.aikar.commands", "co.aikar.${rootProject.name.lowercase()}.acf")
         relocate("co.aikar.locales", "co.aikar.${rootProject.name.lowercase()}.locales")
         relocate("com.clanjhoo.dbhandler", "com.clanjhoo.${rootProject.name.lowercase()}.dbhandler")
+        relocate("net.kyori", "net.kyori.${rootProject.name.lowercase()}")
         include("acf-paper-*-SNAPSHOT.jar")
         include("DBHandler-*.jar")
         include("acf-core_*.properties")
         include("co/aikar/**")
         include("com/clanjhoo/**")
         include("com/zaxxer/dbhandler/hikari/**")
+        include("net/kyori/**")
         include("*.yml")
         include("locales/*.yml")
     }

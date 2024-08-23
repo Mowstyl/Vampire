@@ -7,6 +7,8 @@ import com.clanjhoo.vampire.config.PluginConfig;
 import com.clanjhoo.vampire.entity.VPlayer;
 import com.clanjhoo.vampire.keyproviders.CommandMessageKeys;
 import com.clanjhoo.vampire.util.EntityUtil;
+import com.clanjhoo.vampire.util.Tuple;
+import net.kyori.adventure.text.Component;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
@@ -55,11 +57,11 @@ public abstract class Altar {
                 // Is the altar complete?
                 if (this.sumCollection(missingMaterialCounts.values()) > 0) {
                     // Send info on what to do to finish the altar
-                    String altarName = isDark ? VampireRevamp.getMessage(player, AltarMessageKeys.ALTAR_DARK_NAME) : VampireRevamp.getMessage(player, AltarMessageKeys.ALTAR_LIGHT_NAME);
+                    Component altarName = isDark ? VampireRevamp.getMessage(player, AltarMessageKeys.ALTAR_DARK_NAME) : VampireRevamp.getMessage(player, AltarMessageKeys.ALTAR_LIGHT_NAME);
                     VampireRevamp.sendMessage(player,
                             MessageType.INFO,
                             AltarMessageKeys.INCOMPLETE,
-                            "{altar_name}", altarName);
+                            new Tuple<>("{altar_name}", altarName));
                     for (Entry<Material, Integer> entry : missingMaterialCounts.entrySet()) {
                         Material material = entry.getKey();
                         Integer count = entry.getValue();

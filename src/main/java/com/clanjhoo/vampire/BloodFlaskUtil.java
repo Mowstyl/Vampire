@@ -3,8 +3,10 @@ package com.clanjhoo.vampire;
 import com.clanjhoo.vampire.entity.VPlayer;
 import com.clanjhoo.vampire.keyproviders.SkillMessageKeys;
 import com.clanjhoo.vampire.util.BooleanTagType;
-import com.clanjhoo.vampire.util.CollectionUtil;
+import com.clanjhoo.vampire.util.Tuple;
 import com.clanjhoo.vampire.util.UUIDTagType;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
@@ -35,18 +37,26 @@ public class BloodFlaskUtil {
 
         // ... and convert the isVampiric boolean into a string ...
         SkillMessageKeys flaskVampKey = isVampiric ? SkillMessageKeys.FLASK_VAMPIRIC_TRUE : SkillMessageKeys.FLASK_VAMPIRIC_FALSE;
-        String metaVampiric = VampireRevamp.getMessage(creator, flaskVampKey);
+        Component metaVampiric = VampireRevamp.getMessage(creator, flaskVampKey);
 
         // ... create the item lore ...
-        List<String> lore = CollectionUtil.list(
-                VampireRevamp.getMessage(creator, SkillMessageKeys.FLASK_AMOUNT).replace("{amount}", Double.toString(amount)),
-                metaVampiric
-        );
+        List<Component> lore = new ArrayList<>(VampireRevamp.getMessageList(creator, SkillMessageKeys.FLASK_AMOUNT, new Tuple<>("{amount}", Component.text(amount))));
+        lore.add(metaVampiric);
 
         // ... and set the item meta ...
+        Component displayName = VampireRevamp.getMessage(creator, SkillMessageKeys.FLASK_NAME);
         PotionMeta meta = (PotionMeta) ret.getItemMeta();
-        meta.setDisplayName(VampireRevamp.getMessage(creator, SkillMessageKeys.FLASK_NAME));
-        meta.setLore(lore);
+        if (VampireRevamp.isPaperMc()) {
+            meta.displayName(displayName);
+            meta.lore(lore);
+        }
+        else {
+            GsonComponentSerializer serializer = GsonComponentSerializer.gson();
+            meta.setDisplayName(serializer.serialize(displayName));
+            meta.setLore(lore.stream()
+                    .map(serializer::serialize)
+                    .toList());
+        }
         meta.addCustomEffect(BLOOD_FLASK_CUSTOM_EFFECT, false);
         meta.addItemFlags(ItemFlag.HIDE_POTION_EFFECTS, ItemFlag.HIDE_ATTRIBUTES);
 
@@ -107,9 +117,9 @@ public class BloodFlaskUtil {
         PlayerInventory playerInventory = player.getInventory();
         ItemStack flask = BloodFlaskUtil.createBloodFlask(player, amount, uplayer.isVampire());
         Map<Integer, ItemStack> result = playerInventory.addItem(flask);
-        if (result.size() > 0) {
+        if (!result.isEmpty())
             player.getWorld().dropItem(player.getLocation(), flask);
-        }
+
         return true;
     }
 

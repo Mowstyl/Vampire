@@ -2,6 +2,8 @@ package com.clanjhoo.vampire;
 
 import com.clanjhoo.vampire.keyproviders.HolyWaterMessageKeys;
 import com.clanjhoo.vampire.util.BooleanTagType;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
@@ -26,12 +28,20 @@ public class HolyWaterUtil {
         ItemStack ret = new ItemStack(Material.SPLASH_POTION);
         PotionData pd = new PotionData(PotionType.WATER);
         PotionMeta meta = (PotionMeta) ret.getItemMeta();
-        String holyWaterName = VampireRevamp.getMessage(creator, HolyWaterMessageKeys.NAME);
-        String rawLore = VampireRevamp.getMessage(creator, HolyWaterMessageKeys.LORE);
-        List<String> holyWaterLore = Arrays.asList(rawLore.split("\\n"));
+        Component holyWaterName = VampireRevamp.getMessage(creator, HolyWaterMessageKeys.NAME);
+        List<Component> holyWaterLore = VampireRevamp.getMessageList(creator, HolyWaterMessageKeys.LORE);
         meta.setBasePotionData(pd);
-        meta.setDisplayName(holyWaterName);
-        meta.setLore(holyWaterLore);
+        if (VampireRevamp.isPaperMc()) {
+            meta.displayName(holyWaterName);
+            meta.lore(holyWaterLore);
+        }
+        else {
+            GsonComponentSerializer serializer = GsonComponentSerializer.gson();
+            meta.setDisplayName(serializer.serialize(holyWaterName));
+            meta.setLore(holyWaterLore.stream()
+                    .map(serializer::serialize)
+                    .toList());
+        }
         //meta.addCustomEffect(HOLY_WATER_CUSTOM_EFFECT, false);
         PersistentDataContainer potionDC = meta.getPersistentDataContainer();
         potionDC.set(HOLY_WATER_KEY, BooleanTagType.TYPE, true);

@@ -15,6 +15,7 @@ import com.clanjhoo.vampire.config.StateEffectConfig;
 import com.clanjhoo.vampire.event.InfectionChangeEvent;
 import com.clanjhoo.vampire.event.VampireTypeChangeEvent;
 import com.clanjhoo.vampire.util.*;
+import net.kyori.adventure.text.Component;
 import org.bukkit.*;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.Creature;
@@ -302,9 +303,9 @@ public class VPlayer {
                 VampireRevamp.sendMessage(player,
                         MessageType.INFO,
                         reason.getDescKey(),
-                        "{player}", VampireRevamp.getMessage(player, GrammarMessageKeys.YOU),
-                        "{to_be_past}", VampireRevamp.getMessage(player, GrammarMessageKeys.TO_BE_2ND_PAST),
-                        "{parent}", parent);
+                        new Tuple<>("{player}", VampireRevamp.getMessage(player, GrammarMessageKeys.YOU)),
+                        new Tuple<>("{to_be_past}", VampireRevamp.getMessage(player, GrammarMessageKeys.TO_BE_2ND_PAST)),
+                        new Tuple<>("{parent}", Component.text(parent)));
             this.addInfection(val);
         }
     }
@@ -355,22 +356,22 @@ public class VPlayer {
             return;
         }
         if (!VampireRevamp.getVampireConfig().vampire.intend.enabled) {
-            String intendAction = VampireRevamp.getMessage(p, GrammarMessageKeys.INTEND);
+            Component intendAction = VampireRevamp.getMessage(p, GrammarMessageKeys.INTEND);
             VampireRevamp.sendMessage(p,
                     MessageType.ERROR,
                     CommandMessageKeys.DISABLED_ACTION,
-                    "{action}", intendAction);
+                    new Tuple<>("{action}", intendAction));
             return;
         }
 
-        String on = VampireRevamp.getMessage(p, GrammarMessageKeys.ON);
-        String off = VampireRevamp.getMessage(p, GrammarMessageKeys.OFF);
+        Component on = VampireRevamp.getMessage(p, GrammarMessageKeys.ON);
+        Component off = VampireRevamp.getMessage(p, GrammarMessageKeys.OFF);
 
         VampireRevamp.sendMessage(p,
                 MessageType.INFO,
                 CommandMessageKeys.SHOW_INTENT,
-                "{enabled}", isIntending() ? on : off,
-                "{percent}", String.format("%.1f", combatInfectRisk() * 100));
+                new Tuple<>("{enabled}", isIntending() ? on : off),
+                new Tuple<>("{percent}", Component.text(String.format("%.1f", combatInfectRisk() * 100))));
     }
 
     public boolean isBloodlusting() {
@@ -386,19 +387,19 @@ public class VPlayer {
         }
         PluginConfig conf = VampireRevamp.getVampireConfig();
 
-        String bloodlustAction = VampireRevamp.getMessage(me, GrammarMessageKeys.BLOODLUST);
-        bloodlustAction = bloodlustAction.substring(0, 1).toUpperCase() + bloodlustAction.substring(1);
+        Component bloodlustAction = VampireRevamp.getMessage(me, GrammarMessageKeys.BLOODLUST);
+        bloodlustAction = TextUtil.capitalizeFirst(bloodlustAction);
 
         if (this.bloodlusting == val) {
             // No real change - just view the info.
             VampireRevamp.debugLog(Level.INFO, "This is not a change!");
-            String on = VampireRevamp.getMessage(me, GrammarMessageKeys.ON);
-            String off = VampireRevamp.getMessage(me, GrammarMessageKeys.OFF);
+            Component on = VampireRevamp.getMessage(me, GrammarMessageKeys.ON);
+            Component off = VampireRevamp.getMessage(me, GrammarMessageKeys.OFF);
             VampireRevamp.sendMessage(me,
                     MessageType.INFO,
                     GrammarMessageKeys.X_IS_Y,
-                    "{key}", bloodlustAction,
-                    "{value}", val ? on : off);
+                    new Tuple<>("{key}", bloodlustAction),
+                    new Tuple<>("{value}", val ? on : off));
             return;
         }
 
@@ -407,12 +408,12 @@ public class VPlayer {
             VampireRevamp.debugLog(Level.INFO, "Za warudo has changed!");
             if (!this.isVampire()) {
                 VampireRevamp.debugLog(Level.INFO, "Non non non again!");
-                String vampireType = VampireRevamp.getMessage(me, GrammarMessageKeys.VAMPIRE_TYPE);
+                Component vampireType = VampireRevamp.getMessage(me, GrammarMessageKeys.VAMPIRE_TYPE);
                 VampireRevamp.sendMessage(me,
                         MessageType.ERROR,
                         GrammarMessageKeys.ONLY_TYPE_CAN_ACTION,
-                        "{vampire_type}", vampireType,
-                        "{action}", bloodlustAction);
+                        new Tuple<>("{vampire_type}", vampireType),
+                        new Tuple<>("{action}", bloodlustAction));
             } else if (this.getFood() != null && this.getFood() < conf.vampire.bloodlust.minFood) {
                 VampireRevamp.debugLog(Level.INFO, "Too hungry!");
                 VampireRevamp.sendMessage(me,
@@ -430,19 +431,19 @@ public class VPlayer {
                 VampireRevamp.sendMessage(me,
                         MessageType.ERROR,
                         CommandMessageKeys.DISABLED_ACTION,
-                        "{action}", bloodlustAction);
+                        new Tuple<>("{action}", bloodlustAction));
             } else {
                 this.bloodlusting = true;
                 VampireRevamp.debugLog(Level.INFO, "enabling bloodlust");
                 this.update();
                 VampireRevamp.debugLog(Level.INFO, "updated!");
-                String on = VampireRevamp.getMessage(me, GrammarMessageKeys.ON);
+                Component on = VampireRevamp.getMessage(me, GrammarMessageKeys.ON);
                 VampireRevamp.sendMessage(me,
                         MessageType.INFO,
                         CommandMessageKeys.SHOW_BLOODLUST,
-                        "{bloodlust}", bloodlustAction,
-                        "{enabled}", on,
-                        "{percent}", String.format("%.1f", this.combatDamageFactor() * 100));
+                        new Tuple<>("{bloodlust}", bloodlustAction),
+                        new Tuple<>("{enabled}", on),
+                        new Tuple<>("{percent}", Component.text(String.format("%.1f", this.combatDamageFactor() * 100))));
                 VampireRevamp.debugLog(Level.INFO, "sent message to " + me);
             }
         }
@@ -450,13 +451,13 @@ public class VPlayer {
             this.bloodlusting = false;
             conf.potionEffects.bloodlust.removePotionEffects(me);
             this.update();
-            String off = VampireRevamp.getMessage(me, GrammarMessageKeys.OFF);
+            Component off = VampireRevamp.getMessage(me, GrammarMessageKeys.OFF);
             VampireRevamp.sendMessage(me,
                     MessageType.INFO,
                     CommandMessageKeys.SHOW_BLOODLUST,
-                    "{bloodlust}", bloodlustAction,
-                    "{enabled}", off,
-                    "{percent}", String.format("%.1f", this.combatDamageFactor() * 100));
+                    new Tuple<>("{bloodlust}", bloodlustAction),
+                    new Tuple<>("{enabled}", off),
+                    new Tuple<>("{percent}", Component.text(String.format("%.1f", this.combatDamageFactor() * 100))));
         }
     }
 
@@ -484,21 +485,21 @@ public class VPlayer {
                 // ... trigger a potion effect update ...
                 this.update();
 
-                String onString = val ?
+                Component onString = val ?
                         VampireRevamp.getMessage(me, GrammarMessageKeys.ON) :
                         VampireRevamp.getMessage(me, GrammarMessageKeys.OFF);
 
                 VampireRevamp.sendMessage(me,
                         MessageType.INFO,
                         CommandMessageKeys.SHOW_NIGHTVISION,
-                        "{enabled}", onString);
+                        new Tuple<>("{enabled}", onString));
             }
             else {
-                String nightvisionAction = VampireRevamp.getMessage(me, GrammarMessageKeys.NIGHTVISION);
+                Component nightvisionAction = VampireRevamp.getMessage(me, GrammarMessageKeys.NIGHTVISION);
                 VampireRevamp.sendMessage(me,
                         MessageType.ERROR,
                         CommandMessageKeys.DISABLED_ACTION,
-                        "{action}", nightvisionAction);
+                        new Tuple<>("{action}", nightvisionAction));
             }
         }
     }
@@ -659,11 +660,11 @@ public class VPlayer {
         }
 
         if (!VampireRevamp.getVampireConfig().vampire.intend.enabled) {
-            String shriekAction = VampireRevamp.getMessage(me, GrammarMessageKeys.SHRIEK);
+            Component shriekAction = VampireRevamp.getMessage(me, GrammarMessageKeys.SHRIEK);
             VampireRevamp.sendMessage(me,
                     MessageType.ERROR,
                     CommandMessageKeys.DISABLED_ACTION,
-                    "{action}", shriekAction);
+                    new Tuple<>("{action}", shriekAction));
             return;
         }
 
@@ -691,13 +692,13 @@ public class VPlayer {
                 }
             }
         } else {
-            String vampireType = VampireRevamp.getMessage(me, GrammarMessageKeys.VAMPIRE_TYPE);
-            String shriekAction = VampireRevamp.getMessage(me, GrammarMessageKeys.SHRIEK);
+            Component vampireType = VampireRevamp.getMessage(me, GrammarMessageKeys.VAMPIRE_TYPE);
+            Component shriekAction = VampireRevamp.getMessage(me, GrammarMessageKeys.SHRIEK);
             VampireRevamp.sendMessage(me,
                     MessageType.ERROR,
                     GrammarMessageKeys.ONLY_TYPE_CAN_ACTION,
-                    "{vampire_type}", vampireType,
-                    "{action}", shriekAction);
+                    new Tuple<>("{vampire_type}", vampireType),
+                    new Tuple<>("{action}", shriekAction));
         }
     }
 
@@ -726,11 +727,11 @@ public class VPlayer {
         PluginConfig conf = VampireRevamp.getVampireConfig();
 
         if (!conf.vampire.batusi.enabled) {
-            String batusiAction = VampireRevamp.getMessage(me, GrammarMessageKeys.BATUSI);
+            Component batusiAction = VampireRevamp.getMessage(me, GrammarMessageKeys.BATUSI);
             VampireRevamp.sendMessage(me,
                     MessageType.ERROR,
                     CommandMessageKeys.DISABLED_ACTION,
-                    "{action}", batusiAction);
+                    new Tuple<>("{action}", batusiAction));
             return;
         }
 
@@ -1259,13 +1260,14 @@ public class VPlayer {
                     MessageType.INFO,
                     VampirismMessageKeys.TRUCE_RESTORED);
             // Untarget the player.
-            me.getLocation()
-                    .getNearbyLivingEntities(
-                            50,
-                            (le) -> VampireRevamp.getVampireConfig().truce.entityTypes.contains(le.getType())
-                                    && le instanceof Creature
-                                    && me.equals(((Creature) le).getTarget()))
-                    .forEach((le) -> ((Creature) le).setTarget(null));
+            me.getWorld().getNearbyEntities(
+                    me.getLocation(),
+                    50,
+                    50,
+                    50,
+                    (e) -> VampireRevamp.getVampireConfig().truce.entityTypes.contains(e.getType())
+                            && e instanceof Creature&& me.equals(((Creature) e).getTarget())
+                    ).forEach((le) -> ((Creature) le).setTarget(null));
         }
     }
 
