@@ -6,7 +6,7 @@ import com.clanjhoo.vampire.util.BooleanTagType;
 import com.clanjhoo.vampire.util.Tuple;
 import com.clanjhoo.vampire.util.UUIDTagType;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
@@ -40,23 +40,17 @@ public class BloodFlaskUtil {
         Component metaVampiric = VampireRevamp.getMessage(creator, flaskVampKey);
 
         // ... create the item lore ...
-        List<Component> lore = new ArrayList<>(VampireRevamp.getMessageList(creator, SkillMessageKeys.FLASK_AMOUNT, new Tuple<>("{amount}", Component.text(amount))));
+        List<Component> lore = new ArrayList<>(VampireRevamp.getMessageList(creator, SkillMessageKeys.FLASK_AMOUNT, new Tuple<>("{amount}", Component.text(amount / 2))));
         lore.add(metaVampiric);
 
         // ... and set the item meta ...
         Component displayName = VampireRevamp.getMessage(creator, SkillMessageKeys.FLASK_NAME);
         PotionMeta meta = (PotionMeta) ret.getItemMeta();
-        if (VampireRevamp.isPaperMc()) {
-            meta.displayName(displayName);
-            meta.lore(lore);
-        }
-        else {
-            GsonComponentSerializer serializer = GsonComponentSerializer.gson();
-            meta.setDisplayName(serializer.serialize(displayName));
-            meta.setLore(lore.stream()
-                    .map(serializer::serialize)
-                    .toList());
-        }
+        LegacyComponentSerializer serializer = LegacyComponentSerializer.legacySection();
+        meta.setDisplayName(serializer.serialize(displayName));
+        meta.setLore(lore.stream()
+                .map(serializer::serialize)
+                .toList());
         meta.addCustomEffect(BLOOD_FLASK_CUSTOM_EFFECT, false);
         meta.addItemFlags(ItemFlag.HIDE_POTION_EFFECTS, ItemFlag.HIDE_ATTRIBUTES);
 

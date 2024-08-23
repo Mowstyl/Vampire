@@ -7,6 +7,9 @@ import com.clanjhoo.vampire.Perm;
 import com.clanjhoo.vampire.VampireRevamp;
 import com.clanjhoo.vampire.entity.VPlayer;
 import com.clanjhoo.vampire.keyproviders.GrammarMessageKeys;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
@@ -15,24 +18,50 @@ import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
+import org.checkerframework.checker.nullness.qual.NonNull;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
-import java.util.logging.Level;
 import java.util.regex.Pattern;
 
 public class TextUtil {
     public static final Pattern PATTERN_NEWLINE = Pattern.compile("\\r?\\n");
 
 
-    // TODO: Apañar esto
-    public static Component capitalizeFirst(Component text) {
+    public static Component capitalizeFirst(@NonNull Component text) {
         GsonComponentSerializer serializer = GsonComponentSerializer.gson();
         String rawText = serializer.serialize(text);
-        VampireRevamp.log(Level.INFO, rawText);
-        return text;
+        JsonElement jsonText = JsonParser.parseString(rawText);
+        return serializer.deserialize(capitalizeFirst(jsonText).toString());
+    }
+
+    private static JsonElement capitalizeFirst(JsonElement jsonText) {
+        if (!jsonText.isJsonObject()) {
+            String aux = capitalizeFirst(jsonText.getAsString());
+            if (aux.contains(" "))
+                aux = "\"" + aux + "\"";
+            return JsonParser.parseString(aux);
+        }
+        JsonObject root = jsonText.getAsJsonObject();
+        if (root.has("text")) {
+            String dieText = root.get("text").getAsString();
+            if (!dieText.isEmpty()) {
+                root.addProperty("text", capitalizeFirst(dieText));
+                return root;
+            }
+        }
+        if (root.has("extra")) {
+            JsonElement extra = capitalizeFirst(root.getAsJsonArray("extra").get(0));
+            root.getAsJsonArray("extra").set(0, extra);
+            return root;
+        }
+        throw new IllegalArgumentException("Unknown JSON structure, please contact the dev");
+    }
+
+    public static String capitalizeFirst(@NonNull String text) {
+        return text.substring(0, 1).toUpperCase() + text.substring(1);
     }
 
     public static ArrayList<String> wrap(final String string) {
@@ -151,10 +180,10 @@ public class TextUtil {
         Component extra;
         if (!command.equals("set")) {
             extra = Component.text(" " + regCommand.getSyntaxText(), NamedTextColor.DARK_AQUA)
-                    .append(Component.text(
-                            " " + VampireRevamp.getMessage(sender,
-                                    CommandMessageKeys.getProviderFromCommand(fullCowl.substring(3))),
-                                    NamedTextColor.YELLOW));
+                    .append(Component.text(" "))
+                    .append(VampireRevamp.getMessage(sender,
+                                    CommandMessageKeys.getProviderFromCommand(fullCowl.substring(3)))
+                                    .color(NamedTextColor.YELLOW));
         }
         else {
             extra = Component.text(" set player attributes",NamedTextColor.YELLOW);
@@ -180,11 +209,9 @@ public class TextUtil {
     public static Component getHelpHeader(CommandHelp help, int maxPages, String command, CommandSender sender) {
         Component start = Component.text("_______.[ ", NamedTextColor.GOLD);
 
-        Component helpHeader = VampireRevamp.getMessage(sender, CommandMessageKeys.COMMAND_HELP_HEADER)
-                .replaceText((config) -> {
-                    config.match("{command}");
-                    config.replacement(command);
-                })
+        Component helpHeader = VampireRevamp.getMessage(sender,
+                        CommandMessageKeys.COMMAND_HELP_HEADER,
+                        "{command}", command)
                 .color(NamedTextColor.DARK_GREEN);
 
         Component prev = Component.text("[<]");

@@ -602,9 +602,7 @@ public class CmdVampire extends BaseCommand {
 			if (auxPlayer == null)
 				continue;
 
-			Component compName = VampireRevamp.isPaperMc()
-					? auxPlayer.name()
-					: Component.text(auxPlayer.getName());
+			Component compName = Component.text(auxPlayer.getName());
 			if (vPlayer.isVampire())
 				vampiresOnline.add(compName);
 			else if (vPlayer.isInfected())
@@ -625,7 +623,7 @@ public class CmdVampire extends BaseCommand {
 		{
 			lines.add(Component.text("=== ")
 					.append(vampireType)
-					.append(Component.text("s "))
+					.append(Component.text("s ", vampireType.color()))
 					.append(onlineStr)
 					.append(Component.text(" ==="))
 					.color(NamedTextColor.LIGHT_PURPLE));
@@ -640,7 +638,7 @@ public class CmdVampire extends BaseCommand {
 		{
 			lines.add(Component.text("=== ")
 					.append(infectedType)
-					.append(Component.text("s "))
+					.append(Component.text("s ", infectedType.color()))
 					.append(onlineStr)
 					.append(Component.text(" ==="))
 					.color(NamedTextColor.LIGHT_PURPLE));
@@ -848,9 +846,7 @@ public class CmdVampire extends BaseCommand {
 
 											Component onOff = val ? VampireRevamp.getMessage(sender, GrammarMessageKeys.ON) : VampireRevamp.getMessage(sender, GrammarMessageKeys.OFF);
 											Component attributeName = VampireRevamp.getMessage(sender, CommandMessageKeys.SET_VAMPIRE_ATTRIBUTE);
-											Component displayName = VampireRevamp.isPaperMc()
-													? finalPlayer.displayName()
-													: Component.text(finalPlayer.getDisplayName());
+											Component displayName = Component.text(finalPlayer.getDisplayName());
 											VampireRevamp.sendMessage(sender,
 													MessageType.INFO,
 													CommandMessageKeys.SET_CHANGED_VALUE,
@@ -928,9 +924,7 @@ public class CmdVampire extends BaseCommand {
 
 										Component onOff = val ? VampireRevamp.getMessage(sender, GrammarMessageKeys.ON) : VampireRevamp.getMessage(sender, GrammarMessageKeys.OFF);
 										Component attributeName = VampireRevamp.getMessage(sender, CommandMessageKeys.SET_NOSFERATU_ATTRIBUTE);
-										Component displayName = VampireRevamp.isPaperMc()
-												? finalPlayer.displayName()
-												: Component.text(finalPlayer.getDisplayName());
+										Component displayName = Component.text(finalPlayer.getDisplayName());
 										VampireRevamp.sendMessage(sender,
 												MessageType.INFO,
 												CommandMessageKeys.SET_CHANGED_VALUE,
@@ -1010,9 +1004,7 @@ public class CmdVampire extends BaseCommand {
 									vPlayer.update();
 
 									Component attributeName = VampireRevamp.getMessage(sender, CommandMessageKeys.SET_INFECTION_ATTRIBUTE);
-									Component displayName = VampireRevamp.isPaperMc()
-											? finalPlayer.displayName()
-											: Component.text(finalPlayer.getDisplayName());
+									Component displayName = Component.text(finalPlayer.getDisplayName());
 									Component valComp = Component.text(String.format("%.2f%%", value * 100));
 									VampireRevamp.sendMessage(sender,
 											MessageType.INFO,
@@ -1073,9 +1065,7 @@ public class CmdVampire extends BaseCommand {
 			player.setFoodLevel(res);
 
 			Component attributeName = VampireRevamp.getMessage(sender, CommandMessageKeys.SET_FOOD_ATTRIBUTE);
-			Component displayName = VampireRevamp.isPaperMc()
-					? player.displayName()
-					: Component.text(player.getDisplayName());
+			Component displayName = Component.text(player.getDisplayName());
 			VampireRevamp.sendMessage(sender,
 					MessageType.INFO,
 					CommandMessageKeys.SET_CHANGED_VALUE,
@@ -1117,9 +1107,7 @@ public class CmdVampire extends BaseCommand {
 			player.setHealth(res);
 
 			Component attributeName = VampireRevamp.getMessage(sender, CommandMessageKeys.SET_HEALTH_ATTRIBUTE);
-			Component displayName = VampireRevamp.isPaperMc()
-					? player.displayName()
-					: Component.text(player.getDisplayName());
+			Component displayName = Component.text(player.getDisplayName());
 			VampireRevamp.sendMessage(sender,
 					MessageType.INFO,
 					CommandMessageKeys.SET_CHANGED_VALUE,

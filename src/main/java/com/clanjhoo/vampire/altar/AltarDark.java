@@ -28,37 +28,34 @@ public class AltarDark extends Altar {
     }
 
     @Override
-    public boolean use(final VPlayer uplayer, final Player player) {
+    public boolean use(final VPlayer vPlayer, final Player player) {
         boolean success = false;
-        player.sendMessage("");
-        VampireRevamp.sendMessage(player,
-                MessageType.INFO,
-                AltarMessageKeys.ALTAR_DARK_DESC);
+        watch(vPlayer, player);
 
         if (Perm.ALTAR_DARK.has(player, true)) {
             VampireRevamp.sendMessage(player,
                     MessageType.INFO,
                     AltarMessageKeys.ALTAR_DARK_COMMON);
             FxUtil.ensure(PotionEffectType.BLINDNESS, player, 12 * 20);
-            uplayer.runFxSmoke();
+            vPlayer.runFxSmoke();
 
-            if (uplayer.isHealthy()) {
+            if (vPlayer.isHealthy()) {
                 if (ResourceUtil.playerRemoveAttempt(player, this.resources, AltarMessageKeys.ACTIVATE_SUCCESS, AltarMessageKeys.ACTIVATE_FAIL)) {
                     Bukkit.getScheduler().scheduleSyncDelayedTask(VampireRevamp.getInstance(), () -> {
                         VampireRevamp.sendMessage(player,
                                 MessageType.INFO,
                                 AltarMessageKeys.ALTAR_DARK_HEALTHY);
                         player.getWorld().strikeLightningEffect(player.getLocation().add(0, 3, 0));
-                        uplayer.runFxSmokeBurst();
-                        uplayer.addInfection(0.01D, InfectionReason.ALTAR, (UUID) null);
+                        vPlayer.runFxSmokeBurst();
+                        vPlayer.addInfection(0.01D, InfectionReason.ALTAR, (UUID) null);
                     }, 1);
                     success = true;
                 }
-            } else if (uplayer.isVampire()) {
+            } else if (vPlayer.isVampire()) {
                 VampireRevamp.sendMessage(player,
                         MessageType.INFO,
                         AltarMessageKeys.ALTAR_DARK_VAMPIRE);
-            } else if (uplayer.isInfected()) {
+            } else if (vPlayer.isInfected()) {
                 VampireRevamp.sendMessage(player,
                         MessageType.INFO,
                         AltarMessageKeys.ALTAR_DARK_INFECTED);

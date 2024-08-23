@@ -24,8 +24,6 @@ import com.clanjhoo.vampire.util.*;
 import net.kyori.adventure.platform.AudienceProvider;
 import net.kyori.adventure.platform.bukkit.BukkitAudiences;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.ComponentLike;
-import net.kyori.adventure.text.TextReplacementConfig;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.minimessage.MiniMessage;
@@ -98,13 +96,6 @@ public class VampireRevamp extends JavaPlugin {
 	// -------------------------------------------- //
 	// FIELDS
 	// -------------------------------------------- //
-
-	public static @NonNull AudienceProvider adventure() {
-		if(plugin.adventure == null) {
-			throw new IllegalStateException("Tried to access Adventure when the plugin was disabled!");
-		}
-		return plugin.adventure;
-	}
 
 	public boolean setVampireGroup(Player player, boolean isVampire) {
 		if (isVampire) {
@@ -223,11 +214,10 @@ public class VampireRevamp extends JavaPlugin {
 			File localesFolder = new File(this.getDataFolder() + "/locales");
 			if (!localesFolder.exists())
 				localesFolder.mkdir();
-			String[] providedLocales = new String[]{"lang_en.yml"};
+			String[] providedLocales = new String[]{"lang_en.yml", "lang_es.yml"};
 			for (String locale : providedLocales) {
 				File localeFile = new File(localesFolder, locale);
 				if (!localeFile.exists()) {
-					localeFile.createNewFile();
 					try (InputStream is = getResource("locales/" + locale)) {
 						if (is != null) {
 							Files.copy(is, localeFile.toPath()); //Copies file from plugin jar into newly created file.
@@ -762,8 +752,15 @@ public class VampireRevamp extends JavaPlugin {
 				.getLocales()
 				.getMessage(VampireRevamp.getCommandIssuer(recipient), keyProvider)
 				.split("\\r?\\n");
-		return Arrays.stream(rawMessages)
-				.map((rm) -> MiniMessage.miniMessage().deserialize(rm)).toList();
+        return Arrays.stream(rawMessages)
+				.map((rm) -> MiniMessage.miniMessage().deserialize(rm))
+				.map((comp) -> {
+					for (Tuple<String, Component> rep : replacements) {
+						comp = comp.replaceText((config) -> config.matchLiteral(rep.x).replacement(rep.y));
+					}
+					return comp;
+				})
+				.toList();
 	}
 
 	public static Component getMessage(CommandSender recipient, MessageKeyProvider keyProvider) {
@@ -789,26 +786,28 @@ public class VampireRevamp extends JavaPlugin {
 		Component message = getMessage(recipient, keyProvider);
         for (Tuple<String, Component> replacement : replacements) {
             message = message.replaceText(
-					(config) -> config.match(replacement.x).replacement(replacement.y)
+					(config) -> config.matchLiteral(replacement.x).replacement(replacement.y)
 			);
         }
 		return message;
 	}
 
-	public static Component[] getYouAreWere(CommandSender sender, OfflinePlayer target, boolean self) {
-		Component you = TextUtil.capitalizeFirst(getMessage(sender, GrammarMessageKeys.YOU));
-		//you = you.substring(0, 1).toUpperCase() + you.substring(1);
-		Component are = getMessage(sender, GrammarMessageKeys.TO_BE_2ND);
-		Component were = getMessage(sender, GrammarMessageKeys.TO_BE_2ND_PAST);
-		if (!self) {
-			if (isPapermc) {
-
-			}
-			else
-				you = Component.text(target.getName());
-			are = getMessage(sender, GrammarMessageKeys.TO_BE_3RD);
-			were = getMessage(sender, GrammarMessageKeys.TO_BE_3RD_PAST);
+	public static @NonNull Component[] getYouAreWere(@NonNull CommandSender sender, @NonNull OfflinePlayer target, boolean self) {
+		Component you;
+		MessageKeyProvider areKey;
+		MessageKeyProvider wereKey;
+		if (self) {
+			you = TextUtil.capitalizeFirst(getMessage(sender, GrammarMessageKeys.YOU));
+			areKey = GrammarMessageKeys.TO_BE_2ND;
+			wereKey = GrammarMessageKeys.TO_BE_2ND_PAST;
 		}
+		else {
+			you = Component.text(target.getName());
+			areKey = GrammarMessageKeys.TO_BE_3RD;
+			wereKey = GrammarMessageKeys.TO_BE_3RD_PAST;
+		}
+		Component are = getMessage(sender, areKey);
+		Component were = getMessage(sender, wereKey);
 
 		return new Component[] {you, are, were};
 	}

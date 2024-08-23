@@ -31,16 +31,13 @@ public class AltarLight extends Altar
 	}
 	
 	@Override
-	public boolean use(final VPlayer uplayer, final Player player)
+	public boolean use(final VPlayer vPlayer, final Player player)
 	{
 		boolean success = false;
-		player.sendMessage("");
-		VampireRevamp.sendMessage(player,
-				MessageType.INFO,
-				AltarMessageKeys.ALTAR_LIGHT_DESC);
+		watch(vPlayer, player);
 		
 		if (Perm.ALTAR_LIGHT.has(player, true)) {
-			if (!uplayer.isVampire() && playerHoldsWaterBottle(player)) {
+			if (!vPlayer.isVampire() && playerHoldsWaterBottle(player)) {
 				if (ResourceUtil.playerRemoveAttempt(player,
 						VampireRevamp.getVampireConfig().holyWater.resources,
 						HolyWaterMessageKeys.CREATE_SUCCESS,
@@ -50,7 +47,7 @@ public class AltarLight extends Altar
 						VampireRevamp.sendMessage(player,
 								MessageType.INFO,
 								HolyWaterMessageKeys.CREATE_RESULT);
-						uplayer.runFxEnderBurst();
+						vPlayer.runFxEnderBurst();
 					}, 1);
 					success = true;
 				}
@@ -59,9 +56,9 @@ public class AltarLight extends Altar
 				VampireRevamp.sendMessage(player,
 						MessageType.INFO,
 						AltarMessageKeys.ALTAR_LIGHT_COMMON);
-				uplayer.runFxEnder();
+				vPlayer.runFxEnder();
 
-				if (uplayer.isVampire()) {
+				if (vPlayer.isVampire()) {
 					if (ResourceUtil.playerRemoveAttempt(player,
 							this.resources,
 							AltarMessageKeys.ACTIVATE_SUCCESS,
@@ -71,21 +68,21 @@ public class AltarLight extends Altar
 									MessageType.INFO,
 									AltarMessageKeys.ALTAR_LIGHT_VAMPIRE);
 							player.getWorld().strikeLightningEffect(player.getLocation().add(0, 3, 0));
-							uplayer.runFxEnderBurst();
-							uplayer.setVampire(false);
+							vPlayer.runFxEnderBurst();
+							vPlayer.setVampire(false);
 						}, 1);
 						success = true;
 					}
-				} else if (uplayer.isHealthy()) {
+				} else if (vPlayer.isHealthy()) {
 					VampireRevamp.sendMessage(player,
 							MessageType.INFO,
 							AltarMessageKeys.ALTAR_LIGHT_HEALTHY);
-				} else if (uplayer.isInfected()) {
+				} else if (vPlayer.isInfected()) {
 					VampireRevamp.sendMessage(player,
 							MessageType.INFO,
 							AltarMessageKeys.ALTAR_LIGHT_INFECTED);
-					uplayer.setInfection(0);
-					uplayer.runFxEnderBurst();
+					vPlayer.setInfection(0);
+					vPlayer.runFxEnderBurst();
 				}
 			}
 		}
