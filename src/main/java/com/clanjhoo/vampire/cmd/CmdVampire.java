@@ -124,9 +124,9 @@ public class CmdVampire extends BaseCommand {
 	}
 
 
-	private void showVampireData(CommandSender sender, OfflinePlayer player, VPlayer vPlayer, boolean self) {
+	private void showVampireData(CommandSender sender, OfflinePlayer offlinePlayer, VPlayer vPlayer, boolean self) {
 		PluginConfig conf = VampireRevamp.getVampireConfig();
-		Component[] youAreWere = VampireRevamp.getYouAreWere(sender, player, self);
+		Component[] youAreWere = VampireRevamp.getYouAreWere(sender, offlinePlayer, self);
 		Component you = youAreWere[0];
 		Component are = youAreWere[1];
 		Component were = youAreWere[2];
@@ -134,7 +134,7 @@ public class CmdVampire extends BaseCommand {
 		Component on = VampireRevamp.getMessage(sender, GrammarMessageKeys.ON);
 		Component off = VampireRevamp.getMessage(sender, GrammarMessageKeys.OFF);
 
-		Component playerName = Component.text(player.getName());
+		Component playerName = Component.text(offlinePlayer.getName());
 
 		VampireRevamp.sendMessage(sender, TextUtil.getPlayerInfoHeader(vPlayer.isVampire(),
 				vPlayer.isNosferatu(),
@@ -185,16 +185,16 @@ public class CmdVampire extends BaseCommand {
 					CommandMessageKeys.SHOW_NIGHTVISION,
 					new Tuple<>("{enabled}", vPlayer.isUsingNightVision() ? on : off));
 
-			if (player instanceof Player) {
+			if (offlinePlayer instanceof Player player) {
 				VampireRevamp.sendMessage(sender,
 						MessageType.INFO,
 						CommandMessageKeys.SHOW_TEMPERATURE,
 						"{percent}", String.format("%d%%", (int) Math.round(vPlayer.getTemp() * 100)));
 
 				int rad = (int) Math.round(100 * vPlayer.getRad());
-				int sun = (int) Math.round(100 * SunUtil.calcSolarRad(((Player) player).getWorld(), ((Player) player)));
-				double terrain = 1d - SunUtil.calcTerrainOpacity(((Player) player).getLocation().getBlock());
-				double armor = 1d - SunUtil.calcArmorOpacity((Player) player);
+				int sun = (int) Math.round(100 * SunUtil.calcSolarRad(player.getWorld(), player, true));
+				double terrain = 1d - SunUtil.calcTerrainOpacity(player.getLocation().getBlock());
+				double armor = 1d - SunUtil.calcArmorOpacity(player);
 				int base = (int) Math.round(100 * conf.radiation.baseRadiation);
 
 				VampireRevamp.sendMessage(sender,

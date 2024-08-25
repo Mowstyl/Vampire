@@ -619,7 +619,7 @@ public class VampireRevamp extends JavaPlugin {
 		if (vPlayerManager != null) {
 			log(Level.INFO, "Saving player data...");
 			vPlayerManager.stopRunningTasks();
-			vPlayerManager.saveAllSync(SaveOperation.SAVE_ALL_AND_REMOVE_ALL);
+			vPlayerManager.saveAllSync(SaveOperation.SAVE_ALL);
 			log(Level.INFO, "Saved!");
 		}
 	}
