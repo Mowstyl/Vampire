@@ -104,12 +104,6 @@ repositories {
 dependencies {
     //compileOnly(libs.spigotmc.spigotapi)
     compileOnly(libs.papermc.paperapi)
-    implementation(libs.aikar.acfpaper) {
-        isTransitive = true
-    }
-    implementation(libs.clanjhoo.dbhandler) {
-        isTransitive = true
-    }
     compileOnly(libs.sk89q.worldedit.core) {
         isTransitive = false
     }
@@ -138,6 +132,8 @@ dependencies {
     compileOnly(libs.comphenix.protocollib) {
         isTransitive = false
     }
+    implementation(libs.aikar.acfpaper)
+    implementation(libs.clanjhoo.dbhandler)
     implementation(libs.kyori.adventure.minimessage)
     implementation(libs.kyori.adventure.gson)
     implementation(libs.kyori.adventure.ansi)

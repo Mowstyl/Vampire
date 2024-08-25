@@ -3,7 +3,7 @@ package com.clanjhoo.vampire.listeners;
 import co.aikar.commands.MessageType;
 import com.clanjhoo.dbhandler.data.LoadResult;
 import com.clanjhoo.vampire.*;
-import com.clanjhoo.vampire.event.LoadedVampireEvent;
+import com.clanjhoo.vampire.event.VampireLoadedEvent;
 import com.clanjhoo.vampire.keyproviders.HolyWaterMessageKeys;
 import com.clanjhoo.vampire.keyproviders.SkillMessageKeys;
 import com.clanjhoo.vampire.keyproviders.VampirismMessageKeys;
@@ -38,7 +38,7 @@ public class ListenerMain implements Listener {
     // -------------------------------------------- //
 
     @EventHandler(priority = EventPriority.MONITOR)
-    public void onDataLoad(LoadedVampireEvent ev) {
+    public void onDataLoad(VampireLoadedEvent ev) {
         if (ev.getResult() == LoadResult.SUCCESS) {
             VPlayer vPlayer = ev.getData();
             VampireRevamp.storeVPlayer(vPlayer);

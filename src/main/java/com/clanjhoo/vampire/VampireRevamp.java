@@ -9,7 +9,7 @@ import com.clanjhoo.dbhandler.data.StorageType;
 import com.clanjhoo.vampire.compat.ProtocolLibCompat;
 import com.clanjhoo.vampire.compat.WerewolfCompat;
 import com.clanjhoo.vampire.config.StorageConfig;
-import com.clanjhoo.vampire.event.LoadedVampireEvent;
+import com.clanjhoo.vampire.event.VampireLoadedEvent;
 import com.clanjhoo.vampire.listeners.*;
 import com.clanjhoo.vampire.keyproviders.GrammarMessageKeys;
 import com.clanjhoo.vampire.altar.AltarDark;
@@ -372,7 +372,7 @@ public class VampireRevamp extends JavaPlugin {
 						VPlayer.class,
 						this,
 						type,
-						LoadedVampireEvent::new,
+						VampireLoadedEvent::new,
 						(vPlayer) -> !vPlayer.isHealthy(),
 						5 * 60 * 1000,
 						data);
