@@ -23,7 +23,6 @@ import org.bukkit.inventory.ItemStack;
 
 import java.util.*;
 import java.util.Map.Entry;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 
 @CommandAlias("v|vampire")

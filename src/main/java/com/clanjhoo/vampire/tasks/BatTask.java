@@ -2,19 +2,25 @@ package com.clanjhoo.vampire.tasks;
 
 import com.clanjhoo.vampire.VampireRevamp;
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
 
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.UUID;
+
 
 public class BatTask implements Runnable {
 
     private final VampireRevamp plugin;
+    private final Map<UUID, Location> lastLocationMap;
 
     public BatTask() {
-        this.plugin = VampireRevamp.getInstance();
+        plugin = VampireRevamp.getInstance();
+        lastLocationMap = new HashMap<>();
     }
 
     @Override
@@ -23,6 +29,7 @@ public class BatTask implements Runnable {
             Player player = Bukkit.getPlayer(puuid);
 
             if (player != null) {
+                Location lastLocation = lastLocationMap.put(player.getUniqueId(), player.getLocation());
                 Iterator<LivingEntity> iterator = plugin.batmap.get(puuid).iterator();
                 while (iterator.hasNext()) {
                     LivingEntity entity = iterator.next();
@@ -32,7 +39,12 @@ public class BatTask implements Runnable {
                         Vector velocity = player.getEyeLocation().toVector().subtract(entity.getLocation().toVector()).normalize();
 
                         // To make the bat move faster, you can simply multiply the vector
-                        //velocity.multiply(plugin.batMult);
+                        if (lastLocation != null) {
+                            try {
+                                velocity.multiply(Math.max(1, lastLocation.distance(player.getLocation())));
+                            }
+                            catch (IllegalArgumentException ignore) {}
+                        }
 
                         if (velocity.getX() > Double.MAX_VALUE) {
                             velocity.setX(Double.MAX_VALUE);

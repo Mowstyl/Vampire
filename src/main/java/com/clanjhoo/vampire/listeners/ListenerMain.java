@@ -4,7 +4,6 @@ import co.aikar.commands.MessageType;
 import com.clanjhoo.dbhandler.data.LoadResult;
 import com.clanjhoo.vampire.*;
 import com.clanjhoo.vampire.event.LoadedVampireEvent;
-import com.clanjhoo.vampire.keyproviders.CommandMessageKeys;
 import com.clanjhoo.vampire.keyproviders.HolyWaterMessageKeys;
 import com.clanjhoo.vampire.keyproviders.SkillMessageKeys;
 import com.clanjhoo.vampire.keyproviders.VampirismMessageKeys;
@@ -53,7 +52,6 @@ public class ListenerMain implements Listener {
             VampireRevamp.log(Level.WARNING,
                     "There was an error while loading data for player " + oPlayer.getName() + ".");
             ev.getException().printStackTrace();
-            // VampireRevamp.loadVPlayerFromDB(uuid);
         }
     }
 
@@ -166,6 +164,7 @@ public class ListenerMain implements Listener {
                 return;
             }
             vPlayer.update();
+            vPlayer.updateBatusiOnTeleport();
         }
     }
 
@@ -247,27 +246,27 @@ public class ListenerMain implements Listener {
             return;
         // If a noncreative player ...
         Player player = event.getPlayer();
-        if (EntityUtil.isPlayer(player) && player.getGameMode() != GameMode.CREATIVE) {
-            // ... moved between two blocks ...
-            Block from = event.getFrom().getBlock();
-            Block to = event.getTo().getBlock();
-            if (!from.equals(to)) {
-                VPlayer vPlayer = VampireRevamp.getVPlayer(player);
-                if (vPlayer == null)
-                    return;
-                // ... and that player is a vampire ...
-                // ... that has bloodlust on ...
-                if (vPlayer.isVampire() && vPlayer.isBloodlusting()) {
-                    // ... then spawn smoke trail.
-                    PluginConfig conf = VampireRevamp.getVampireConfig();
-                    Location one = event.getFrom().clone();
-                    Location two = one.clone().add(0, 1, 0);
-                    long count1 = MathUtil.probabilityRound(conf.vampire.bloodlust.smokes);
-                    long count2 = MathUtil.probabilityRound(conf.vampire.bloodlust.smokes);
-                    for (long i = count1; i > 0; i--) FxUtil.smoke(one);
-                    for (long i = count2; i > 0; i--) FxUtil.smoke(two);
-                }
-            }
+        if (!EntityUtil.isPlayer(player) || player.getGameMode() == GameMode.CREATIVE)
+            return;
+        // ... moved between two blocks ...
+        Block from = event.getFrom().getBlock();
+        Block to = event.getTo().getBlock();
+        if (from.equals(to))
+            return;
+        // ... and that player is a vampire ...
+        VPlayer vPlayer = VampireRevamp.getVPlayer(player);
+        if (vPlayer == null)
+            return;
+        // ... that has bloodlust on ...
+        if (vPlayer.isVampire() && vPlayer.isBloodlusting()) {
+            // ... then spawn smoke trail.
+            PluginConfig conf = VampireRevamp.getVampireConfig();
+            Location one = event.getFrom().clone();
+            Location two = one.clone().add(0, 1, 0);
+            long count1 = MathUtil.probabilityRound(conf.vampire.bloodlust.smokes);
+            long count2 = MathUtil.probabilityRound(conf.vampire.bloodlust.smokes);
+            for (long i = count1; i > 0; i--) FxUtil.smoke(one);
+            for (long i = count2; i > 0; i--) FxUtil.smoke(two);
         }
     }
 

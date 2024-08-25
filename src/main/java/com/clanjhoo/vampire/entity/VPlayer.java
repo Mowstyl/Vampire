@@ -28,7 +28,9 @@ import org.jetbrains.annotations.Nullable;
 import java.util.*;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
+
 
 @Entity(table = "vampire_data")
 public class VPlayer {
@@ -707,9 +709,9 @@ public class VPlayer {
 
     public void setBatusi(boolean activate, int numberOfBats) {
         if (activate)
-            enableBatusi(numberOfBats);
+            enableBatusi(numberOfBats, false);
         else
-            disableBatusi();
+            disableBatusi(false);
     }
 
     public boolean isBatusi() {
@@ -719,7 +721,7 @@ public class VPlayer {
         return VampireRevamp.getInstance().batEnabled.getOrDefault(player.getUniqueId(), false);
     }
 
-    private void enableBatusi(int numberOfBats) {
+    private void enableBatusi(int numberOfBats, boolean silent) {
         Player me = Bukkit.getPlayer(uuid);
         if (me == null) {
             VampireRevamp.log(Level.WARNING, "An offline player is trying to batusi!");
@@ -758,11 +760,12 @@ public class VPlayer {
             me.setFlying(true);
             VampireRevamp.debugLog(Level.INFO, "Flight enabled!");
         }
-        VampireRevamp.sendMessage(me, MessageType.INFO, messageKey);
+        if (!silent)
+            VampireRevamp.sendMessage(me, MessageType.INFO, messageKey);
         VampireRevamp.debugLog(Level.INFO, "Batusi message sent!");
     }
 
-    private void disableBatusi() {
+    private void disableBatusi(boolean silent) {
         VampireRevamp plugin = VampireRevamp.getInstance();
         Player sender = Bukkit.getPlayer(uuid);
 
@@ -781,9 +784,10 @@ public class VPlayer {
                 sender.setFlying(sender.getAllowFlight() && sender.isFlying());
             }
             plugin.batEnabled.put(sender.getUniqueId(), false);
-            VampireRevamp.sendMessage(sender,
-                    MessageType.INFO,
-                    CommandMessageKeys.BATUSI_TOGGLED_OFF);
+            if (!silent)
+                VampireRevamp.sendMessage(sender,
+                        MessageType.INFO,
+                        CommandMessageKeys.BATUSI_TOGGLED_OFF);
         }
         catch (Exception ex) {
             VampireRevamp.sendMessage(sender,
@@ -820,6 +824,25 @@ public class VPlayer {
             }
         }
         VampireRevamp.debugLog(Level.INFO, "Updated");
+    }
+
+    public void updateBatusiOnTeleport() {
+        if (this.isBatusi()) {
+            AtomicInteger aliveBats = new AtomicInteger(0);
+            VampireRevamp.getInstance().batmap.get(uuid).forEach((le) -> {
+                if (le.isDead())
+                    return;
+                le.remove();
+                VampireRevamp.getInstance().bats.remove(le);
+                aliveBats.getAndIncrement();
+            });
+            VampireRevamp.getInstance().batmap.remove(uuid);
+            disableBatusi(true);
+            Bukkit.getScheduler().runTaskLater(
+                    VampireRevamp.getInstance(),
+                    () -> enableBatusi(aliveBats.get(), true),
+                    1);
+        }
     }
 
     public boolean canHaveNosferatuEffects() {
