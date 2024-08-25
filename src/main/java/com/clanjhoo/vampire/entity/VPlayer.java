@@ -23,6 +23,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentSkipListSet;
@@ -504,10 +505,12 @@ public class VPlayer {
         }
     }
 
+    @NotNull
     public UUID getUuid() {
         return uuid;
     }
 
+    @Nullable
     public Player getPlayer() {
         return Bukkit.getPlayer(uuid);
     }

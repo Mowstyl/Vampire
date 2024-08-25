@@ -1,10 +1,12 @@
 [plugins]
 shadowPlugin = { id = "com.gradleup.shadow", version.ref = "shadowGradlePlugin" }
+generatePOMPlugin = { id = "ru.vyarus.java-lib", version.ref = "generatePOMGradlePlugin" }
 
 [versions]
 shadowGradlePlugin = "8.3.0"
+generatePOMGradlePlugin = "3.0.0"
 bukkitAPI = "1.20.4-R0.1-SNAPSHOT"
-dbHandler = "3.0.1"
+dbHandler = "4.0.0"
 acfPaper = "0.5.1-SNAPSHOT"
 worldEdit = "7.2.0-SNAPSHOT"
 worldGuard = "7.1.0-SNAPSHOT"
@@ -20,7 +22,7 @@ annotations = "24.1.0"
 [libraries]
 papermc-paperapi = { group = "io.papermc.paper", name = "paper-api", version.ref = "bukkitAPI" }
 spigotmc-spigotapi = { group = "org.spigotmc", name = "spigot-api", version.ref = "bukkitAPI" }
-clanjhoo-dbhandler = { group = "com.clanjhoo", name = "DBHandler", version.ref = "dbHandler" }
+clanjhoo-dbhandler = { group = "com.clanjhoo", name = "dbhandler", version.ref = "dbHandler" }
 aikar-acfpaper = { group = "co.aikar", name = "acf-paper", version.ref = "acfPaper" }
 sk89q-worldedit-core = { group = "com.sk89q.worldedit", name = "worldedit-core", version.ref = "worldEdit" }
 sk89q-worldedit-bukkit = { group = "com.sk89q.worldedit", name = "worldedit-bukkit", version.ref = "worldEdit" }

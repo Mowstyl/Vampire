@@ -61,7 +61,7 @@ public class BedListener implements Listener {
             return;
 
         // ... the player is a vampire ...
-        VPlayer vPlayer = VampireRevamp.getVPlayerNow(player);
+        VPlayer vPlayer = VampireRevamp.getVPlayer(player);
         if (vPlayer == null || !vPlayer.isVampire())
             return;
         // ... and tries to sleep at night ...
@@ -106,7 +106,7 @@ public class BedListener implements Listener {
         }
 
         long time = world.getTime();
-        VPlayer vPlayer = VampireRevamp.getVPlayerNow(player);
+        VPlayer vPlayer = VampireRevamp.getVPlayer(player);
         // ... the player is not a vampire ...
         if (vPlayer == null || !vPlayer.isVampire()) {
             // ... we exit

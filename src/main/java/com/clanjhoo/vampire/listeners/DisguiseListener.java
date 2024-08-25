@@ -23,7 +23,7 @@ public class DisguiseListener implements Listener {
             return;
 
         final Player player = (Player) aux;
-        VPlayer vPlayer = VampireRevamp.getVPlayerNow(player);
+        VPlayer vPlayer = VampireRevamp.getVPlayer(player);
         if (vPlayer == null || !vPlayer.isChangingDisguise())
             return;
         if (!ResourceUtil.hasPermission(player, Perm.MODE_BATUSI_DISGUISE))
@@ -39,7 +39,7 @@ public class DisguiseListener implements Listener {
             return;
 
         final Player player = (Player) aux;
-        VPlayer vPlayer = VampireRevamp.getVPlayerNow(player);
+        VPlayer vPlayer = VampireRevamp.getVPlayer(player);
         if (vPlayer == null || !vPlayer.isChangingDisguise())
             return;
         // This event is also called when the player already has a disguise before using batusi.

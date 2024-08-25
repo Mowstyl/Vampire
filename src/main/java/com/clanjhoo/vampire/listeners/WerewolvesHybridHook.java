@@ -102,7 +102,7 @@ public class WerewolvesHybridHook implements Listener {
             return;
         }
 
-        VPlayer vPlayer = VampireRevamp.getVPlayerNow(player);
+        VPlayer vPlayer = VampireRevamp.getVPlayer(player);
         if (vPlayer == null) {
             player.sendMessage("You seem resistant to werewolf infection somehow... Please contact an admin if this error persists.");
             VampireRevamp.log(Level.WARNING, "Couldn't get data of player " + player.getName());

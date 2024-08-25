@@ -47,7 +47,7 @@ public class WerewolvesSilverHook implements Listener {
         if (!EventUtil.isCloseCombatEvent(event))
             return;
 
-        VPlayer vPlayer = VampireRevamp.getVPlayerNow((Player) event.getEntity());
+        VPlayer vPlayer = VampireRevamp.getVPlayer((Player) event.getEntity());
         if (vPlayer == null) {
             VampireRevamp.log(Level.WARNING, "Couldn't get data of player " + event.getEntity().getName());
             return;

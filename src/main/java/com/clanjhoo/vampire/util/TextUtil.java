@@ -148,7 +148,7 @@ public class TextUtil {
 
         Component params = Component.text(" " + command);
         if (sender instanceof Player) {
-            VPlayer vPlayer = VampireRevamp.getVPlayerNow(((Player) sender));
+            VPlayer vPlayer = VampireRevamp.getVPlayer(((Player) sender));
             int vampireLevel = (vPlayer == null || vPlayer.isHuman()) ? 0 : (vPlayer.isNosferatu() ? 2 : 1);
             boolean hasRequiredVLevel = requireVampire <= vampireLevel;
             if (!command.equals("vampire") && !command.equals("nosferatu")) {

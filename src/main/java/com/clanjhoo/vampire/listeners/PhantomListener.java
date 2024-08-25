@@ -24,7 +24,7 @@ public class PhantomListener implements Listener {
         if ((e.getEntity() instanceof Phantom phan) && e.getSpawnReason() == CreatureSpawnEvent.SpawnReason.NATURAL) {
             if (phan.getSpawningEntity() != null) {
                 Player player = Bukkit.getPlayer(phan.getSpawningEntity());
-                VPlayer vPlayer = VampireRevamp.getVPlayerNow(player);
+                VPlayer vPlayer = VampireRevamp.getVPlayer(player);
                 if (vPlayer != null && vPlayer.isVampire() && !vPlayer.truceIsBroken(System.currentTimeMillis())) {
                     e.setCancelled(true);
                 }

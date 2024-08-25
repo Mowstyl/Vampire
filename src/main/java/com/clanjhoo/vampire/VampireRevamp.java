@@ -4,10 +4,12 @@ import co.aikar.commands.*;
 import co.aikar.locales.MessageKey;
 import co.aikar.locales.MessageKeyProvider;
 import com.clanjhoo.dbhandler.data.DBObjectManager;
+import com.clanjhoo.dbhandler.data.SaveOperation;
 import com.clanjhoo.dbhandler.data.StorageType;
 import com.clanjhoo.vampire.compat.ProtocolLibCompat;
 import com.clanjhoo.vampire.compat.WerewolfCompat;
 import com.clanjhoo.vampire.config.StorageConfig;
+import com.clanjhoo.vampire.event.LoadedVampireEvent;
 import com.clanjhoo.vampire.listeners.*;
 import com.clanjhoo.vampire.keyproviders.GrammarMessageKeys;
 import com.clanjhoo.vampire.altar.AltarDark;
@@ -48,24 +50,30 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import org.bukkit.scheduler.BukkitScheduler;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.*;
 import java.nio.file.Files;
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class VampireRevamp extends JavaPlugin {
+
+	private static ConcurrentHashMap<UUID, VPlayer> playerCollection = new ConcurrentHashMap<>();
+	private static VampireRevamp plugin;
+	private static boolean isPapermc = false;
+	private static Permission perms = null;
+
 	// -------------------------------------------- //
 	// INSTANCE & CONSTRUCT
 	// -------------------------------------------- //
 
 	private AudienceProvider adventure;
-	private static VampireRevamp plugin;
 	private int cleanTaskId = -1;
 	private int theTaskId = -1;
 	private int batTaskId = -1;
@@ -76,7 +84,6 @@ public class VampireRevamp extends JavaPlugin {
 	public boolean isDisguiseEnabled = false;
 	public boolean hasVault = false;
 	private PluginConfig conf = null;
-	private static boolean isPapermc = false;
 	private AltarDark altarDark;
 	private AltarLight altarLight;
 	private SemVer serverVersion;
@@ -89,7 +96,6 @@ public class VampireRevamp extends JavaPlugin {
 	private PhantomListener pl;
 	private EntryVampiresListener dvl;
 	private BedListener bl;
-	private static Permission perms = null;
 
 	private DBObjectManager<VPlayer> vPlayerManager;
 	
@@ -98,12 +104,13 @@ public class VampireRevamp extends JavaPlugin {
 	// -------------------------------------------- //
 
 	public boolean setVampireGroup(Player player, boolean isVampire) {
-		if (isVampire) {
-			return perms.playerAddGroup(player, conf.compatibility.vampirePermissionGroup);
+		if (perms != null) {
+			if (isVampire)
+				return perms.playerAddGroup(player, conf.compatibility.vampirePermissionGroup);
+			else
+				return perms.playerRemoveGroup(player, conf.compatibility.vampirePermissionGroup);
 		}
-		else {
-			return perms.playerRemoveGroup(player, conf.compatibility.vampirePermissionGroup);
-		}
+		return false;
 	}
 
 	public boolean permissionGroupEnabled() {
@@ -150,11 +157,11 @@ public class VampireRevamp extends JavaPlugin {
 			Class.forName("com.destroystokyo.paper.VersionHistoryManager$VersionData");
 			isPapermc = true;
 		} catch (ClassNotFoundException e) {
-			this.getLogger().info("Use Paper for more features like Phantom related ones!");
+			log(Level.INFO, "Use Paper for more features like Phantom and Bed related ones!");
 		}
 
 		if (isPapermc) {
-			this.getLogger().info("Using Paper");
+			log(Level.INFO, "Using Paper");
 		}
 
 		String versionString = this.getServer().getVersion();
@@ -319,60 +326,6 @@ public class VampireRevamp extends JavaPlugin {
 		return reloadVampireConfig() && reloadLocales();
 	}
 
-	public static void saveVPlayer(OfflinePlayer p) {
-		VampireRevamp.getInstance().vPlayerManager.save(p.getUniqueId());
-	}
-
-	public static CompletableFuture<VPlayer> syncTaskVPlayer(OfflinePlayer p, Consumer<? super VPlayer> accept, Consumer<Throwable> exception) {
-		CompletableFuture<VPlayer> future = VampireRevamp.getInstance().vPlayerManager.getFutureData(p.getUniqueId());
-		if (future.isCompletedExceptionally()) {
-			future = loadPlayerFromDB(p);
-		}
-		return future.handle((vPlayer, ex) -> {
-			if (accept != null || exception != null)
-				Bukkit.getScheduler().runTask(plugin, () -> {
-					if (exception != null && ex != null) {
-						exception.accept(ex);
-					}
-					if (vPlayer != null && accept != null)
-						accept.accept(vPlayer);
-				});
-			if (ex != null)
-				loadPlayerFromDB(p);
-			return ex == null ? vPlayer : null;
-		});
-	}
-
-	public static VPlayer getVPlayerNow(OfflinePlayer p) {
-		try {
-			return VampireRevamp.getInstance().vPlayerManager.tryGetDataNow(p.getUniqueId());
-		}
-		catch (AssertionError ignore) {}
-		catch (RuntimeException ex) {
-			loadPlayerFromDB(p);
-		}
-		return null;
-	}
-
-	private static CompletableFuture<VPlayer> loadPlayerFromDB(OfflinePlayer p) {
-		return VampireRevamp.getInstance().vPlayerManager
-				.getFutureData(p.getUniqueId())
-				.exceptionally((ex) -> {
-					VampireRevamp.log(Level.SEVERE, "Couldn't load player " + p.getName() + " from DB.");
-					ex.printStackTrace();
-					return null;
-				});
-	}
-
-	private static void afterTask(VPlayer vPlayer) {
-		Bukkit.getScheduler().runTask(plugin, () -> {
-			Player p = vPlayer.getPlayer();
-			if (p != null && perms != null) {
-				VampireRevamp.getInstance().setVampireGroup(p, vPlayer.isVampire());
-			}
-		});
-	}
-
 	private boolean loadConfig(boolean loadDefaults) {
 		boolean result = false;
 		try {
@@ -393,38 +346,39 @@ public class VampireRevamp extends JavaPlugin {
 
 		if (vPlayerManager != null) {
 			reloadPlayers = true;
-			this.getLogger().log(Level.INFO, "Saving player data...");
-			vPlayerManager.saveAll();
-			this.getLogger().log(Level.INFO, "Saved!");
+			log(Level.INFO, "Saving player data...");
+			vPlayerManager.saveAll(SaveOperation.SAVE_ALL);
+			log(Level.INFO, "Saved!");
 		}
 		if (vPlayerManager == null) {
 			try {
 				StorageConfig sconf = conf.storage;
+				StorageType type;
+				Object[] data;
 				if (conf.storage.storageType == StorageType.JSON) {
-					vPlayerManager = new DBObjectManager<>(
-							VPlayer.class,
-							VampireRevamp::afterTask,
-							(vPlayer) -> !vPlayer.isHealthy(),
-							this, null,
-							StorageType.JSON,
-							"store");
+					type = StorageType.JSON;
+					data = new Object[]{"store"};
 				} else {
-					vPlayerManager = new DBObjectManager<>(
-							VPlayer.class,
-							VampireRevamp::afterTask,
-							(vPlayer) -> !vPlayer.isHealthy(),
-							this,
-							null,
-							StorageType.MARIADB,
+					type = StorageType.MARIADB;
+					data = new Object[]{
 							sconf.address,
 							sconf.port,
 							sconf.database,
 							sconf.username,
 							sconf.password,
-							sconf.prefix);
+							sconf.prefix};
 				}
+				vPlayerManager = new DBObjectManager<>(
+						VPlayer.class,
+						this,
+						type,
+						LoadedVampireEvent::new,
+						(vPlayer) -> !vPlayer.isHealthy(),
+						5 * 60 * 1000,
+						data);
+				vPlayerManager.initialize();
 			} catch (IOException ex) {
-				this.getLogger().log(Level.SEVERE, "Couldn't create storage! Disabling plugin!");
+				log(Level.SEVERE, "Couldn't create storage! Disabling plugin!");
 				ex.printStackTrace();
 				getServer().getPluginManager().disablePlugin(this);
 				disabled = true;
@@ -433,7 +387,7 @@ public class VampireRevamp extends JavaPlugin {
 		}
 		if (reloadPlayers) {
 			for (Player p : Bukkit.getOnlinePlayers()) {
-				VampireRevamp.loadPlayerFromDB(p);
+				VampireRevamp.loadVPlayerFromDB(p.getUniqueId());
 			}
 		}
 
@@ -569,7 +523,7 @@ public class VampireRevamp extends JavaPlugin {
 
 		BukkitScheduler scheduler = getServer().getScheduler();
 
-		cleanTaskId = scheduler.scheduleSyncRepeatingTask(this, vPlayerManager::saveAndRemoveUnactive, 0L, 5 * 60 * 20L);
+		cleanTaskId = scheduler.scheduleSyncRepeatingTask(this, () -> vPlayerManager.saveAll(SaveOperation.SAVE_ALL_AND_REMOVE_INACTIVE), 0L, 5 * 60 * 20L);
 		theTaskId = scheduler.scheduleSyncRepeatingTask(this, new TheTask(), 0L, (this.conf.general.taskDelayMillis * 20L) / 1000);
 		batTaskId = scheduler.scheduleSyncRepeatingTask(this, new BatTask(), 0L, (this.conf.general.batTaskDelayMillis * 20L) / 1000);
 	}
@@ -663,9 +617,10 @@ public class VampireRevamp extends JavaPlugin {
 		scheduler.cancelTask(batTaskId);
 
 		if (vPlayerManager != null) {
-			this.getLogger().log(Level.INFO, "Saving player data...");
-			vPlayerManager.saveAndRemoveAllSync();
-			this.getLogger().log(Level.INFO, "Saved!");
+			log(Level.INFO, "Saving player data...");
+			vPlayerManager.stopRunningTasks();
+			vPlayerManager.saveAllSync(SaveOperation.SAVE_ALL_AND_REMOVE_ALL);
+			log(Level.INFO, "Saved!");
 		}
 	}
 
@@ -792,7 +747,8 @@ public class VampireRevamp extends JavaPlugin {
 		return message;
 	}
 
-	public static @NonNull Component[] getYouAreWere(@NonNull CommandSender sender, @NonNull OfflinePlayer target, boolean self) {
+	@NonNull
+	public static Component[] getYouAreWere(@NonNull CommandSender sender, @NonNull OfflinePlayer target, boolean self) {
 		Component you;
 		MessageKeyProvider areKey;
 		MessageKeyProvider wereKey;
@@ -810,5 +766,65 @@ public class VampireRevamp extends JavaPlugin {
 		Component were = getMessage(sender, wereKey);
 
 		return new Component[] {you, are, were};
+	}
+
+	public static void saveVPlayer(@Nullable UUID uuid) {
+		if (uuid == null)
+			return;
+		plugin.vPlayerManager.save(uuid);
+	}
+
+	public static void saveVPlayer(@Nullable Player player) {
+		if (player == null)
+			return;
+		saveVPlayer(player.getUniqueId());
+	}
+
+	public static void saveVPlayer(@Nullable OfflinePlayer offlinePlayer) {
+		if (offlinePlayer == null)
+			return;
+		saveVPlayer(offlinePlayer.getUniqueId());
+	}
+
+	@Nullable
+	@Contract(value = "null -> null")
+	public static VPlayer getVPlayer(@Nullable UUID uuid) {
+		if (uuid == null)
+			return null;
+		return playerCollection.computeIfAbsent(uuid, (k) -> plugin.vPlayerManager.tryGetDataNow(k));
+	}
+
+	@Nullable
+	@Contract(value = "null -> null")
+	public static VPlayer getVPlayer(@Nullable Player player) {
+		if (player == null)
+			return null;
+		return getVPlayer(player.getUniqueId());
+	}
+
+	@Nullable
+	@Contract(value = "null -> null")
+	public static VPlayer getVPlayer(@Nullable OfflinePlayer offlinePlayer) {
+		if (offlinePlayer == null)
+			return null;
+		return getVPlayer(offlinePlayer.getUniqueId());
+	}
+
+	/**
+	 * This method is for VampireRevamp internal use. If you break something, don't tell me I didn't warn you
+	 * @param vPlayer the data to store
+	 * @return the previous stored value
+	 */
+	@Nullable
+	public static VPlayer storeVPlayer(@NotNull VPlayer vPlayer) {
+		return playerCollection.put(vPlayer.getUuid(), vPlayer);
+	}
+
+	/**
+	 * Use this method at your own peril
+	 * @param uuid the UUID of the player to load
+	 */
+	public static void loadVPlayerFromDB(@NotNull UUID uuid) {
+		plugin.vPlayerManager.loadData(uuid);
 	}
 }

@@ -40,7 +40,7 @@ public class TheTask implements Runnable {
 
         // Tick each online player
         for (Player player : Bukkit.getOnlinePlayers()) {
-            VPlayer vPlayer = VampireRevamp.getVPlayerNow(player);
+            VPlayer vPlayer = VampireRevamp.getVPlayer(player);
             if (vPlayer == null)
                 continue;
             try {

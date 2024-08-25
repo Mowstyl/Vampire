@@ -93,7 +93,7 @@ public class VampireExpansion extends PlaceholderExpansion {
             return "";
         }
 
-        VPlayer vPlayer = VampireRevamp.getVPlayerNow(player);
+        VPlayer vPlayer = VampireRevamp.getVPlayer(player);
         if (vPlayer == null){
             return "";
         }

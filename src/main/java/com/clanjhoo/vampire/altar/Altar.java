@@ -73,7 +73,7 @@ public abstract class Altar {
                     }
                 }
                 else {
-                    VPlayer vPlayer = VampireRevamp.getVPlayerNow(player);
+                    VPlayer vPlayer = VampireRevamp.getVPlayer(player);
                     if (vPlayer != null) {
                         blockUse = this.use(vPlayer, player);
                     }

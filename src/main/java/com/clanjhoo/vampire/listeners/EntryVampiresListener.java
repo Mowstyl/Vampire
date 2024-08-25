@@ -16,7 +16,7 @@ public class EntryVampiresListener implements Listener {
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onVampireEntry(PlayerMoveEvent event) {
         Player player = event.getPlayer();
-        VPlayer vPlayer = VampireRevamp.getVPlayerNow(player);
+        VPlayer vPlayer = VampireRevamp.getVPlayer(player);
         if (vPlayer == null || !vPlayer.isVampire()) {
             return;
         }

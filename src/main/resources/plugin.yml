@@ -1,10 +1,10 @@
-name: ${rootProject.name}Revamp
-main: ${group}.${rootProject.name.toLowerCase()}.${rootProject.name}Revamp
-api-version: "1.13"
+name: ${projectName}
+main: ${group}.${name}.${projectName}
 version: ${version}
-website: https://clanjhoo.com
 description: ${description}
+api-version: "1.13"
 authors: [Cayorion, Mowstyl]
+website: https://clanjhoo.com
 softdepend: [WorldEdit, WorldGuard, LibsDisguises, PlaceholderAPI, Vault, ProtocolLib]
 loadbefore: [Werewolf]
 permissions:

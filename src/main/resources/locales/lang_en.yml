@@ -124,7 +124,7 @@ commands:
     notEnoughInputs: "<red>Not enough command input. <yellow>You should use it like this:"
     notEnoughPerms: "<red>You don't have permissions to do {action}! Node: {perm}"
     notValidValue: "<light_purple>{value}<red> is not a valid value"
-    dataNotFound: "<red>Couldn't find vampire data for that player. Please contact an administrator."
+    dataNotFound: "<red>The database is now busy. Please contact an administrator if the error persists."
     fullInventory: "<red>Could not add item to your inventory. Inventory full."
     disabledAction: "<red>{action} is disabled by config."
     consolePlayerArgRequired: "<red>You must specify player from console."

@@ -2,14 +2,11 @@ import java.io.ByteArrayOutputStream;
 
 
 plugins {
-    java
-    `maven-publish`
+    `java-library`
     alias(libs.plugins.shadowPlugin)
+    alias(libs.plugins.generatePOMPlugin)
 }
 
-group = "com.clanjhoo"
-version = "1.0.0-SNAPSHOT"
-description = "Anyone can become a vampire, but do you want to? During daytime vampires cower from sunlight. During the night the humans reach for their holy water and wooden stakes as the vampires roam the lands with inhuman strength, speed and levitation-powers. Driven by their endless bloodlust, they devour all living in their way."
 
 val getGitHash: String by lazy {
     val stdout = ByteArrayOutputStream()
@@ -18,6 +15,15 @@ val getGitHash: String by lazy {
         standardOutput = stdout
     }
     stdout.toString().trim()
+}
+
+group = "com.clanjhoo"
+version = "1.0.0-SNAPSHOT"//.replace("SNAPSHOT", getGitHash)
+description = "Anyone can become a vampire, but do you want to? During daytime vampires cower from sunlight. During the night the humans reach for their holy water and wooden stakes as the vampires roam the lands with inhuman strength, speed and levitation-powers. Driven by their endless bloodlust, they devour all living in their way."
+
+ext.set("projectName", gradle.extra["projectName"].toString())
+maven.pom {
+    name = gradle.extra["projectName"].toString()
 }
 
 java {
@@ -92,56 +98,50 @@ repositories {
         }
     }
     mavenCentral()
-    //mavenLocal()
+    // mavenLocal()
 }
 
 dependencies {
     //compileOnly(libs.spigotmc.spigotapi)
     compileOnly(libs.papermc.paperapi)
     implementation(libs.aikar.acfpaper) {
-        isTransitive = false
+        isTransitive = true
     }
     implementation(libs.clanjhoo.dbhandler) {
+        isTransitive = true
+    }
+    compileOnly(libs.sk89q.worldedit.core) {
         isTransitive = false
     }
-    implementation(libs.sk89q.worldedit.core) {
+    compileOnly(libs.sk89q.worldedit.bukkit) {
         isTransitive = false
     }
-    implementation(libs.sk89q.worldedit.bukkit) {
+    compileOnly(libs.sk89q.worldguard.core) {
         isTransitive = false
     }
-    implementation(libs.sk89q.worldguard.core) {
+    compileOnly(libs.sk89q.worldguard.bukkit) {
         isTransitive = false
     }
-    implementation(libs.sk89q.worldguard.bukkit) {
+    compileOnly(libs.libraryaddict.libsdisguises) {
         isTransitive = false
     }
-    implementation(libs.libraryaddict.libsdisguises) {
+    compileOnly(libs.clip.placeholderapi) {
         isTransitive = false
     }
-    implementation(libs.clip.placeholderapi) {
-        isTransitive = false
-    }
-    implementation(libs.milkbowl.vaultapi) {
+    compileOnly(libs.milkbowl.vaultapi) {
         isTransitive = false
     }
     //implementation(files("./lib/Werewolf-1.7.2-SNAPSHOT.jar"))
-    implementation(libs.rfsmassacre.werewolves) {
+    compileOnly(libs.rfsmassacre.werewolves) {
         isTransitive = false
     }
-    implementation(libs.comphenix.protocollib) {
+    compileOnly(libs.comphenix.protocollib) {
         isTransitive = false
     }
     implementation(libs.kyori.adventure.minimessage)
     implementation(libs.kyori.adventure.gson)
     implementation(libs.kyori.adventure.ansi)
     implementation(libs.kyori.platform.bukkit)
-}
-
-publishing {
-    publications.create<MavenPublication>("maven") {
-        from(components["java"])
-    }
 }
 
 tasks.withType<JavaCompile> {
@@ -160,23 +160,17 @@ tasks {
     }
 
     shadowJar {
-        archiveFileName.set("${rootProject.name}Revamp-${version}.jar".replace("SNAPSHOT", getGitHash))
+        //archiveFileName.set("${rootProject.name}-${version}.jar")
         relocate("co.aikar.commands", "co.aikar.${rootProject.name.lowercase()}.acf")
         relocate("co.aikar.locales", "co.aikar.${rootProject.name.lowercase()}.locales")
         relocate("com.clanjhoo.dbhandler", "com.clanjhoo.${rootProject.name.lowercase()}.dbhandler")
         relocate("net.kyori", "net.kyori.${rootProject.name.lowercase()}")
-        include("acf-paper-*-SNAPSHOT.jar")
-        include("DBHandler-*.jar")
-        include("adventure-*.jar")
-        include("ansi-*.jar")
-        include("examination-*.jar")
-        include("option-*.jar")
-        include("acf-core_*.properties")
-        include("co/aikar/**")
-        include("com/clanjhoo/**")
-        include("com/zaxxer/dbhandler/hikari/**")
-        include("net/kyori/**")
-        include("*.yml")
-        include("locales/*.yml")
+        exclude("com/google/gson/**")
+        exclude("META-INF/services/**")
+        exclude("META-INF/versions/**")
+        exclude("META-INF/maven/co.aikar/**")
+        exclude("META-INF/maven/com.google.code.gson/**")
+        exclude("META-INF/maven/net.jodah/**")
+        exclude("META-INF/maven/com.clanjhoo/dbhandler/**")
     }
 }

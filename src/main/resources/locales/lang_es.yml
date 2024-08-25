@@ -124,7 +124,7 @@ commands:
     notEnoughInputs: "<red>No hay suficiente entrada de comando. <yellow>Deberías usarlo así:"
     notEnoughPerms: "<red>¡No tienes permisos para hacer {action}! Nodo: {perm}"
     notValidValue: "<light_purple>{value}<red> no es un valor válido"
-    dataNotFound: "<red>No se pudieron encontrar datos de vampiro para ese jugador. Por favor contacte a un administrador."
+    dataNotFound: "<red>La base de datos está ocupada en este momento. Por favor contacte a un administrador si el error persiste."
     fullInventory: "<red>No se pudo añadir el objeto a tu inventario. Inventario lleno."
     disabledAction: "<red>{action} está deshabilitado por la configuración."
     consolePlayerArgRequired: "<red>Debes especificar el jugador desde la consola."
