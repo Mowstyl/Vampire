@@ -25,7 +25,7 @@ import java.util.*;
 import java.util.logging.Level;
 
 public class BloodFlaskUtil {
-    public final static PotionEffect BLOOD_FLASK_CUSTOM_EFFECT = new PotionEffect(PotionEffectType.INCREASE_DAMAGE, 20, 0);
+    public final static PotionEffect BLOOD_FLASK_CUSTOM_EFFECT = new PotionEffect(PotionEffectType.STRENGTH, 20, 0);
     private final static NamespacedKey BLOOD_FLASK_KEY = new NamespacedKey(VampireRevamp.getInstance(), "flask");
     private final static NamespacedKey BLOOD_FLASK_AMOUNT = new NamespacedKey(VampireRevamp.getInstance(), "amount");
     private final static NamespacedKey BLOOD_FLASK_VAMPIRIC = new NamespacedKey(VampireRevamp.getInstance(), "vampiric");
@@ -52,7 +52,7 @@ public class BloodFlaskUtil {
                 .map(serializer::serialize)
                 .toList());
         meta.addCustomEffect(BLOOD_FLASK_CUSTOM_EFFECT, false);
-        meta.addItemFlags(ItemFlag.HIDE_POTION_EFFECTS, ItemFlag.HIDE_ATTRIBUTES);
+        meta.addItemFlags(ItemFlag.HIDE_ADDITIONAL_TOOLTIP, ItemFlag.HIDE_ATTRIBUTES);
 
         PersistentDataContainer flaskDC = meta.getPersistentDataContainer();
         PersistentDataContainer flaskTag = flaskDC.getAdapterContext().newPersistentDataContainer();

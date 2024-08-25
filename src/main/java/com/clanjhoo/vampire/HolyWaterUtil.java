@@ -11,12 +11,12 @@ import org.bukkit.entity.ThrownPotion;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.PotionMeta;
 import org.bukkit.persistence.PersistentDataContainer;
-import org.bukkit.potion.PotionData;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.potion.PotionType;
 
 import java.util.List;
+import java.util.Objects;
 
 public class HolyWaterUtil {
 
@@ -25,11 +25,10 @@ public class HolyWaterUtil {
 
     public static ItemStack createHolyWater(Player creator) {
         ItemStack ret = new ItemStack(Material.SPLASH_POTION);
-        PotionData pd = new PotionData(PotionType.WATER);
         PotionMeta meta = (PotionMeta) ret.getItemMeta();
         Component holyWaterName = VampireRevamp.getMessage(creator, HolyWaterMessageKeys.NAME);
         List<Component> holyWaterLore = VampireRevamp.getMessageList(creator, HolyWaterMessageKeys.LORE);
-        meta.setBasePotionData(pd);
+        meta.setBasePotionType(PotionType.WATER);
         LegacyComponentSerializer serializer = LegacyComponentSerializer.legacySection();
         meta.setDisplayName(serializer.serialize(holyWaterName));
         meta.setLore(holyWaterLore.stream()
@@ -48,18 +47,15 @@ public class HolyWaterUtil {
     }
 
     public static boolean isHolyWater(ItemStack item) {
-        if (!item.getType().equals(Material.SPLASH_POTION)) {
+        if (!item.getType().equals(Material.SPLASH_POTION))
             return false;
-        }
 
         PotionMeta meta = (PotionMeta) item.getItemMeta();
-        if (!meta.getBasePotionData().getType().equals(PotionType.WATER)) {
+        if (!Objects.equals(meta.getBasePotionType(), PotionType.WATER))
             return false;
-        }
 
         PersistentDataContainer itemDC =  meta.getPersistentDataContainer();
         Boolean result = itemDC.get(HOLY_WATER_KEY, BooleanTagType.TYPE);
         return result != null && result;
     }
-
 }

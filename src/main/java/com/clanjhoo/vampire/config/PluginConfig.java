@@ -8,8 +8,10 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.EntityType;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.Damageable;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.PotionMeta;
-import org.bukkit.potion.PotionData;
+import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.potion.PotionType;
 import org.jetbrains.annotations.NotNull;
@@ -60,14 +62,14 @@ public class PluginConfig {
             EntityType.COW, NON_HUMAN,
             EntityType.DONKEY, NON_HUMAN,
             EntityType.HORSE, NON_HUMAN,
-            EntityType.MUSHROOM_COW, NON_HUMAN,
+            EntityType.MOOSHROOM, NON_HUMAN,
             EntityType.MULE, NON_HUMAN,
             EntityType.OCELOT, NON_HUMAN,
             EntityType.PARROT, NON_HUMAN,
             EntityType.PIG, NON_HUMAN,
             EntityType.RABBIT, NON_HUMAN,
             EntityType.SHEEP, NON_HUMAN,
-            EntityType.SNOWMAN, NO_BLOOD,
+            EntityType.SNOW_GOLEM, NO_BLOOD,
             EntityType.SQUID, NON_HUMAN,
             EntityType.VILLAGER, HUMAN,
             EntityType.IRON_GOLEM, NO_BLOOD,
@@ -127,9 +129,36 @@ public class PluginConfig {
                 for (Map.Entry<?, ?> entry : itemMap.entrySet()) {
                     String key = entry.getKey().toString();
                     if (entry.getKey() instanceof PotionEffectType)
-                        key = ((PotionEffectType) entry.getKey()).getName();
+                        key = ((PotionEffectType) entry.getKey()).getKey().toString();
                     res = res && writeLine(configWriter, "- " + key + ": " + entry.getValue().toString(), indent, level + 1);
                 }
+            }
+        } catch (IOException ex) {
+            res = false;
+            VampireRevamp.log(Level.WARNING, "Error while indenting!");
+        }
+        return res;
+    }
+
+    protected static boolean writePotionEffectCollection(BufferedWriter configWriter, String header, Collection<PotionEffect> effects, String indent, int level) {
+        boolean res;
+        try {
+            for (int i = 0; i < level; i++)
+                configWriter.write(indent);
+            configWriter.write(header);
+
+            if (effects.isEmpty()) {
+                configWriter.write(" []");
+                configWriter.newLine();
+                res = true;
+            }
+            else {
+                configWriter.newLine();
+                res = true;
+                for (PotionEffect effect : effects) {
+                    res = res && writeLine(configWriter, "- data: \"" + effect.toString() + "\"", indent, level + 1);
+                }
+
             }
         } catch (IOException ex) {
             res = false;
@@ -154,18 +183,17 @@ public class PluginConfig {
                 configWriter.newLine();
                 res = true;
                 for (ItemStack item : itemSet) {
+                    ItemMeta meta = item.getItemMeta();
                     res = res && writeLine(configWriter, "- material: " + item.getType(), indent, level + 1);
                     res = res && writeLine(configWriter, "  amount: " + item.getAmount(), indent, level + 1);
-                    if (new SemVer(1, 14).compareTo(VampireRevamp.getServerVersion()) > 0 && item.getDurability() != 0)
-                        res = res && writeLine(configWriter, "  durability: " + item.getDurability(), indent, level + 1);
-                    if (item.getType() == Material.POTION || item.getType() == Material.SPLASH_POTION || item.getType() == Material.LINGERING_POTION) {
-                        PotionData pd = ((PotionMeta) item.getItemMeta()).getBasePotionData();
+                    if (meta instanceof Damageable dmg)
+                        res = res && writeLine(configWriter, "  damage: " + dmg.getDamage(), indent, level + 1);
+                    if (meta instanceof PotionMeta) {
+                        PotionMeta pd = ((PotionMeta) item.getItemMeta());
                         res = res && writeLine(configWriter, "  meta:", indent, level + 1);
-                        res = res && writeLine(configWriter, "type: " + pd.getType(), indent, level + 2);
-                        if (pd.isExtended())
-                            res = res && writeLine(configWriter, "extended: true", indent, level + 2);
-                        if (pd.isUpgraded())
-                            res = res && writeLine(configWriter, "upgraded: true", indent, level + 2);
+                        res = res && writeLine(configWriter, "type: " + pd.getBasePotionType(), indent, level + 2);
+                        // I think no one will ever need this
+                        // res = res && writePotionEffectCollection(configWriter, "effects:", pd.getCustomEffects(), indent, level + 2);
                     }
                 }
 
@@ -498,32 +526,34 @@ public class PluginConfig {
     }
 
     public static ItemStack getIngredient(Material material, int amount) {
-        return getIngredient(material, amount, null, false, false, (short) 0);
+        return getIngredient(material, amount, null, (short) 0);
     }
 
-    public static ItemStack getIngredient(Material material, int amount, short durability) {
-        return getIngredient(material, amount, null, false, false, durability);
+    public static ItemStack getIngredient(Material material, int amount, int damage) {
+        return getIngredient(material, amount, null, damage);
     }
 
     public static ItemStack getIngredient(Material material, int amount, PotionType type) {
-        return getIngredient(material, amount, type, false, false, (short) 0);
+        return getIngredient(material, amount, type, (short) 0);
     }
 
-    public static ItemStack getIngredient(Material material, int amount, PotionType type, boolean extended, boolean upgraded, short durability) {
+    public static ItemStack getIngredient(Material material, int amount, PotionType type, int damage) {
         ItemStack ingredient;
         if (new SemVer(1, 14).compareTo(VampireRevamp.getServerVersion()) <= 0) {
             ingredient = new ItemStack(material, amount);
         }
         else {
-            ingredient = new ItemStack(material, amount, durability);
+            ingredient = new ItemStack(material, amount, (short) damage);
         }
 
-        if (material == Material.POTION || material == Material.LINGERING_POTION || material == Material.SPLASH_POTION) {
-            PotionData pd = new PotionData(type, extended, upgraded);
-            PotionMeta pm = (PotionMeta) ingredient.getItemMeta();
-            pm.setBasePotionData(pd);
-            ingredient.setItemMeta(pm);
-        }
+        ItemMeta meta = ingredient.getItemMeta();
+        if (meta == null)
+            return ingredient;
+        if (meta instanceof Damageable dmg)
+            dmg.setDamage(damage);
+        if (meta instanceof PotionMeta meth)
+            meth.setBasePotionType(type);
+        ingredient.setItemMeta(meta);
 
         return ingredient;
     }
@@ -558,25 +588,15 @@ public class PluginConfig {
                         item = new ItemStack(material, amount);
                     }
 
-                    if (source.containsKey("meta") &&
-                            (material == Material.POTION ||
-                             material == Material.LINGERING_POTION ||
-                             material == Material.SPLASH_POTION)) {
+                    if (source.containsKey("meta") && item.getItemMeta() instanceof PotionMeta meth) {
                         PotionType type;
-                        boolean extended,
-                                upgraded;
                         Map<String, Object> meta = (Map<String, Object>) source.get("meta");
                         String typeName = (String) meta.get("type");
 
                         try {
                             type = PotionType.valueOf(typeName);
-                            extended = (Boolean) meta.getOrDefault("extended", false);
-                            upgraded = (Boolean) meta.getOrDefault("upgraded", false);
-
-                            PotionData pd = new PotionData(type, extended, upgraded);
-                            PotionMeta pm = (PotionMeta) item.getItemMeta();
-                            pm.setBasePotionData(pd);
-                            item.setItemMeta(pm);
+                            meth.setBasePotionType(type);
+                            item.setItemMeta(meth);
                         }
                         catch (IllegalArgumentException ex) {
                             VampireRevamp.log(Level.WARNING, "PotionType " + typeName + " doesn't exist!");

@@ -9,6 +9,8 @@ import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
+import java.util.logging.Level;
+
 public class SunUtil
 {
 	// -------------------------------------------- //
@@ -59,27 +61,42 @@ public class SunUtil
 		int mdticks = calcMidDeltaTicks(world, player);
 		return MDTICKS_TO_ANGLE_FACTIOR * mdticks;
 	}
+
+	public static double calcSolarRad(World world, Player player) {
+		return calcSolarRad(world, player, false);
+	}
 	
 	/**
 	 * A value between 0 and 1. 0 means no sun at all. 1 means sun directly from above.
 	 * http://en.wikipedia.org/wiki/Effect_of_sun_angle_on_climate
 	 */
-	public static double calcSolarRad(World world, Player player)
+	public static double calcSolarRad(World world, Player player, boolean verbose)
 	{
+		if (verbose)
+			VampireRevamp.log(Level.INFO, "Calculating radiation");
 		if (world.getEnvironment() != Environment.NORMAL)
 			return 0d;
 		boolean storming = world.hasStorm();
 
+		if (verbose)
+			VampireRevamp.log(Level.INFO, "Storming: " + storming);
 		if (VampireRevamp.isWorldGuardEnabled()) {
 			WorldGuardCompat wg = VampireRevamp.getWorldGuardCompat();
 			storming = !wg.isSkyClear(player, player.getLocation());
 		}
+		if (verbose)
+			VampireRevamp.log(Level.INFO, "Storming (after wg): " + storming);
 
 		if (storming) return 0d;
 		double angle = calcSunAngle(world, player);
 		double absangle = Math.abs(angle);
 		if (absangle >= HALF_PI) return 0;
 		double a = HALF_PI - absangle;
+		if (verbose) {
+			VampireRevamp.log(Level.INFO, "Angle: " + angle);
+			VampireRevamp.log(Level.INFO, "a: " + a);
+			VampireRevamp.log(Level.INFO, "sina: " + Math.sin(a));
+		}
 		//P.p.log("calcSolarRadiation", Math.sin(a));
 		return Math.sin(a);
 	}
