@@ -47,10 +47,10 @@ public class RadiationConfig {
         tempPerRadAndMilli = 0.0001;
         removeBuffs = new RadiationEffectConfig(true, 0.2, true);
         effects = CollectionUtil.list(
-                new RadiationEffectConfig(PotionEffectType.CONFUSION, 0, 0.2, 200, false),
+                new RadiationEffectConfig(PotionEffectType.NAUSEA, 0, 0.2, 200, false),
                 new RadiationEffectConfig(PotionEffectType.WEAKNESS, 1, 0.3, 200, false),
                 new RadiationEffectConfig(PotionEffectType.WEAKNESS, 0, 0.3, 200, true),
-                new RadiationEffectConfig(PotionEffectType.SLOW, 0, 0.5, 200, false),
+                new RadiationEffectConfig(PotionEffectType.SLOWNESS, 0, 0.5, 200, false),
                 new RadiationEffectConfig(PotionEffectType.BLINDNESS, 0, 0.8, 200, false)
         );
         burn = new RadiationEffectConfig(true, 0.9, 60, true);

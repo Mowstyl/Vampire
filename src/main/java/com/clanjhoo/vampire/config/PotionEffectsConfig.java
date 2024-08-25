@@ -71,7 +71,7 @@ public class PotionEffectsConfig {
                 EventPriority.HIGHEST,
                 CollectionUtil.map(
                         PotionEffectType.SPEED, 3,
-                        PotionEffectType.JUMP, 4
+                        PotionEffectType.JUMP_BOOST, 4
                 )
         );
     }
@@ -91,7 +91,7 @@ public class PotionEffectsConfig {
                 CollectionUtil.map(
                         PotionEffectType.REGENERATION, 3,
                         PotionEffectType.SPEED, 1,
-                        PotionEffectType.JUMP, 2
+                        PotionEffectType.JUMP_BOOST, 2
                 )
         );
     }
@@ -101,7 +101,7 @@ public class PotionEffectsConfig {
                 EventPriority.NORMAL,
                 CollectionUtil.map(
                         PotionEffectType.SPEED, 1,
-                        PotionEffectType.JUMP, 1
+                        PotionEffectType.JUMP_BOOST, 1
                 )
         );
     }

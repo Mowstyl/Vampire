@@ -974,7 +974,7 @@ public class VPlayer {
                 if (conf.infection.progressDamage != 0)
                     me.damage(conf.infection.progressDamage);
                 if (conf.infection.progressNauseaTicks > 0)
-                    FxUtil.ensure(PotionEffectType.CONFUSION, me, conf.infection.progressNauseaTicks);
+                    FxUtil.ensure(PotionEffectType.NAUSEA, me, conf.infection.progressNauseaTicks);
 
                 VampireRevamp.sendMessage(me,
                         MessageType.INFO,
@@ -1214,7 +1214,7 @@ public class VPlayer {
                 VampireRevamp.sendMessage(me,
                         MessageType.INFO,
                         TradingMessageKeys.SELF);
-                FxUtil.ensure(PotionEffectType.CONFUSION, me, 12 * 20);
+                FxUtil.ensure(PotionEffectType.NAUSEA, me, 12 * 20);
             } else {
                 Component merName = Component.text(me.getDisplayName());
                 Component amountComp = Component.text(String.format("%.1f", amount));

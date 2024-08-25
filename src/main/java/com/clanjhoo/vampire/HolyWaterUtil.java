@@ -58,9 +58,8 @@ public class HolyWaterUtil {
     }
 
     public static boolean isHolyWater(ItemStack item) {
-        if (!item.getType().equals(Material.SPLASH_POTION)) {
+        if (!item.getType().equals(Material.SPLASH_POTION))
             return false;
-        }
 
         PotionMeta meta = (PotionMeta) item.getItemMeta();
         assert meta != null;
@@ -71,5 +70,4 @@ public class HolyWaterUtil {
         Boolean result = itemDC.get(HOLY_WATER_KEY, BooleanTagType.TYPE);
         return result != null && result;
     }
-
 }

@@ -137,8 +137,7 @@ public class ResourceUtil {
 		if (qty > 0 && qty <= 64) {
 			bottles = new ItemStack(Material.POTION, qty);
 			PotionMeta meta = (PotionMeta) bottles.getItemMeta();
-			PotionData data = new PotionData(PotionType.WATER);
-			meta.setBasePotionData(data);
+			meta.setBasePotionType(PotionType.WATER);
 			bottles.setItemMeta(meta);
 		}
 
