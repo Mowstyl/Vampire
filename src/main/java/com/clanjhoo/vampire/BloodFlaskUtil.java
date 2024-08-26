@@ -6,7 +6,7 @@ import com.clanjhoo.vampire.util.BooleanTagType;
 import com.clanjhoo.vampire.util.Tuple;
 import com.clanjhoo.vampire.util.UUIDTagType;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
+import net.kyori.adventure.text.serializer.bungeecord.BungeeComponentSerializer;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
@@ -46,11 +46,17 @@ public class BloodFlaskUtil {
         // ... and set the item meta ...
         Component displayName = VampireRevamp.getMessage(creator, SkillMessageKeys.FLASK_NAME);
         PotionMeta meta = (PotionMeta) ret.getItemMeta();
-        LegacyComponentSerializer serializer = LegacyComponentSerializer.legacySection();
-        meta.setDisplayName(serializer.serialize(displayName));
-        meta.setLore(lore.stream()
-                .map(serializer::serialize)
-                .toList());
+        if (VampireRevamp.isPaperMc()) {
+            meta.displayName(displayName);
+            meta.lore(lore);
+        }
+        else {
+            BungeeComponentSerializer serializer = BungeeComponentSerializer.get();
+            meta.setDisplayNameComponent(serializer.serialize(displayName));
+            meta.setLoreComponents(lore.stream()
+                    .map(serializer::serialize)
+                    .toList());
+        }
         meta.addCustomEffect(BLOOD_FLASK_CUSTOM_EFFECT, false);
         meta.addItemFlags(ItemFlag.HIDE_POTION_EFFECTS, ItemFlag.HIDE_ATTRIBUTES);
 

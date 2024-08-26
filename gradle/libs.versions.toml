@@ -40,4 +40,5 @@ kyori-adventure-ansi = { group = "net.kyori", name = "adventure-text-serializer-
 kyori-adventure-legacy = { group = "net.kyori", name = "adventure-text-serializer-legacy", version.ref = "adventure" }
 kyori-platform-api = { group = "net.kyori", name = "adventure-platform-api", version.ref = "adventurePlatform" }
 kyori-platform-bukkit = { group = "net.kyori", name = "adventure-platform-bukkit", version.ref = "adventurePlatform" }
+kyori-platform-bungee = { group = "net.kyori", name = "adventure-platform-bungeecord", version.ref = "adventurePlatform" }
 jetbrains-annotations = { group = "org.jetbrains", name = "annotations", version.ref = "annotations" }

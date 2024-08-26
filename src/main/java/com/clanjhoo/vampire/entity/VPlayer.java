@@ -1103,6 +1103,9 @@ public class VPlayer {
             VPlayer vyou = this.tradeOfferedFrom;
             Player you = vyou == null ? null : vyou.getPlayer();
             PluginConfig conf = VampireRevamp.getVampireConfig();
+            Component yourName = VampireRevamp.isPaperMc()
+                    ? you.displayName()
+                    : Component.text(you.getDisplayName());
 
             // Any offer available?
             if (you == null || System.currentTimeMillis() - this.tradeOfferedAtMillis > conf.trade.offerToleranceMillis) {
@@ -1114,7 +1117,7 @@ public class VPlayer {
                 VampireRevamp.sendMessage(me,
                         MessageType.ERROR,
                         TradingMessageKeys.NOT_CLOSE,
-                        "{player}", you.getDisplayName());
+                        new Tuple<>("{player}", yourName));
             } else {
                 double amount = this.tradeOfferedAmount;
 
@@ -1135,8 +1138,12 @@ public class VPlayer {
                     VampireRevamp.sendMessage(me,
                             MessageType.ERROR,
                             TradingMessageKeys.LACKING_IN,
-                            "{player}", you.getDisplayName());
+                            new Tuple<>("{player}", yourName));
                 } else {
+                    Component merName = VampireRevamp.isPaperMc()
+                            ? me.displayName()
+                            : Component.text(me.getDisplayName());
+                    Component amountComp = Component.text(String.format("%.1f", amount));
                     // Transfer blood (food for vampires, life for humans)
                     if (conf.general.vampiresUseFoodAsBlood && vyou.isVampire()) {
                         vyou.addFood(-amount);
@@ -1160,13 +1167,13 @@ public class VPlayer {
                     VampireRevamp.sendMessage(you,
                             MessageType.INFO,
                             TradingMessageKeys.TRANSFER_OUT,
-                            "{player}", me.getDisplayName(),
-                            "{amount}", String.format("%.1f", amount));
+                            new Tuple<>("{player}", merName),
+                            new Tuple<>("{amount}", amountComp));
                     VampireRevamp.sendMessage(me,
                             MessageType.INFO,
                             TradingMessageKeys.TRANSFER_IN,
-                            "{player}", you.getDisplayName(),
-                            "{amount}", String.format("%.1f", amount));
+                            new Tuple<>("{player}", yourName),
+                            new Tuple<>("{amount}", amountComp));
 
                     // Who noticed?
                     Location tradeLocation = me.getLocation();
@@ -1181,8 +1188,8 @@ public class VPlayer {
                                 VampireRevamp.sendMessage(player,
                                         MessageType.INFO,
                                         TradingMessageKeys.SEEN,
-                                        "{player}", me.getDisplayName(),
-                                        "{source}", you.getDisplayName());
+                                        new Tuple<>("{player}", merName),
+                                        new Tuple<>("{source}", yourName));
                             }
                         }
                     }
@@ -1201,17 +1208,24 @@ public class VPlayer {
         Player me = Bukkit.getPlayer(uuid);
         if (you != null && me != null) {
             PluginConfig conf = VampireRevamp.getVampireConfig();
+            Component yourName = VampireRevamp.isPaperMc()
+                    ? you.displayName()
+                    : Component.text(you.getDisplayName());
             if (!this.withinDistanceOf(vyou, conf.trade.offerMaxDistance)) {
                 VampireRevamp.sendMessage(me,
                         MessageType.INFO,
                         TradingMessageKeys.NOT_CLOSE,
-                        "{player}", you.getDisplayName());
+                        new Tuple<>("{player}", yourName));
             } else if (me.equals(you)) {
                 VampireRevamp.sendMessage(me,
                         MessageType.INFO,
                         TradingMessageKeys.SELF);
                 FxUtil.ensure(PotionEffectType.CONFUSION, me, 12 * 20);
             } else {
+                Component merName = VampireRevamp.isPaperMc()
+                        ? me.displayName()
+                        : Component.text(me.getDisplayName());
+                Component amountComp = Component.text(String.format("%.1f", amount));
                 vyou.tradeOfferedFrom = this;
                 vyou.tradeOfferedAtMillis = System.currentTimeMillis();
                 vyou.tradeOfferedAmount = amount;
@@ -1219,14 +1233,14 @@ public class VPlayer {
                 VampireRevamp.sendMessage(me,
                         MessageType.INFO,
                         TradingMessageKeys.OFFER_OUT,
-                        "{player}", you.getDisplayName(),
-                        "{amount}", String.format("%.1f", amount));
+                        new Tuple<>("{player}", yourName),
+                        new Tuple<>("{amount}", amountComp));
 
                 VampireRevamp.sendMessage(you,
                         MessageType.INFO,
                         TradingMessageKeys.OFFER_IN,
-                        "{player}", me.getDisplayName(),
-                        "{amount}", String.format("%.1f", amount));
+                        new Tuple<>("{player}", merName),
+                        new Tuple<>("{amount}", amountComp));
 
                 VampireRevamp.sendMessage(you,
                         MessageType.INFO,
