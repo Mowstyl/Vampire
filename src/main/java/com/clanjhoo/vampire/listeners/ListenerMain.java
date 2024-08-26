@@ -707,9 +707,7 @@ public class ListenerMain implements Listener {
                                 VampireRevamp.log(Level.WARNING, "There was an error while loading " + player.getName() + " data");
                                 return;
                             }
-                            Component displayName = VampireRevamp.isPaperMc()
-                                    ? shooter.displayName()
-                                    : Component.text(shooter.getDisplayName());
+                            Component displayName = Component.text(shooter.getDisplayName());
                             VampireRevamp.sendMessage(player,
                                     MessageType.INFO,
                                     HolyWaterMessageKeys.COMMON_REACT,

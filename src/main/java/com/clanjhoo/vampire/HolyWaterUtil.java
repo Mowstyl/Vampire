@@ -4,6 +4,7 @@ import com.clanjhoo.vampire.keyproviders.HolyWaterMessageKeys;
 import com.clanjhoo.vampire.util.BooleanTagType;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.bungeecord.BungeeComponentSerializer;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
@@ -16,6 +17,7 @@ import org.bukkit.potion.PotionEffectType;
 import org.bukkit.potion.PotionType;
 
 import java.util.List;
+import java.util.Objects;
 
 public class HolyWaterUtil {
 
@@ -25,17 +27,21 @@ public class HolyWaterUtil {
     public static ItemStack createHolyWater(Player creator) {
         ItemStack ret = new ItemStack(Material.SPLASH_POTION);
         PotionMeta meta = (PotionMeta) ret.getItemMeta();
+        assert meta != null;
         Component holyWaterName = VampireRevamp.getMessage(creator, HolyWaterMessageKeys.NAME);
         List<Component> holyWaterLore = VampireRevamp.getMessageList(creator, HolyWaterMessageKeys.LORE);
         meta.setBasePotionType(PotionType.WATER);
         if (VampireRevamp.isPaperMc()) {
-            meta.displayName(holyWaterName);
-            meta.lore(holyWaterLore);
-        }
-        else {
             BungeeComponentSerializer serializer = BungeeComponentSerializer.get();
             meta.setDisplayNameComponent(serializer.serialize(holyWaterName));
             meta.setLoreComponents(holyWaterLore.stream()
+                    .map(serializer::serialize)
+                    .toList());
+        }
+        else {
+            LegacyComponentSerializer serializer = LegacyComponentSerializer.legacySection();
+            meta.setDisplayName(serializer.serialize(holyWaterName));
+            meta.setLore(holyWaterLore.stream()
                     .map(serializer::serialize)
                     .toList());
         }
@@ -57,9 +63,9 @@ public class HolyWaterUtil {
         }
 
         PotionMeta meta = (PotionMeta) item.getItemMeta();
-        if (!meta.getBasePotionType().equals(PotionType.WATER)) {
+        assert meta != null;
+        if (!Objects.equals(meta.getBasePotionType(), PotionType.WATER))
             return false;
-        }
 
         PersistentDataContainer itemDC =  meta.getPersistentDataContainer();
         Boolean result = itemDC.get(HOLY_WATER_KEY, BooleanTagType.TYPE);

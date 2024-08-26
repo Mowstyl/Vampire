@@ -627,9 +627,7 @@ public class CmdVampire extends BaseCommand {
 			if (auxPlayer == null)
 				continue;
 
-			Component compName = VampireRevamp.isPaperMc()
-					? auxPlayer.name()
-					: Component.text(auxPlayer.getName());
+			Component compName = Component.text(auxPlayer.getDisplayName());
 			if (vPlayer.isVampire())
 				vampiresOnline.add(compName);
 			else if (vPlayer.isInfected())
@@ -867,9 +865,7 @@ public class CmdVampire extends BaseCommand {
 							return;
 						}
 						if (vPlayer.isVampire() != val) {
-							Component displayName = VampireRevamp.isPaperMc()
-									? player.displayName()
-									: Component.text(player.getDisplayName());
+							Component displayName = Component.text(player.getDisplayName());
 							if (!val || !VampireRevamp.getWerewolvesCompat().isWerewolf(player)) {
 								vPlayer.setReason(InfectionReason.OPERATOR);
 								vPlayer.setMaker(null);
@@ -939,9 +935,7 @@ public class CmdVampire extends BaseCommand {
 									CommandMessageKeys.DATA_NOT_FOUND);
 							return;
 						}
-						Component displayName = VampireRevamp.isPaperMc()
-								? player.displayName()
-								: Component.text(player.getDisplayName());
+						Component displayName = Component.text(player.getDisplayName());
 						if (!val || !VampireRevamp.getWerewolvesCompat().isWerewolf(player)) {
 							if (val && vPlayer.isVampire() != val) {
 								vPlayer.setReason(InfectionReason.OPERATOR);
@@ -1018,9 +1012,7 @@ public class CmdVampire extends BaseCommand {
 							CommandMessageKeys.DATA_NOT_FOUND);
 					return;
 				}
-				Component displayName = VampireRevamp.isPaperMc()
-						? player.displayName()
-						: Component.text(player.getDisplayName());
+				Component displayName = Component.text(player.getDisplayName());
 				if (vPlayer.isVampire()) {
 					VampireRevamp.sendMessage(sender,
 							MessageType.ERROR,
@@ -1095,9 +1087,7 @@ public class CmdVampire extends BaseCommand {
 			player.setFoodLevel(res);
 
 			Component attributeName = VampireRevamp.getMessage(sender, CommandMessageKeys.SET_FOOD_ATTRIBUTE);
-			Component displayName = VampireRevamp.isPaperMc()
-					? player.displayName()
-					: Component.text(player.getDisplayName());
+			Component displayName = Component.text(player.getDisplayName());
 			VampireRevamp.sendMessage(sender,
 					MessageType.INFO,
 					CommandMessageKeys.SET_CHANGED_VALUE,
@@ -1139,9 +1129,7 @@ public class CmdVampire extends BaseCommand {
 			player.setHealth(res);
 
 			Component attributeName = VampireRevamp.getMessage(sender, CommandMessageKeys.SET_HEALTH_ATTRIBUTE);
-			Component displayName = VampireRevamp.isPaperMc()
-					? player.displayName()
-					: Component.text(player.getDisplayName());
+			Component displayName = Component.text(player.getDisplayName());
 			VampireRevamp.sendMessage(sender,
 					MessageType.INFO,
 					CommandMessageKeys.SET_CHANGED_VALUE,

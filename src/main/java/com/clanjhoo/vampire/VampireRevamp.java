@@ -654,17 +654,12 @@ public class VampireRevamp extends JavaPlugin {
 	}
 
 	public static void sendMessage(CommandSender recipient, Component message) {
-		if (isPapermc) {
-			recipient.sendMessage(message);
-		}
-		else {
-			if (recipient instanceof Player) {
-				plugin.adventure.player(((Player) recipient).getUniqueId()).sendMessage(message);
-			} else if (recipient instanceof ConsoleCommandSender) {
-				plugin.adventure.console().sendMessage(message);
-			} else {
-				recipient.spigot().sendMessage(BungeeComponentSerializer.get().serialize(message));
-			}
+		if (recipient instanceof Player) {
+			plugin.adventure.player(((Player) recipient).getUniqueId()).sendMessage(message);
+		} else if (recipient instanceof ConsoleCommandSender) {
+			plugin.adventure.console().sendMessage(message);
+		} else {
+			recipient.spigot().sendMessage(BungeeComponentSerializer.get().serialize(message));
 		}
 	}
 

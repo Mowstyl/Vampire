@@ -151,10 +151,7 @@ public class EntityUtil {
 
             for (int i = 0; i < qty; i++) {
                 Bat fakeBat = (Bat) p.getWorld().spawnEntity(p.getLocation(), EntityType.BAT);
-                if (VampireRevamp.isPaperMc())
-                    fakeBat.customName(p.displayName());
-                else
-                    fakeBat.setCustomName(p.getDisplayName());
+                fakeBat.setCustomName(p.getDisplayName());
                 entities.add(fakeBat);
                 plugin.bats.add(fakeBat);
             }

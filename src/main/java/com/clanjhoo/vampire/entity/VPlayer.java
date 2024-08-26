@@ -1103,9 +1103,7 @@ public class VPlayer {
             VPlayer vyou = this.tradeOfferedFrom;
             Player you = vyou == null ? null : vyou.getPlayer();
             PluginConfig conf = VampireRevamp.getVampireConfig();
-            Component yourName = VampireRevamp.isPaperMc()
-                    ? you.displayName()
-                    : Component.text(you.getDisplayName());
+            Component yourName = Component.text(you.getDisplayName());
 
             // Any offer available?
             if (you == null || System.currentTimeMillis() - this.tradeOfferedAtMillis > conf.trade.offerToleranceMillis) {
@@ -1140,9 +1138,7 @@ public class VPlayer {
                             TradingMessageKeys.LACKING_IN,
                             new Tuple<>("{player}", yourName));
                 } else {
-                    Component merName = VampireRevamp.isPaperMc()
-                            ? me.displayName()
-                            : Component.text(me.getDisplayName());
+                    Component merName = Component.text(me.getDisplayName());
                     Component amountComp = Component.text(String.format("%.1f", amount));
                     // Transfer blood (food for vampires, life for humans)
                     if (conf.general.vampiresUseFoodAsBlood && vyou.isVampire()) {
@@ -1208,9 +1204,7 @@ public class VPlayer {
         Player me = Bukkit.getPlayer(uuid);
         if (you != null && me != null) {
             PluginConfig conf = VampireRevamp.getVampireConfig();
-            Component yourName = VampireRevamp.isPaperMc()
-                    ? you.displayName()
-                    : Component.text(you.getDisplayName());
+            Component yourName = Component.text(you.getDisplayName());
             if (!this.withinDistanceOf(vyou, conf.trade.offerMaxDistance)) {
                 VampireRevamp.sendMessage(me,
                         MessageType.INFO,
@@ -1222,9 +1216,7 @@ public class VPlayer {
                         TradingMessageKeys.SELF);
                 FxUtil.ensure(PotionEffectType.CONFUSION, me, 12 * 20);
             } else {
-                Component merName = VampireRevamp.isPaperMc()
-                        ? me.displayName()
-                        : Component.text(me.getDisplayName());
+                Component merName = Component.text(me.getDisplayName());
                 Component amountComp = Component.text(String.format("%.1f", amount));
                 vyou.tradeOfferedFrom = this;
                 vyou.tradeOfferedAtMillis = System.currentTimeMillis();
