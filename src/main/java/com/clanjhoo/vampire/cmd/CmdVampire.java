@@ -192,7 +192,7 @@ public class CmdVampire extends BaseCommand {
 						"{percent}", String.format("%d%%", (int) Math.round(vPlayer.getTemp() * 100)));
 
 				int rad = (int) Math.round(100 * vPlayer.getRad());
-				int sun = (int) Math.round(100 * SunUtil.calcSolarRad(player.getWorld(), player, true));
+				int sun = (int) Math.round(100 * SunUtil.calcSolarRad(player.getWorld(), player));
 				double terrain = 1d - SunUtil.calcTerrainOpacity(player.getLocation().getBlock());
 				double armor = 1d - SunUtil.calcArmorOpacity(player);
 				int base = (int) Math.round(100 * conf.radiation.baseRadiation);
@@ -627,7 +627,7 @@ public class CmdVampire extends BaseCommand {
 			if (auxPlayer == null)
 				continue;
 
-			Component compName = Component.text(auxPlayer.getName());
+			Component compName = Component.text(auxPlayer.getDisplayName());
 			if (vPlayer.isVampire())
 				vampiresOnline.add(compName);
 			else if (vPlayer.isInfected())
@@ -865,6 +865,7 @@ public class CmdVampire extends BaseCommand {
 							return;
 						}
 						if (vPlayer.isVampire() != val) {
+							Component displayName = Component.text(player.getDisplayName());
 							if (!val || !VampireRevamp.getWerewolvesCompat().isWerewolf(player)) {
 								vPlayer.setReason(InfectionReason.OPERATOR);
 								vPlayer.setMaker(null);
@@ -874,7 +875,6 @@ public class CmdVampire extends BaseCommand {
 
 								Component onOff = val ? VampireRevamp.getMessage(sender, GrammarMessageKeys.ON) : VampireRevamp.getMessage(sender, GrammarMessageKeys.OFF);
 								Component attributeName = VampireRevamp.getMessage(sender, CommandMessageKeys.SET_VAMPIRE_ATTRIBUTE);
-								Component displayName = Component.text(player.getDisplayName());
 								VampireRevamp.sendMessage(sender,
 										MessageType.INFO,
 										CommandMessageKeys.SET_CHANGED_VALUE,
@@ -885,7 +885,7 @@ public class CmdVampire extends BaseCommand {
 								VampireRevamp.sendMessage(sender,
 										MessageType.ERROR,
 										CommandMessageKeys.SET_ERROR_HYBRID,
-										"{player}", player.getDisplayName());
+										new Tuple<>("{player}", displayName));
 							}
 						}
 					}
@@ -935,6 +935,7 @@ public class CmdVampire extends BaseCommand {
 									CommandMessageKeys.DATA_NOT_FOUND);
 							return;
 						}
+						Component displayName = Component.text(player.getDisplayName());
 						if (!val || !VampireRevamp.getWerewolvesCompat().isWerewolf(player)) {
 							if (val && vPlayer.isVampire() != val) {
 								vPlayer.setReason(InfectionReason.OPERATOR);
@@ -951,7 +952,6 @@ public class CmdVampire extends BaseCommand {
 
 							Component onOff = val ? VampireRevamp.getMessage(sender, GrammarMessageKeys.ON) : VampireRevamp.getMessage(sender, GrammarMessageKeys.OFF);
 							Component attributeName = VampireRevamp.getMessage(sender, CommandMessageKeys.SET_NOSFERATU_ATTRIBUTE);
-							Component displayName = Component.text(player.getDisplayName());
 							VampireRevamp.sendMessage(sender,
 									MessageType.INFO,
 									CommandMessageKeys.SET_CHANGED_VALUE,
@@ -963,7 +963,7 @@ public class CmdVampire extends BaseCommand {
 							VampireRevamp.sendMessage(sender,
 									MessageType.ERROR,
 									CommandMessageKeys.SET_ERROR_HYBRID,
-									"{player}", player.getDisplayName());
+									new Tuple<>("{player}", displayName));
 						}
 					}
 					else {
@@ -1012,11 +1012,12 @@ public class CmdVampire extends BaseCommand {
 							CommandMessageKeys.DATA_NOT_FOUND);
 					return;
 				}
+				Component displayName = Component.text(player.getDisplayName());
 				if (vPlayer.isVampire()) {
 					VampireRevamp.sendMessage(sender,
 							MessageType.ERROR,
 							VampirismMessageKeys.ALREADY_VAMPIRE,
-							"{player}", player.getDisplayName());
+							new Tuple<>("{player}", displayName));
 				} else {
 					if (!VampireRevamp.getWerewolvesCompat().isWerewolf(player)) {
 						InfectionReason reason = vPlayer.getReason();
@@ -1030,7 +1031,6 @@ public class CmdVampire extends BaseCommand {
 						vPlayer.update();
 
 						Component attributeName = VampireRevamp.getMessage(sender, CommandMessageKeys.SET_INFECTION_ATTRIBUTE);
-						Component displayName = Component.text(player.getDisplayName());
 						Component valComp = Component.text(String.format("%.2f%%", value * 100));
 						VampireRevamp.sendMessage(sender,
 								MessageType.INFO,
@@ -1042,7 +1042,7 @@ public class CmdVampire extends BaseCommand {
 						VampireRevamp.sendMessage(sender,
 								MessageType.ERROR,
 								CommandMessageKeys.SET_ERROR_HYBRID,
-								"{player}", player.getDisplayName());
+								new Tuple<>("{player}", displayName));
 					}
 				}
 			}

@@ -10,6 +10,7 @@ import com.clanjhoo.vampire.keyproviders.VampirismMessageKeys;
 import com.clanjhoo.vampire.config.PluginConfig;
 import com.clanjhoo.vampire.entity.VPlayer;
 import com.clanjhoo.vampire.util.*;
+import net.kyori.adventure.text.Component;
 import org.bukkit.*;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.block.Block;
@@ -706,10 +707,11 @@ public class ListenerMain implements Listener {
                                 VampireRevamp.log(Level.WARNING, "There was an error while loading " + player.getName() + " data");
                                 return;
                             }
+                            Component displayName = Component.text(shooter.getDisplayName());
                             VampireRevamp.sendMessage(player,
                                     MessageType.INFO,
                                     HolyWaterMessageKeys.COMMON_REACT,
-                                    "{player}", shooter.getDisplayName());
+                                    new Tuple<>("{player}", displayName));
                             vPlayer.runFxEnderBurst();
 
                             // Trigger a damage event so other plugins can cancel this.

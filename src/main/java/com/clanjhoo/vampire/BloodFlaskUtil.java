@@ -6,6 +6,7 @@ import com.clanjhoo.vampire.util.BooleanTagType;
 import com.clanjhoo.vampire.util.Tuple;
 import com.clanjhoo.vampire.util.UUIDTagType;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.serializer.bungeecord.BungeeComponentSerializer;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
@@ -13,6 +14,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.PotionMeta;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
@@ -46,11 +48,22 @@ public class BloodFlaskUtil {
         // ... and set the item meta ...
         Component displayName = VampireRevamp.getMessage(creator, SkillMessageKeys.FLASK_NAME);
         PotionMeta meta = (PotionMeta) ret.getItemMeta();
-        LegacyComponentSerializer serializer = LegacyComponentSerializer.legacySection();
-        meta.setDisplayName(serializer.serialize(displayName));
-        meta.setLore(lore.stream()
-                .map(serializer::serialize)
-                .toList());
+        assert meta != null;
+
+        if (VampireRevamp.isPaperMc()) {
+            BungeeComponentSerializer serializer = BungeeComponentSerializer.get();
+            meta.setDisplayNameComponent(serializer.serialize(displayName));
+            meta.setLoreComponents(lore.stream()
+                    .map(serializer::serialize)
+                    .toList());
+        }
+        else {
+            LegacyComponentSerializer serializer = LegacyComponentSerializer.legacySection();
+            meta.setDisplayName(serializer.serialize(displayName));
+            meta.setLore(lore.stream()
+                    .map(serializer::serialize)
+                    .toList());
+        }
         meta.addCustomEffect(BLOOD_FLASK_CUSTOM_EFFECT, false);
         meta.addItemFlags(ItemFlag.HIDE_ADDITIONAL_TOOLTIP, ItemFlag.HIDE_ATTRIBUTES);
 
@@ -72,10 +85,13 @@ public class BloodFlaskUtil {
         Boolean isVampiric;
         UUID owner;
 
-        PersistentDataContainer flaskTag = item.getItemMeta().getPersistentDataContainer().get(BLOOD_FLASK_KEY, PersistentDataType.TAG_CONTAINER);
-        if (flaskTag == null) {
+        ItemMeta meta = item.getItemMeta();
+        if (meta == null)
             return null;
-        }
+
+        PersistentDataContainer flaskTag = meta.getPersistentDataContainer().get(BLOOD_FLASK_KEY, PersistentDataType.TAG_CONTAINER);
+        if (flaskTag == null)
+            return null;
 
         amount = flaskTag.get(BLOOD_FLASK_AMOUNT, PersistentDataType.DOUBLE);
         isVampiric = flaskTag.get(BLOOD_FLASK_VAMPIRIC, BooleanTagType.TYPE);
@@ -92,24 +108,26 @@ public class BloodFlaskUtil {
         ItemStack item = player.getInventory().getItemInMainHand();
         if (item.getType() == Material.GLASS_BOTTLE) {
             int amount = item.getAmount();
-            if (amount > 1) {
+            if (amount > 1)
                 item.setAmount(amount - 1);
-            } else {
+            else
                 item = null;
-            }
+
             player.getInventory().setItemInMainHand(item);
             return true;
         }
         return false;
     }
 
-    public static boolean fillBottle(VPlayer uplayer, double amount) {
-        Player player = uplayer.getPlayer();
-        if (!BloodFlaskUtil.playerConsumeGlassBottle(player)) {
+    public static boolean fillBottle(VPlayer vPlayer, double amount) {
+        Player player = vPlayer.getPlayer();
+        if (player == null)
             return false;
-        }
+        if (!BloodFlaskUtil.playerConsumeGlassBottle(player))
+            return false;
+
         PlayerInventory playerInventory = player.getInventory();
-        ItemStack flask = BloodFlaskUtil.createBloodFlask(player, amount, uplayer.isVampire());
+        ItemStack flask = BloodFlaskUtil.createBloodFlask(player, amount, vPlayer.isVampire());
         Map<Integer, ItemStack> result = playerInventory.addItem(flask);
         if (!result.isEmpty())
             player.getWorld().dropItem(player.getLocation(), flask);

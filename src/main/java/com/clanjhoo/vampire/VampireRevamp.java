@@ -29,13 +29,11 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.minimessage.MiniMessage;
-import net.kyori.adventure.text.serializer.ansi.ANSIComponentSerializer;
-import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
+import net.kyori.adventure.text.serializer.bungeecord.BungeeComponentSerializer;
 import net.milkbowl.vault.permission.Permission;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.OfflinePlayer;
-import org.bukkit.command.BlockCommandSender;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.configuration.ConfigurationSection;
@@ -578,7 +576,7 @@ public class VampireRevamp extends JavaPlugin {
 		if (color != null)
 			message = message.colorIfAbsent(color);
 
-		plugin.getLogger().log(level, ANSIComponentSerializer.ansi().serialize(message));
+		plugin.adventure.console().sendMessage(message);
 	}
 
 	public static void debugLog(Level level, String message) {
@@ -658,15 +656,10 @@ public class VampireRevamp extends JavaPlugin {
 	public static void sendMessage(CommandSender recipient, Component message) {
 		if (recipient instanceof Player) {
 			plugin.adventure.player(((Player) recipient).getUniqueId()).sendMessage(message);
-		}
-		else if (recipient instanceof ConsoleCommandSender) {
+		} else if (recipient instanceof ConsoleCommandSender) {
 			plugin.adventure.console().sendMessage(message);
-		}
-		else if (recipient instanceof BlockCommandSender) {
-			recipient.sendMessage(GsonComponentSerializer.gson().serialize(message));
-		}
-		else {
-			recipient.sendMessage(ANSIComponentSerializer.ansi().serialize(message));
+		} else {
+			recipient.spigot().sendMessage(BungeeComponentSerializer.get().serialize(message));
 		}
 	}
 

@@ -3,6 +3,7 @@ package com.clanjhoo.vampire;
 import com.clanjhoo.vampire.keyproviders.HolyWaterMessageKeys;
 import com.clanjhoo.vampire.util.BooleanTagType;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.serializer.bungeecord.BungeeComponentSerializer;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
@@ -26,14 +27,24 @@ public class HolyWaterUtil {
     public static ItemStack createHolyWater(Player creator) {
         ItemStack ret = new ItemStack(Material.SPLASH_POTION);
         PotionMeta meta = (PotionMeta) ret.getItemMeta();
+        assert meta != null;
         Component holyWaterName = VampireRevamp.getMessage(creator, HolyWaterMessageKeys.NAME);
         List<Component> holyWaterLore = VampireRevamp.getMessageList(creator, HolyWaterMessageKeys.LORE);
         meta.setBasePotionType(PotionType.WATER);
-        LegacyComponentSerializer serializer = LegacyComponentSerializer.legacySection();
-        meta.setDisplayName(serializer.serialize(holyWaterName));
-        meta.setLore(holyWaterLore.stream()
-                .map(serializer::serialize)
-                .toList());
+        if (VampireRevamp.isPaperMc()) {
+            BungeeComponentSerializer serializer = BungeeComponentSerializer.get();
+            meta.setDisplayNameComponent(serializer.serialize(holyWaterName));
+            meta.setLoreComponents(holyWaterLore.stream()
+                    .map(serializer::serialize)
+                    .toList());
+        }
+        else {
+            LegacyComponentSerializer serializer = LegacyComponentSerializer.legacySection();
+            meta.setDisplayName(serializer.serialize(holyWaterName));
+            meta.setLore(holyWaterLore.stream()
+                    .map(serializer::serialize)
+                    .toList());
+        }
         //meta.addCustomEffect(HOLY_WATER_CUSTOM_EFFECT, false);
         PersistentDataContainer potionDC = meta.getPersistentDataContainer();
         potionDC.set(HOLY_WATER_KEY, BooleanTagType.TYPE, true);
@@ -51,6 +62,7 @@ public class HolyWaterUtil {
             return false;
 
         PotionMeta meta = (PotionMeta) item.getItemMeta();
+        assert meta != null;
         if (!Objects.equals(meta.getBasePotionType(), PotionType.WATER))
             return false;
 

@@ -7,18 +7,13 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.*;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.metadata.Metadatable;
-import org.bukkit.permissions.PermissionAttachment;
 import org.bukkit.util.Vector;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 
 public class EntityUtil {
-    public static final Map<UUID, PermissionAttachment> perms = new ConcurrentHashMap<>();
 
     public static Player getAsPlayer(Entity entity) {
         Player player = null;
@@ -37,8 +32,7 @@ public class EntityUtil {
     public static boolean isNpc(Object object) {
         boolean buliano = false;
 
-        if (object instanceof Metadatable) {
-            Metadatable metadatable = (Metadatable) object;
+        if (object instanceof Metadatable metadatable) {
             try {
                 buliano = metadatable.hasMetadata("NPC");
             } catch (UnsupportedOperationException ignore) {
@@ -53,7 +47,7 @@ public class EntityUtil {
     public static boolean isSender(Object object) {
         boolean buliano = false;
 
-        if (object != null && object instanceof CommandSender) {
+        if (object instanceof CommandSender) {
             buliano = !isNpc(object);
         }
 
@@ -157,11 +151,9 @@ public class EntityUtil {
 
             for (int i = 0; i < qty; i++) {
                 Bat fakeBat = (Bat) p.getWorld().spawnEntity(p.getLocation(), EntityType.BAT);
-                if (fakeBat != null) {
-                    fakeBat.setCustomName(p.getDisplayName());
-                    entities.add(fakeBat);
-                    plugin.bats.add(fakeBat);
-                }
+                fakeBat.setCustomName(p.getDisplayName());
+                entities.add(fakeBat);
+                plugin.bats.add(fakeBat);
             }
 
             plugin.batmap.put(p.getUniqueId(), entities);

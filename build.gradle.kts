@@ -137,7 +137,6 @@ dependencies {
     implementation(libs.clanjhoo.dbhandler)
     implementation(libs.kyori.adventure.minimessage)
     implementation(libs.kyori.adventure.gson)
-    implementation(libs.kyori.adventure.ansi)
     implementation(libs.kyori.platform.bukkit)
 }
 
