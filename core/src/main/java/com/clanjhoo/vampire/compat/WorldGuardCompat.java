@@ -82,7 +82,7 @@ public class WorldGuardCompat {
     }
 
     public boolean isSkyClear(Player player, Location location) {
-        boolean clear = location.getWorld().isClearWeather();
+        boolean clear = !location.getWorld().isThundering() && !location.getWorld().hasStorm();
         WeatherType qres = queryFlag(player, location, Flags.WEATHER_LOCK);
         if (qres != null) {
             clear = !qres.getName().equals(org.bukkit.WeatherType.DOWNFALL.name());

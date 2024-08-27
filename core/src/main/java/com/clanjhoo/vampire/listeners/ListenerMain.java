@@ -303,7 +303,10 @@ public class ListenerMain implements Listener {
             PluginConfig conf = VampireRevamp.getVampireConfig();
 
             // ... by creature that cares about the truce with vampires ...
-            if (player != null && conf.truce.entityTypes.contains(event.getEntityType())) {
+            if (player != null && event.getEntity() instanceof Creature) {
+                Creature creat = (Creature) event.getEntity();
+                if (creat.getCategory() != EntityCategory.UNDEAD || creat.getType() == EntityType.WITHER)
+                    return;
                 VampireRevamp.debugLog(Level.INFO, "Entity in truce list");
                 VPlayer vPlayer = VampireRevamp.getVPlayer(player);
                 if (vPlayer == null)
@@ -327,7 +330,10 @@ public class ListenerMain implements Listener {
         if (EventUtil.isCombatEvent(event)) {
             // ... to a creature that cares about the truce with vampires...
             PluginConfig conf = VampireRevamp.getVampireConfig();
-            if (conf.truce.entityTypes.contains(event.getEntityType())) {
+            if (event.getEntity() instanceof Creature) {
+                Creature creat = (Creature) event.getEntity();
+                if (creat.getCategory() != EntityCategory.UNDEAD || creat.getType() == EntityType.WITHER)
+                    return;
                 // ... and the liable damager is a vampire ...
                 Entity damager = EventUtil.getLiableDamager(event);
 
@@ -389,7 +395,8 @@ public class ListenerMain implements Listener {
             // ... and the damagee is a player ...
             Entity entity = event.getEntity();
 
-            if (damagerEntity instanceof HumanEntity damager && EntityUtil.isPlayer(entity)) {
+            if (damagerEntity instanceof HumanEntity && EntityUtil.isPlayer(entity)) {
+                HumanEntity damager = (HumanEntity) damagerEntity;
                 PluginConfig conf = VampireRevamp.getVampireConfig();
                 // ... and the damagee is a vampire ...
                 VPlayer vPlayer = VampireRevamp.getVPlayer((Player) entity);
@@ -578,7 +585,8 @@ public class ListenerMain implements Listener {
             return;
         // If this is a close combat event ...
         // ... to a living entity ...
-        if (EventUtil.isCloseCombatEvent(event) && event.getEntity() instanceof LivingEntity damagee) {
+        if (EventUtil.isCloseCombatEvent(event) && event.getEntity() instanceof LivingEntity) {
+            LivingEntity damagee = (LivingEntity) event.getEntity();
             PluginConfig conf = VampireRevamp.getVampireConfig();
             // ... of a tasty type ...
             double fullFoodQuotient = conf.fullFoodQuotient.getOrDefault(damagee.getType(), 0D);
@@ -685,25 +693,25 @@ public class ListenerMain implements Listener {
         Projectile projectile = event.getEntity();
         PluginConfig conf = VampireRevamp.getVampireConfig();
         if (!conf.general.isBlacklisted(projectile.getWorld()) &&
-                projectile instanceof ThrownPotion thrownPotion) {
+                projectile instanceof ThrownPotion) {
             // ... and the potion type is holy water ...
-            if (HolyWaterUtil.isHolyWater(thrownPotion)) {
-                ProjectileSource shooter = thrownPotion.getShooter();
+            if (HolyWaterUtil.isHolyWater((ThrownPotion) projectile)) {
+                ProjectileSource shooter = projectile.getShooter();
                 Component displayName = null;
-                if (shooter instanceof Player peaShooter) {
-                    displayName = Component.text(peaShooter.getDisplayName());
+                if (shooter instanceof Player) {
+                    displayName = Component.text(((Player) shooter).getDisplayName());
                 }
-                else if (shooter instanceof BlockProjectileSource blockShooter) {
-                    displayName = Component.text(blockShooter.getBlock().getType().name());
+                else if (shooter instanceof BlockProjectileSource) {
+                    displayName = Component.text(((BlockProjectileSource) shooter).getBlock().getType().name());
                 }
-                else if (shooter instanceof Entity elShooter) {
-                    displayName = Component.text(elShooter.getName());
+                else if (shooter instanceof Entity) {
+                    displayName = Component.text(((Entity) shooter).getName());
                 }
                 else if (shooter != null) {
                     displayName = Component.text("???");
                 }
                 // ... who is the thrower and where did it splash? ...
-                Location splashLocation = thrownPotion.getLocation();
+                Location splashLocation = projectile.getLocation();
                 // ... then to all nearby players ...
                 for (Player player : splashLocation.getWorld().getPlayers()) {
                     if (EntityUtil.isPlayer(player)

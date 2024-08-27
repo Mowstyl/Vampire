@@ -11,16 +11,14 @@ import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 
+
 public class TruceConfig {
     public final int breakMillis;
     public final boolean checkGamemode;
-    public final Set<EntityType> entityTypes;
 
     public TruceConfig() {
         breakMillis = 60000;
         checkGamemode = false;
-        entityTypes = new HashSet<>(PluginConfig.undeadTypes);
-        entityTypes.remove(EntityType.WITHER);
     }
 
     public TruceConfig(@NotNull ConfigurationSection cs) {
@@ -44,8 +42,6 @@ public class TruceConfig {
                 }
             }
         }
-
-        entityTypes = auxSEnts != null ? auxSEnts : def.entityTypes;
     }
 
     protected boolean saveConfigToFile(BufferedWriter configWriter, String indent, int level) {
@@ -53,8 +49,6 @@ public class TruceConfig {
         result = result && PluginConfig.writeLine(configWriter, "breakMillis: " + this.breakMillis, indent, level);
         result = result && PluginConfig.writeLine(configWriter, "# Whether only survival players can break truce or not", indent, level);
         result = result && PluginConfig.writeLine(configWriter, "checkGamemode: " + this.checkGamemode, indent, level);
-        result = result && PluginConfig.writeLine(configWriter, "# Entities in truce with vampire players", indent, level);
-        result = result && PluginConfig.writeCollection(configWriter, "entityTypes:",  this.entityTypes, indent, level);
 
         return result;
     }
@@ -63,7 +57,6 @@ public class TruceConfig {
     public String toString() {
         return "TruceConfig{" +
                 "breakMillis=" + breakMillis +
-                ", entityTypes=" + entityTypes +
                 '}';
     }
 }

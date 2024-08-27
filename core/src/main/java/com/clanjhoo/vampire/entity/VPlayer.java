@@ -19,9 +19,10 @@ import net.kyori.adventure.text.Component;
 import org.bukkit.*;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.Creature;
+import org.bukkit.entity.EntityCategory;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.potion.PotionEffect;
-import org.bukkit.potion.PotionEffectType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -1297,9 +1298,15 @@ public class VPlayer {
                     50,
                     50,
                     50,
-                    (e) -> VampireRevamp.getVampireConfig().truce.entityTypes.contains(e.getType())
-                            && e instanceof Creature&& me.equals(((Creature) e).getTarget())
-                    ).forEach((le) -> ((Creature) le).setTarget(null));
+                    (e) -> {
+                        if (e instanceof Creature) {
+                            Creature creat = (Creature) e;
+                            if (creat.getCategory() == EntityCategory.UNDEAD && creat.getType() != EntityType.WITHER)
+                                return me.equals(creat.getTarget());
+                        }
+                        return false;
+                    })
+                    .forEach((le) -> ((Creature) le).setTarget(null));
         }
     }
 

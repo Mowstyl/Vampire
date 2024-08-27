@@ -44,7 +44,6 @@ import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import org.bukkit.scheduler.BukkitScheduler;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -300,7 +299,7 @@ public class VampireRevamp extends JavaPlugin {
 		}
 
 		// Paper compat
-		if (isPapermc && new SemVer(1, 13).compareTo(serverVersion) < 0 && this.conf.truce.entityTypes.contains(EntityType.PHANTOM)) {
+		if (isPapermc && new SemVer(1, 13).compareTo(serverVersion) < 0) {
 			pl = new PhantomListener();
 			Bukkit.getPluginManager().registerEvents(pl, this);
 		}
@@ -756,8 +755,8 @@ public class VampireRevamp extends JavaPlugin {
 		return message;
 	}
 
-	@NonNull
-	public static Component[] getYouAreWere(@NonNull CommandSender sender, @NonNull OfflinePlayer target, boolean self) {
+	@NotNull
+	public static Component[] getYouAreWere(@NotNull CommandSender sender, @NotNull OfflinePlayer target, boolean self) {
 		Component you;
 		MessageKeyProvider areKey;
 		MessageKeyProvider wereKey;

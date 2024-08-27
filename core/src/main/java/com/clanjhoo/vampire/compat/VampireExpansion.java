@@ -64,7 +64,6 @@ public class VampireExpansion extends PlaceholderExpansion {
     /**
      * This is the version of the expansion.
      * <br>You don't have to use numbers, since it is set as a String.
-     *
      * For convienience do we return the version from the plugin.yml
      *
      * @return The version as a String.
@@ -100,109 +99,77 @@ public class VampireExpansion extends PlaceholderExpansion {
 
         switch (identifier) {
             // %vampire_temperature%
-            case "temperature" -> {
+            case "temperature":
                 return String.format("%f", vPlayer.getTemp());
-            }
-
-
             // %vampire_radiation%
-            case "radiation" -> {
+            case "radiation":
                 return String.format("%f", vPlayer.getRad());
-            }
-
-
             // %vampire_infectionlevel%
-            case "infectionlevel" -> {
+            case "infectionlevel":
                 return String.format("%f", vPlayer.getInfection());
-            }
-
-
             // %vampire_maker%
-            case "maker" -> {
+            case "maker":
                 String name = null;
-
                 if (vPlayer.isHuman()) {
                     name = "None";
-                } else {
+                }
+                else {
                     try {
                         name = vPlayer.getMakerName();
-                    } catch (Exception ignored) {
-
                     }
-
+                    catch (Exception ignored) {}
                     if (name == null) {
                         InfectionReason reason = vPlayer.getReason();
-                        name = switch (reason) {
-                            case UNKNOWN, COMBAT_INTENDED, COMBAT_MISTAKE, TRADE -> "Unknown";
-                            case FLASK -> "Blood flask";
-                            case OPERATOR -> "Dark magic";
-                            case ALTAR -> "Altar of darkness";
-                        };
+                        switch (reason) {
+                            case UNKNOWN:
+                            case COMBAT_INTENDED:
+                            case COMBAT_MISTAKE:
+                            case TRADE:
+                                name = "Unknown";
+                                break;
+                            case FLASK:
+                                name = "Blood flask";
+                                break;
+                            case OPERATOR:
+                                name = "Dark magic";
+                                break;
+                            case ALTAR:
+                                name = "Altar of darkness";
+                                break;
+                        }
                     }
                 }
-
                 return name;
-            }
-
-
             // %vampire_bloodlust%
-            case "bloodlust" -> {
+            case "bloodlust":
                 return String.format("%b", vPlayer.isBloodlusting());
-            }
-
-
             // %vampire_intend%
-            case "intend" -> {
+            case "intend":
                 return String.format("%b", vPlayer.isIntending());
-            }
-
-
             // %vampire_nightvision%
-            case "nightvision" -> {
+            case "nightvision":
                 return String.format("%b", vPlayer.isUsingNightVision());
-            }
-
-
             // %vampire_batusi%
-            case "batusi" -> {
+            case "batusi":
                 return String.format("%b", vPlayer.isBatusi());
-            }
-
-
             // %vampire_healthy%
-            case "healthy" -> {
+            case "healthy":
                 return String.format("%b", vPlayer.isHealthy());
-            }
-
-
             // %vampire_unhealthy%
-            case "unhealthy" -> {
+            case "unhealthy":
                 return String.format("%b", vPlayer.isUnhealthy());
-            }
-
-
             // %vampire_human%
-            case "human" -> {
+            case "human":
                 return String.format("%b", vPlayer.isHuman());
-            }
-
-
             // %vampire_infected%
-            case "infected" -> {
+            case "infected":
                 return String.format("%b", vPlayer.isInfected());
-            }
-
-
             // %vampire_vampire%
-            case "vampire" -> {
+            case "vampire":
                 return String.format("%b", vPlayer.isVampire());
-            }
-
-
             // %vampire_nosferatu%
-            case "nosferatu" -> {
+            case "nosferatu":
                 return String.format("%b", vPlayer.isNosferatu());
-            }
         }
 
         // We return null if an invalid placeholder (f.e. %someplugin_placeholder3%)

@@ -15,7 +15,7 @@ repositories {
 
 dependencies {
     compileOnly(project(":core"))
-    compileOnly("org.spigotmc:spigot-api:1.18-R0.1-SNAPSHOT")
+    compileOnly("org.spigotmc:spigot-api:1.13-R0.1-SNAPSHOT")
     //compileOnly("io.papermc.paper:paper-api:1.20.1-R0.1-SNAPSHOT")
 }
 

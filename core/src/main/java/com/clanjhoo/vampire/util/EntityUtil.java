@@ -32,9 +32,9 @@ public class EntityUtil {
     public static boolean isNpc(Object object) {
         boolean buliano = false;
 
-        if (object instanceof Metadatable metadatable) {
+        if (object instanceof Metadatable) {
             try {
-                buliano = metadatable.hasMetadata("NPC");
+                buliano = ((Metadatable) object).hasMetadata("NPC");
             } catch (UnsupportedOperationException ignore) {
                 // ProtocolLib
                 // UnsupportedOperationException: The method hasMetadata is not supported for temporary players.

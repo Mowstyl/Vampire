@@ -110,6 +110,8 @@ public class SunUtil
 	 */
 	public static double calcTerrainOpacity(Block block)
 	{
+		return block.getLightFromSky() / 15D;
+		/*
 		double ret = 0;
 		
 		int x = block.getX();
@@ -133,6 +135,7 @@ public class SunUtil
 		//P.p.log("calcTerrainOpacity",ret);
 		
 		return ret;
+		*/
 	}
 	
 	// -------------------------------------------- //

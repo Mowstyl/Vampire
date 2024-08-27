@@ -66,10 +66,11 @@ repositories {
             includeGroup("com.comphenix.protocol")
         }
     }
+    mavenLocal()
 }
 
 dependencies {
-    //compileOnly("org.spigotmc:spigot-api:1.18-R0.1-SNAPSHOT")
+    // compileOnly("org.spigotmc:spigot-api:1.18-R0.1-SNAPSHOT")
     compileOnly("io.papermc.paper:paper-api:1.18-R0.1-SNAPSHOT")
     compileOnly(libs.aikar.acfpaper)
     compileOnly(libs.clanjhoo.dbhandler)

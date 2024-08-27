@@ -185,7 +185,8 @@ public class CmdVampire extends BaseCommand {
 					CommandMessageKeys.SHOW_NIGHTVISION,
 					new Tuple<>("{enabled}", vPlayer.isUsingNightVision() ? on : off));
 
-			if (offlinePlayer instanceof Player player) {
+			if (offlinePlayer instanceof Player) {
+				Player player = (Player) offlinePlayer;
 				VampireRevamp.sendMessage(sender,
 						MessageType.INFO,
 						CommandMessageKeys.SHOW_TEMPERATURE,

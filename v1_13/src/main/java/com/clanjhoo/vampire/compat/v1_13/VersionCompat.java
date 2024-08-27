@@ -1,4 +1,4 @@
-package com.clanjhoo.vampire.compat.v1_18;
+package com.clanjhoo.vampire.compat.v1_13;
 
 import com.clanjhoo.vampire.compat.AbstractVersionCompat;
 import org.bukkit.Material;
@@ -75,16 +75,16 @@ public class VersionCompat extends AbstractVersionCompat {
     public EntityDamageEvent getProjectileDamageEvent(Player target, Projectile projectile, double damage) {
         EntityDamageEvent triggeredEvent;
         ProjectileSource shooter = projectile.getShooter();
-        if (shooter instanceof Entity elShooter) {
+        if (shooter instanceof Entity) {
             triggeredEvent = new EntityDamageByEntityEvent(
-                    elShooter,
+                    ((Entity) shooter),
                     target,
                     DamageCause.CUSTOM,
                     damage);
         }
-        else if (shooter instanceof BlockProjectileSource blockShooter) {
+        else if (shooter instanceof BlockProjectileSource) {
             triggeredEvent = new EntityDamageByBlockEvent(
-                    blockShooter.getBlock(),
+                    ((BlockProjectileSource) shooter).getBlock(),
                     target,
                     DamageCause.CUSTOM,
                     damage);

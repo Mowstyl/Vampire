@@ -43,18 +43,6 @@ public class PluginConfig {
     private static final double HUMAN = 0.5;
     private static final double PLAYER = 1;
 
-    public static final Set<EntityType> undeadTypes = CollectionUtil.set(
-            EntityType.SKELETON,
-            EntityType.STRAY,
-            EntityType.WITHER_SKELETON,
-            EntityType.ZOMBIE,
-            EntityType.HUSK,
-            EntityType.ZOMBIE_VILLAGER,
-            EntityType.WITHER,
-            EntityType.SKELETON_HORSE,
-            EntityType.ZOMBIE_HORSE
-    );
-
     private static final Map<EntityType, Double> baseFoodQuotient = CollectionUtil.map(
             EntityType.PLAYER, PLAYER,
             EntityType.BAT, NON_HUMAN,
@@ -129,7 +117,9 @@ public class PluginConfig {
                 for (Map.Entry<?, ?> entry : itemMap.entrySet()) {
                     String key = entry.getKey().toString();
                     if (entry.getKey() instanceof PotionEffectType)
-                        key = ((PotionEffectType) entry.getKey()).getKey().toString();
+                        key = VampireRevamp.getServerVersion().compareTo(new SemVer(1, 18)) < 0
+                                ? ((PotionEffectType) entry.getKey()).getName()
+                                : ((PotionEffectType) entry.getKey()).getKey().toString();
                     res = res && writeLine(configWriter, "- " + key + ": " + entry.getValue().toString(), indent, level + 1);
                 }
             }
@@ -186,8 +176,10 @@ public class PluginConfig {
                     ItemMeta meta = item.getItemMeta();
                     res = res && writeLine(configWriter, "- material: " + item.getType(), indent, level + 1);
                     res = res && writeLine(configWriter, "  amount: " + item.getAmount(), indent, level + 1);
-                    if (meta instanceof Damageable dmg)
+                    if (meta instanceof Damageable) {
+                        Damageable dmg = (Damageable) meta;
                         res = res && writeLine(configWriter, "  damage: " + dmg.getDamage(), indent, level + 1);
+                    }
                     if (meta instanceof PotionMeta) {
                         PotionMeta pd = ((PotionMeta) item.getItemMeta());
                         res = res && writeLine(configWriter, "  meta:", indent, level + 1);
@@ -311,23 +303,6 @@ public class PluginConfig {
         return res;
     }
 
-    public static void updateUndeadTypes() {
-        SemVer version = VampireRevamp.getServerVersion();
-
-        if (new SemVer(1, 16).compareTo(version) <= 0) {
-            undeadTypes.add(EntityType.ZOMBIFIED_PIGLIN);
-            undeadTypes.add(EntityType.ZOGLIN);
-        }
-        else {
-            undeadTypes.add(EntityType.valueOf("PIG_ZOMBIE"));
-        }
-
-        if (new SemVer(1, 13).compareTo(version) <= 0) {
-            undeadTypes.add(EntityType.DROWNED);
-            undeadTypes.add(EntityType.PHANTOM);
-        }
-    }
-
     public static void updateFoodMap() {
         SemVer version = VampireRevamp.getServerVersion();
 
@@ -361,7 +336,6 @@ public class PluginConfig {
     }
 
     public PluginConfig() {
-        updateUndeadTypes();
         updateFoodMap();
 
         version = lastVersion;
@@ -382,8 +356,6 @@ public class PluginConfig {
     }
 
     public PluginConfig(FileConfiguration config) {
-        updateUndeadTypes();
-
         ConfigurationSection aux;
 
         version = config.getInt("version", lastVersion);
@@ -549,10 +521,14 @@ public class PluginConfig {
         ItemMeta meta = ingredient.getItemMeta();
         if (meta == null)
             return ingredient;
-        if (meta instanceof Damageable dmg)
+        if (meta instanceof Damageable) {
+            Damageable dmg = (Damageable) meta;
             dmg.setDamage(damage);
-        if (meta instanceof PotionMeta meth)
+        }
+        if (meta instanceof PotionMeta) {
+            PotionMeta meth = (PotionMeta) meta;
             VampireRevamp.getVersionCompat().setBasePotionType(meth, type);
+        }
         ingredient.setItemMeta(meta);
 
         return ingredient;
@@ -588,7 +564,8 @@ public class PluginConfig {
                         item = new ItemStack(material, amount);
                     }
 
-                    if (source.containsKey("meta") && item.getItemMeta() instanceof PotionMeta meth) {
+                    if (source.containsKey("meta") && item.getItemMeta() instanceof PotionMeta) {
+                        PotionMeta meth = (PotionMeta) item.getItemMeta();
                         PotionType type;
                         Map<String, Object> meta = (Map<String, Object>) source.get("meta");
                         String typeName = (String) meta.get("type");

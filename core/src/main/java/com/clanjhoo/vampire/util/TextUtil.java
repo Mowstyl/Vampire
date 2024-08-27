@@ -18,7 +18,7 @@ import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
-import org.checkerframework.checker.nullness.qual.NonNull;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -30,10 +30,11 @@ public class TextUtil {
     public static final Pattern PATTERN_NEWLINE = Pattern.compile("\\r?\\n");
 
 
-    public static Component capitalizeFirst(@NonNull Component text) {
+    public static Component capitalizeFirst(@NotNull Component text) {
         GsonComponentSerializer serializer = GsonComponentSerializer.gson();
         String rawText = serializer.serialize(text);
-        JsonElement jsonText = JsonParser.parseString(rawText);
+        JsonParser jsonParser = new JsonParser();
+        JsonElement jsonText = jsonParser.parse(rawText);
         return serializer.deserialize(capitalizeFirst(jsonText).toString());
     }
 
@@ -42,7 +43,8 @@ public class TextUtil {
             String aux = capitalizeFirst(jsonText.getAsString());
             if (aux.contains(" "))
                 aux = "\"" + aux + "\"";
-            return JsonParser.parseString(aux);
+            JsonParser jsonParser = new JsonParser();
+            return jsonParser.parse(aux);
         }
         JsonObject root = jsonText.getAsJsonObject();
         if (root.has("text")) {
@@ -60,7 +62,7 @@ public class TextUtil {
         throw new IllegalArgumentException("Unknown JSON structure, please contact the dev");
     }
 
-    public static String capitalizeFirst(@NonNull String text) {
+    public static String capitalizeFirst(@NotNull String text) {
         return text.substring(0, 1).toUpperCase() + text.substring(1);
     }
 

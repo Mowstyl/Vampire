@@ -4,6 +4,7 @@ import com.clanjhoo.vampire.VampireRevamp;
 import com.clanjhoo.vampire.entity.VPlayer;
 import com.clanjhoo.vampire.keyproviders.VampirismMessageKeys;
 import com.clanjhoo.vampire.util.EntityUtil;
+import com.clanjhoo.vampire.util.SemVer;
 import com.comphenix.protocol.PacketType;
 import com.comphenix.protocol.events.ListenerPriority;
 import com.comphenix.protocol.events.PacketAdapter;
@@ -118,13 +119,17 @@ public class BedListener implements Listener {
             sleepers.add(player);
         }
         long worldPlayerCount = world.getPlayers().stream().filter((p) -> EntityUtil.isPlayer(p) && !p.isSleepingIgnored()).count();
-        Integer percentage = player.getWorld().getGameRuleValue(GameRule.PLAYERS_SLEEPING_PERCENTAGE);
-        if (percentage == null) {
-            percentage = player.getWorld().getGameRuleDefault(GameRule.PLAYERS_SLEEPING_PERCENTAGE);
+        Integer percentage = 100;
+        if (VampireRevamp.getServerVersion().compareTo(new SemVer(1, 17)) >= 0) {
+            percentage = player.getWorld().getGameRuleValue(GameRule.PLAYERS_SLEEPING_PERCENTAGE);
+            if (percentage == null) {
+                percentage = player.getWorld().getGameRuleDefault(GameRule.PLAYERS_SLEEPING_PERCENTAGE);
+            }
+            if (percentage == null) {
+                percentage = 100;
+            }
         }
-        if (percentage == null) {
-            percentage = 100;
-        }
+
         long sleepingPlayers = sleepers.stream().filter((p) -> p.isValid() && p.isOnline() && !p.isDead() && p.getWorld().equals(world)).count();
 
         // Enough people sleeping

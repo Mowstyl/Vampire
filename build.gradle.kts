@@ -49,12 +49,12 @@ repositories {
         }
     }
     mavenCentral()
-    // mavenLocal()
+    mavenLocal()
 }
 
 dependencies {
     implementation(project(":core"))
-    implementation(project(":v1_18"))
+    implementation(project(":v1_13"))
     implementation(project(":v1_20_2"))
     implementation(project(":v1_20_3"))
     implementation(project(":v1_20_5"))

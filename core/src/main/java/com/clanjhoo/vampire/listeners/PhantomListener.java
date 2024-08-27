@@ -21,7 +21,8 @@ public class PhantomListener implements Listener {
 
     @EventHandler(priority = EventPriority.NORMAL)
     public void onPhantomSpawn(CreatureSpawnEvent e) {
-        if ((e.getEntity() instanceof Phantom phan) && e.getSpawnReason() == CreatureSpawnEvent.SpawnReason.NATURAL) {
+        if ((e.getEntity() instanceof Phantom) && e.getSpawnReason() == CreatureSpawnEvent.SpawnReason.NATURAL) {
+            Phantom phan = (Phantom) e.getEntity();
             if (phan.getSpawningEntity() != null) {
                 Player player = Bukkit.getPlayer(phan.getSpawningEntity());
                 VPlayer vPlayer = VampireRevamp.getVPlayer(player);

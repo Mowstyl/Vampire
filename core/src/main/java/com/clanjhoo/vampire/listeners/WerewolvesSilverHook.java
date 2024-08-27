@@ -56,8 +56,9 @@ public class WerewolvesSilverHook implements Listener {
             return;
 
         Entity rawDamager = EventUtil.getLiableDamager(event);
-        if (!(rawDamager instanceof LivingEntity damager))
+        if (!(rawDamager instanceof LivingEntity))
             return;
+        LivingEntity damager = (LivingEntity) rawDamager;
         if (damager.getEquipment() == null)
             return;
         ItemStack weapon = damager.getEquipment().getItemInMainHand();
