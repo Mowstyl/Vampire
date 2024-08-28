@@ -308,7 +308,7 @@ public class VampireRevamp extends JavaPlugin {
 			Bukkit.getPluginManager().registerEvents(pl, this);
 		}
 
-		if (wg != null && wg.useWG) {
+		if (wg != null && wg.usingWG()) {
 			dvl = new EntryVampiresListener(this);
 			Bukkit.getPluginManager().registerEvents(dvl, this);
 		}
@@ -447,9 +447,9 @@ public class VampireRevamp extends JavaPlugin {
 				finalResult = true;
 			}
 		}
-		catch (Exception ex) {
+		catch (IOException | InvalidConfigurationException ex) {
 			ex.printStackTrace();
-		}
+        }
 		finally {
 			if (!hasDefaultLocale) {
 				Level msgLevel = disableOnFail ? Level.SEVERE : Level.WARNING;
@@ -484,8 +484,6 @@ public class VampireRevamp extends JavaPlugin {
 		this.adventure = BukkitAudiences.create(this);
 
 		isDisguiseEnabled = Bukkit.getPluginManager().isPluginEnabled("LibsDisguises");
-		if (isDisguiseEnabled)
-			DisguiseUtil.plugin = this;
 
 		if (conf.compatibility.useVampirePermGroup) {
 			hasVault = getServer().getPluginManager().getPlugin("Vault") != null;

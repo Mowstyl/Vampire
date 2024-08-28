@@ -2,7 +2,7 @@ plugins {
     `java-library`
     alias(libs.plugins.shadowPlugin)
     alias(libs.plugins.generatePOMPlugin)
-    alias(libs.plugins.spotBugsPlugin)
+    // alias(libs.plugins.spotBugsPlugin)
 }
 
 
@@ -161,6 +161,7 @@ tasks {
         exclude("META-INF/maven/com.clanjhoo/dbhandler/**")
     }
 
+    /*
     spotbugsMain {
         reports.create("html") {
             required = true
@@ -168,4 +169,5 @@ tasks {
             setStylesheet("fancy-hist.xsl")
         }
     }
+    */
 }

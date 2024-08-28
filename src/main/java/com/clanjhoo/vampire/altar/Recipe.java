@@ -15,8 +15,7 @@ public class Recipe
 	public final Map<Material, Integer> materialQuantities;
 	
 	// GSON needs this noarg constructor;
-	public Recipe()
-	{
+	public Recipe() {
 		this(new HashMap<>());
 	}
 	
@@ -28,21 +27,23 @@ public class Recipe
 	public void removeFromPlayer(Player player)
 	{
 		Inventory inventory = player.getInventory();
-		for (Material material: this.materialQuantities.keySet()) {
-			inventory.removeItem(new ItemStack(material, this.materialQuantities.get(material)));
+
+		for (Map.Entry<Material, Integer> entry: this.materialQuantities.entrySet()) {
+			inventory.removeItem(new ItemStack(entry.getKey(), entry.getValue()));
 		}
+
 		player.updateInventory(); // It is ok to use this method though it is deprecated.
 	}
 	
 	public boolean playerHasEnough(Player player)
 	{
 		Inventory inventory = player.getInventory();
-		for (Material material: this.materialQuantities.keySet()) {
-			if (getMaterialCountFromInventory(material, inventory) < this.materialQuantities.get(material))
-			{
+
+		for (Map.Entry<Material, Integer> entry: this.materialQuantities.entrySet()) {
+			if (getMaterialCountFromInventory(entry.getKey(), inventory) < entry.getValue())
 				return false;
-			}
 		}
+
 		return true;
 	}
 	

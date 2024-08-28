@@ -18,7 +18,7 @@ import org.bukkit.entity.Player;
 import java.util.logging.Level;
 
 public class WorldGuardCompat {
-    public boolean useWG;
+    private boolean useWG;
     public final StateFlag IRRADIATE_VAMPIRES_FLAG;
     public final StateFlag ENTRY_VAMPIRES_FLAG;
     private final WorldGuard worldGuardInstance;
@@ -36,6 +36,10 @@ public class WorldGuardCompat {
         useWG = auxUseWG && (ENTRY_VAMPIRES_FLAG != null || IRRADIATE_VAMPIRES_FLAG != null);
 
         plugin.log(Level.INFO, "WorldGuard hooks enabled.");
+    }
+
+    public boolean usingWG() {
+        return useWG;
     }
 
     private StateFlag registerStateFlag(String flagName, boolean defaultValue) {

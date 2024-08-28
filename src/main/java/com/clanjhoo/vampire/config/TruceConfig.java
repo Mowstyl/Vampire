@@ -31,21 +31,6 @@ public class TruceConfig {
         breakMillis = cs.getInt("breakMillis", def.breakMillis);
 
         checkGamemode = cs.getBoolean("checkGamemode", def.checkGamemode);
-
-        Set<EntityType> auxSEnts = null;
-        if (cs.contains("entityTypes")) {
-            List<String> auxLEnts = cs.getStringList("entityTypes");
-            auxSEnts = new HashSet<>();
-            for (String entName : auxLEnts) {
-                try {
-                    EntityType aux = EntityType.valueOf(entName);
-                    auxSEnts.add(aux);
-                }
-                catch (IllegalArgumentException ex) {
-                    plugin.log(Level.WARNING, "EntityType " + entName + " doesn't exist!");
-                }
-            }
-        }
     }
 
     protected boolean saveConfigToFile(BufferedWriter configWriter, String indent, int level) {

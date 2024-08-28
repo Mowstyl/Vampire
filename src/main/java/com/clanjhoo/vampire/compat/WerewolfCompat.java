@@ -14,7 +14,7 @@ import java.lang.reflect.Method;
 import java.util.UUID;
 import java.util.logging.Level;
 
-public class WerewolfCompat {
+public final class WerewolfCompat {
     private boolean isHybridProtEnabled;
     private boolean isSilverEnabled;
     private WerewolvesHybridHook hybridListener = null;
@@ -41,7 +41,8 @@ public class WerewolfCompat {
                 isWerewolfUUID = wwAPI.getMethod("isWerewolf", UUID.class);
                 isAlphaUUID = wwAPI.getMethod("isAlpha", UUID.class);
                 getWerewolfItemID = wwAPI.getMethod("getWerewolfItemID", ItemStack.class);
-            } catch (Exception ex) {
+            }
+            catch (ClassNotFoundException | NoSuchMethodException ex) {
                 hybridProtEnabled = false;
                 silverEnabled = false;
             }

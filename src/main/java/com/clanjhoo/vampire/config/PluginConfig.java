@@ -17,11 +17,12 @@ import org.bukkit.potion.PotionType;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.logging.Level;
 
 public class PluginConfig {
-    private final int lastVersion = 1;
+    private static final int LAST_VERSION = 1;
     private final int version;
     public final GeneralConfig general;
     public final CompatConfig compatibility;
@@ -277,31 +278,20 @@ public class PluginConfig {
             return res;
         }
 
-        FileOutputStream confStream = null;
-        BufferedWriter confWriter = null;
         boolean open = false;
 
-        try {
-            confStream = new FileOutputStream(destination);
-            confWriter = new BufferedWriter(new OutputStreamWriter(confStream));
-            open = true;
-
+        try (OutputStream confStream = new FileOutputStream(destination);
+             Writer rawWriter = new OutputStreamWriter(confStream, StandardCharsets.UTF_8);
+             BufferedWriter confWriter = new BufferedWriter(rawWriter)) {
             res = saveConfigToFile(confWriter, indent, 0);
-        } catch (IOException ex) {
+        }
+        catch (IOException ex) {
             res = false;
             ex.printStackTrace();
         }
 
         if (!res)
             plugin.log(Level.WARNING, "Couldn't save default config file!");
-
-        try {
-            if (open)
-                confWriter.close();
-        } catch (IOException ex) {
-            plugin.log(Level.WARNING, "Failed to close the file!");
-            ex.printStackTrace();
-        }
 
         return res;
     }
@@ -343,7 +333,7 @@ public class PluginConfig {
 
         updateFoodMap();
 
-        version = lastVersion;
+        version = LAST_VERSION;
         general = new GeneralConfig(plugin);
         compatibility = new CompatConfig();
         specialEffects = new FXConfig();
@@ -364,7 +354,7 @@ public class PluginConfig {
         ConfigurationSection aux;
         this.plugin = plugin;
 
-        version = config.getInt("version", lastVersion);
+        version = config.getInt("version", LAST_VERSION);
 
         aux = config.getConfigurationSection("general");
         if (aux != null) {
