@@ -36,7 +36,6 @@ import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.HandlerList;
@@ -90,7 +89,7 @@ public class VampireRevamp extends JavaPlugin {
 	private PhantomListener pl;
 	private EntryVampiresListener dvl;
 	private BedListener bl;
-	private AbstractVersionCompat vc;
+	private VersionCompat vc;
 
 	private DBObjectManager<VPlayer> vPlayerManager;
 
@@ -99,7 +98,7 @@ public class VampireRevamp extends JavaPlugin {
 	// FIELDS
 	// -------------------------------------------- //
 
-	public static AbstractVersionCompat getVersionCompat() {
+	public static VersionCompat getVersionCompat() {
 		return plugin.vc;
 	}
 
@@ -196,7 +195,9 @@ public class VampireRevamp extends JavaPlugin {
 		}
 
 		try {
-			vc = VersionHandler.getVersionCompat(serverVersion);
+			vc = new VersionCompat(serverVersion);
+			// Test versionCompat is working
+			vc.test();
 		}
 		catch (Exception ex) {
 			log(Level.SEVERE, "Error found while loading methods for minecraft version: " + versionString);

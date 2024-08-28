@@ -16,7 +16,7 @@ maven.pom {
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(17)
+        languageVersion = JavaLanguageVersion.of(21)
         vendor = JvmVendorSpec.ORACLE
     }
 }
@@ -25,6 +25,13 @@ repositories {
     gradlePluginPortal {
         content {
             includeGroup("com.gradleup")
+        }
+    }
+    maven {
+        url = uri("https://hub.spigotmc.org/nexus/content/repositories/snapshots/")
+        content {
+            includeGroup("org.bukkit")
+            includeGroup("org.spigotmc")
         }
     }
     maven {
@@ -42,10 +49,41 @@ repositories {
         }
     }
     maven {
+        url = uri("https://maven.enginehub.org/repo/")
+        content {
+            includeGroup("com.sk89q.worldedit")
+            includeGroup("com.sk89q.worldguard")
+        }
+    }
+    maven {
+        url = uri("https://repo.extendedclip.com/content/repositories/placeholderapi/")
+        content {
+            includeGroup("me.clip")
+        }
+    }
+    maven {
+        url = uri("https://jitpack.io")
+        content {
+            includeGroupByRegex("com\\.github\\..*")
+        }
+    }
+    maven {
         url = uri("https://nexus.clanjhoo.com/repository/maven-public/")
         content {
             includeGroup("com.clanjhoo")
             includeGroup("us.rfsmassacre")
+        }
+    }
+    maven {
+        url = uri("https://mvn.lumine.io/repository/maven-public/")
+        content {
+            includeGroup("LibsDisguises")
+        }
+    }
+    maven {
+        url = uri("https://repo.dmulloy2.net/repository/public/")
+        content {
+            includeGroup("com.comphenix.protocol")
         }
     }
     mavenCentral()
@@ -53,13 +91,36 @@ repositories {
 }
 
 dependencies {
-    implementation(project(":core"))
-    implementation(project(":v1_13"))
-    implementation(project(":v1_20_2"))
-    implementation(project(":v1_20_3"))
-    implementation(project(":v1_20_5"))
-    implementation(project(":v1_20_6"))
-    implementation(project(":v1_21"))
+    //compileOnly(libs.spigotmc.spigotapi)
+    compileOnly(libs.papermc.paperapi)
+    compileOnly(libs.sk89q.worldedit.core) {
+        isTransitive = false
+    }
+    compileOnly(libs.sk89q.worldedit.bukkit) {
+        isTransitive = false
+    }
+    compileOnly(libs.sk89q.worldguard.core) {
+        isTransitive = false
+    }
+    compileOnly(libs.sk89q.worldguard.bukkit) {
+        isTransitive = false
+    }
+    compileOnly(libs.libraryaddict.libsdisguises) {
+        isTransitive = false
+    }
+    compileOnly(libs.clip.placeholderapi) {
+        isTransitive = false
+    }
+    compileOnly(libs.milkbowl.vaultapi) {
+        isTransitive = false
+    }
+    //implementation(files("./lib/Werewolf-1.7.2-SNAPSHOT.jar"))
+    compileOnly(libs.rfsmassacre.werewolves) {
+        isTransitive = false
+    }
+    compileOnly(libs.comphenix.protocollib) {
+        isTransitive = false
+    }
     implementation(libs.aikar.acfpaper)
     implementation(libs.clanjhoo.dbhandler)
     implementation(libs.kyori.adventure.minimessage)
