@@ -2,7 +2,6 @@ package com.clanjhoo.vampire.config;
 
 import com.clanjhoo.vampire.VampireRevamp;
 import com.clanjhoo.vampire.util.CollectionUtil;
-import com.clanjhoo.vampire.util.SemVer;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.potion.PotionEffectType;
 import org.jetbrains.annotations.NotNull;
@@ -12,6 +11,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
+
 
 public class RadiationConfig {
     public final double opacityPerArmorPiece;
@@ -23,20 +23,20 @@ public class RadiationConfig {
     public final double smokesPerTempAndMilli;
     public final double flamesPerTempAndMilli;
     public final boolean radiationRingEnabled;
+    private final VampireRevamp plugin;
 
 
-    public RadiationConfig() {
-        SemVer version = VampireRevamp.getServerVersion();
-
+    public RadiationConfig(VampireRevamp plugin) {
+        this.plugin = plugin;
         opacityPerArmorPiece = 0.125;
         baseRadiation = -0.2;
         tempPerRadAndMilli = 0.0001;
         removeBuffs = new RadiationEffectConfig(true, 0.2, true);
         effects = CollectionUtil.list(
-                new RadiationEffectConfig(VampireRevamp.getVersionCompat().getNauseaEffect(), 0, 0.2, 200, false),
+                new RadiationEffectConfig(plugin.getVersionCompat().getNauseaEffect(), 0, 0.2, 200, false),
                 new RadiationEffectConfig(PotionEffectType.WEAKNESS, 1, 0.3, 200, false),
                 new RadiationEffectConfig(PotionEffectType.WEAKNESS, 0, 0.3, 200, true),
-                new RadiationEffectConfig(VampireRevamp.getVersionCompat().getSlownessEffect(), 0, 0.5, 200, false),
+                new RadiationEffectConfig(plugin.getVersionCompat().getSlownessEffect(), 0, 0.5, 200, false),
                 new RadiationEffectConfig(PotionEffectType.BLINDNESS, 0, 0.8, 200, false)
         );
         burn = new RadiationEffectConfig(true, 0.9, 60, true);
@@ -46,8 +46,9 @@ public class RadiationConfig {
         radiationRingEnabled = false;
     }
 
-    public RadiationConfig(@NotNull ConfigurationSection cs) {
-        RadiationConfig def = new RadiationConfig();
+    public RadiationConfig(VampireRevamp plugin, @NotNull ConfigurationSection cs) {
+        this.plugin = plugin;
+        RadiationConfig def = new RadiationConfig(plugin);
 
         opacityPerArmorPiece = cs.getDouble("opacityPerArmorPiece", def.opacityPerArmorPiece);
         baseRadiation = cs.getDouble("baseRadiation", def.baseRadiation);
@@ -79,7 +80,7 @@ public class RadiationConfig {
                             type = PotionEffectType.getByName(typeName);
 
                             if (type == null) {
-                                VampireRevamp.log(Level.WARNING, "PotionEffectType " + typeName + " doesn't exist!");
+                                plugin.log(Level.WARNING, "PotionEffectType " + typeName + " doesn't exist!");
                                 break label;
                             }
                             break;
@@ -90,7 +91,7 @@ public class RadiationConfig {
                             temp = (Double) entry.getValue();
 
                             if (temp < 0 || temp > 1) {
-                                VampireRevamp.log(Level.WARNING, "Temperature must be between 0 and 1 doesn't exist!");
+                                plugin.log(Level.WARNING, "Temperature must be between 0 and 1 doesn't exist!");
                                 temp = null;
                                 break label;
                             }
@@ -99,7 +100,7 @@ public class RadiationConfig {
                             ticks = (Integer) entry.getValue();
 
                             if (ticks < 1) {
-                                VampireRevamp.log(Level.WARNING, "Ticks must be positive non 0!");
+                                plugin.log(Level.WARNING, "Ticks must be positive non 0!");
                                 ticks = null;
                                 break label;
                             }
@@ -111,7 +112,7 @@ public class RadiationConfig {
                 }
 
                 if (type == null || temp == null || ticks == null || an == null) {
-                    VampireRevamp.log(Level.WARNING, "You have to specify a valid type, temperature, ticks and affectNosferatu for all effects!");
+                    plugin.log(Level.WARNING, "You have to specify a valid type, temperature, ticks and affectNosferatu for all effects!");
                 }
                 else {
                     if (str == null)

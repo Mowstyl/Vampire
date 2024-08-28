@@ -25,10 +25,13 @@ public class WerewolfCompat {
     private Method isWerewolfUUID = null;
     private Method isAlphaUUID = null;
     private Method getWerewolfItemID = null;
+    private final VampireRevamp plugin;
 
-    public WerewolfCompat() {
-        boolean hybridProtEnabled = VampireRevamp.getVampireConfig().compatibility.preventWerewolfHybrids;
-        boolean silverEnabled = VampireRevamp.getVampireConfig().compatibility.useWerewolfSilverSword;
+
+    public WerewolfCompat(VampireRevamp plugin) {
+        this.plugin = plugin;
+        boolean hybridProtEnabled = plugin.getVampireConfig().compatibility.preventWerewolfHybrids;
+        boolean silverEnabled = plugin.getVampireConfig().compatibility.useWerewolfSilverSword;
         if (hybridProtEnabled) {
             try {
                 Class<?> wwAPI = Class.forName("us.rfsmassacre.Werewolf.WerewolfAPI");
@@ -44,50 +47,45 @@ public class WerewolfCompat {
             }
         }
 
-        isHybridProtEnabled = hybridProtEnabled &&
-                isHumanPlayer != null &&
-                isWerewolfPlayer != null &&
-                isAlphaPlayer != null &&
-                isWerewolfUUID != null &&
-                isAlphaUUID != null;
+        isHybridProtEnabled = hybridProtEnabled;
 
         isSilverEnabled = silverEnabled && getWerewolfItemID != null;
 
         if (isHybridProtEnabled || isSilverEnabled) {
-            VampireRevamp.log(Level.INFO, "Werewolves found! Enabling werewolves compatibility...");
+            plugin.log(Level.INFO, "Werewolves found! Enabling werewolves compatibility...");
 
             if (isHybridProtEnabled) {
-                VampireRevamp.log(Level.INFO, "Enabling hybrid protection...");
-                hybridListener = new WerewolvesHybridHook();
-                Bukkit.getPluginManager().registerEvents(hybridListener, VampireRevamp.getInstance());
+                plugin.log(Level.INFO, "Enabling hybrid prevention...");
+                hybridListener = new WerewolvesHybridHook(plugin);
+                Bukkit.getPluginManager().registerEvents(hybridListener, plugin);
             }
 
             if (isSilverEnabled) {
-                VampireRevamp.log(Level.INFO, "Enabling silver detection...");
-                silverListener = new WerewolvesSilverHook();
-                Bukkit.getPluginManager().registerEvents(silverListener, VampireRevamp.getInstance());
+                plugin.log(Level.INFO, "Enabling silver detection...");
+                silverListener = new WerewolvesSilverHook(plugin);
+                Bukkit.getPluginManager().registerEvents(silverListener, plugin);
             }
 
-            VampireRevamp.log(Level.INFO, "Done!");
+            plugin.log(Level.INFO, "Done!");
         }
     }
 
     private void disableWWHybridProt() {
-        VampireRevamp.log(Level.INFO, "Disabling Werewolves hybrid protection hook...");
+        plugin.log(Level.INFO, "Disabling Werewolves hybrid protection hook...");
         isHybridProtEnabled = false;
         HandlerList.unregisterAll(hybridListener);
-        VampireRevamp.log(Level.INFO, "Done!");
+        plugin.log(Level.INFO, "Done!");
     }
 
     private void disableSilverHook() {
-        VampireRevamp.log(Level.INFO, "Disabling Werewolves silver detection hook...");
+        plugin.log(Level.INFO, "Disabling Werewolves silver detection hook...");
         isSilverEnabled = false;
         HandlerList.unregisterAll(silverListener);
-        VampireRevamp.log(Level.INFO, "Done!");
+        plugin.log(Level.INFO, "Done!");
     }
 
     public void disable() {
-        VampireRevamp.log(Level.INFO, "Disabling werewolves compatibility!");
+        plugin.log(Level.INFO, "Disabling werewolves compatibility!");
         disableWWHybridProt();
         disableSilverHook();
     }
@@ -101,7 +99,7 @@ public class WerewolfCompat {
                     result = itemID != null && itemID.equals("SILVER_SWORD");
                 }
             } catch (IllegalAccessException | InvocationTargetException ex) {
-                VampireRevamp.log(Level.WARNING, "Error while calling WerewolfAPI!");
+                plugin.log(Level.WARNING, "Error while calling WerewolfAPI!");
                 ex.printStackTrace();
                 disableSilverHook();
             }
@@ -115,7 +113,7 @@ public class WerewolfCompat {
             try {
                 result = (boolean) isHumanPlayer.invoke(null, var0);
             } catch (IllegalAccessException | InvocationTargetException ex) {
-                VampireRevamp.log(Level.WARNING, "Error while calling WerewolfAPI!");
+                plugin.log(Level.WARNING, "Error while calling WerewolfAPI!");
                 ex.printStackTrace();
                 disableWWHybridProt();
             }
@@ -129,7 +127,7 @@ public class WerewolfCompat {
             try {
                 result = (boolean) isWerewolfPlayer.invoke(null, var0);
             } catch (IllegalAccessException | InvocationTargetException ex) {
-                VampireRevamp.log(Level.WARNING, "Error while calling WerewolfAPI!");
+                plugin.log(Level.WARNING, "Error while calling WerewolfAPI!");
                 ex.printStackTrace();
                 disableWWHybridProt();
             }
@@ -143,7 +141,7 @@ public class WerewolfCompat {
             try {
                 result = (boolean) isAlphaPlayer.invoke(null, var0);
             } catch (IllegalAccessException | InvocationTargetException ex) {
-                VampireRevamp.log(Level.WARNING, "Error while calling WerewolfAPI!");
+                plugin.log(Level.WARNING, "Error while calling WerewolfAPI!");
                 ex.printStackTrace();
                 disableWWHybridProt();
             }
@@ -157,7 +155,7 @@ public class WerewolfCompat {
             try {
                 result = (boolean) isWerewolfUUID.invoke(null, var0);
             } catch (IllegalAccessException | InvocationTargetException ex) {
-                VampireRevamp.log(Level.WARNING, "Error while calling WerewolfAPI!");
+                plugin.log(Level.WARNING, "Error while calling WerewolfAPI!");
                 ex.printStackTrace();
                 disableWWHybridProt();
             }
@@ -171,7 +169,7 @@ public class WerewolfCompat {
             try {
                 result = (boolean) isAlphaUUID.invoke(null, var0);
             } catch (IllegalAccessException | InvocationTargetException ex) {
-                VampireRevamp.log(Level.WARNING, "Error while calling WerewolfAPI!");
+                plugin.log(Level.WARNING, "Error while calling WerewolfAPI!");
                 ex.printStackTrace();
                 disableWWHybridProt();
             }

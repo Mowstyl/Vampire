@@ -34,17 +34,19 @@ public final class VersionCompat {
     private final static SemVer v1_20_5 = new SemVer(1, 20, 5);
     private final static SemVer v1_20_3 = new SemVer(1, 20, 3);
     private final static SemVer v1_20_2 = new SemVer(1, 20, 2);
-    private final static SemVer v1_13 = new SemVer(1, 13);
+    private final static SemVer minSupported = new SemVer(1, 16, 2);
 
     private final SemVer currentVersion;
+    private final VampireRevamp plugin;
 
 
-    public VersionCompat(SemVer serverVersion) {
+    public VersionCompat(VampireRevamp plugin, SemVer serverVersion) {
+        this.plugin = plugin;
         currentVersion = serverVersion;
-        if (currentVersion.compareTo(v1_13) < 0) {
-            VampireRevamp.log(Level.WARNING,
-                    "The minimum supported version is " + v1_13
-                            + ". Earlier versions may not work as they should.");
+        if (currentVersion.compareTo(minSupported) < 0) {
+            plugin.log(Level.WARNING,
+                    "The minimum supported version is " + minSupported
+                            + ". Earlier versions will not work as they should.");
         }
     }
 
@@ -182,11 +184,12 @@ public final class VersionCompat {
                 }
                 Object dmgSource = dmgSrcBuilderClazz.getMethod("build").invoke(dmgSrcBuilder);
 
-                if (shooter instanceof Entity elShooter) {
+                if (shooter instanceof Entity) {
                     constructor = EntityDamageByEntityEvent.class.getConstructor(Entity.class, Entity.class, DamageCause.class, dmgSourceClazz, double.class);
-                    initArgs = List.of(elShooter, target, cause, dmgSource, damage);
+                    initArgs = List.of((Entity) shooter, target, cause, dmgSource, damage);
                 }
-                else if (shooter instanceof BlockProjectileSource blockShooter) {
+                else if (shooter instanceof BlockProjectileSource) {
+                    BlockProjectileSource blockShooter = (BlockProjectileSource) shooter;
                     if (currentVersion.compareTo(v1_20_6) >= 0) {
                         constructor = EntityDamageByBlockEvent.class
                                 .getConstructor(Block.class, BlockState.class, Entity.class, DamageCause.class, dmgSourceClazz, double.class);
@@ -200,7 +203,7 @@ public final class VersionCompat {
                     }
                     else {
 
-                        if (VampireRevamp.isPaperMc()) {
+                        if (plugin.isPaperMc()) {
                             constructor = EntityDamageByBlockEvent.class
                                     .getConstructor(Block.class, Entity.class, DamageCause.class, dmgSourceClazz, double.class, BlockState.class);
                             initArgs = List.of(
@@ -272,7 +275,7 @@ public final class VersionCompat {
                 }
                 else {
 
-                    if (VampireRevamp.isPaperMc()) {
+                    if (plugin.isPaperMc()) {
                         constructor = EntityDamageByBlockEvent.class
                                 .getConstructor(Block.class, Entity.class, DamageCause.class, dmgSourceClazz, double.class, BlockState.class);
                     }

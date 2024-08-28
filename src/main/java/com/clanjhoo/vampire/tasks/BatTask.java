@@ -18,8 +18,8 @@ public class BatTask implements Runnable {
     private final VampireRevamp plugin;
     private final Map<UUID, Location> lastLocationMap;
 
-    public BatTask() {
-        plugin = VampireRevamp.getInstance();
+    public BatTask(VampireRevamp plugin) {
+        this.plugin = plugin;
         lastLocationMap = new HashMap<>();
     }
 

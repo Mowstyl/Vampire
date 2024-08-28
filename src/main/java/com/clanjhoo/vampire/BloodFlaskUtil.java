@@ -19,53 +19,64 @@ import org.bukkit.inventory.meta.PotionMeta;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.potion.PotionEffect;
-import org.bukkit.potion.PotionEffectType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 import java.util.logging.Level;
+import java.util.stream.Collectors;
 
 public class BloodFlaskUtil {
-    public final static PotionEffect BLOOD_FLASK_CUSTOM_EFFECT = new PotionEffect(VampireRevamp.getVersionCompat().getStrengthEffect(), 20, 0);
-    private final static NamespacedKey BLOOD_FLASK_KEY = new NamespacedKey(VampireRevamp.getInstance(), "flask");
-    private final static NamespacedKey BLOOD_FLASK_AMOUNT = new NamespacedKey(VampireRevamp.getInstance(), "amount");
-    private final static NamespacedKey BLOOD_FLASK_VAMPIRIC = new NamespacedKey(VampireRevamp.getInstance(), "vampiric");
-    private final static NamespacedKey BLOOD_FLASK_OWNER = new NamespacedKey(VampireRevamp.getInstance(), "owner");
+    private final VampireRevamp plugin;
+    public final PotionEffect BLOOD_FLASK_CUSTOM_EFFECT;
+    public final NamespacedKey BLOOD_FLASK_KEY;
+    public final NamespacedKey BLOOD_FLASK_AMOUNT;
+    public final NamespacedKey BLOOD_FLASK_VAMPIRIC;
+    public final NamespacedKey BLOOD_FLASK_OWNER;
 
-    public static ItemStack createBloodFlask(Player creator, double amount, boolean isVampiric) {
+
+    public BloodFlaskUtil(VampireRevamp plugin) {
+        this.plugin = plugin;
+        BLOOD_FLASK_CUSTOM_EFFECT = new PotionEffect(plugin.getVersionCompat().getStrengthEffect(), 20, 0);
+        BLOOD_FLASK_KEY = new NamespacedKey(plugin, "flask");
+        BLOOD_FLASK_AMOUNT = new NamespacedKey(plugin, "amount");
+        BLOOD_FLASK_VAMPIRIC = new NamespacedKey(plugin, "vampiric");
+        BLOOD_FLASK_OWNER = new NamespacedKey(plugin, "owner");
+    }
+
+    public ItemStack createBloodFlask(Player creator, double amount, boolean isVampiric) {
         // Create a new item stack of material potion ...
         ItemStack ret = new ItemStack(Material.POTION);
 
         // ... and convert the isVampiric boolean into a string ...
         SkillMessageKeys flaskVampKey = isVampiric ? SkillMessageKeys.FLASK_VAMPIRIC_TRUE : SkillMessageKeys.FLASK_VAMPIRIC_FALSE;
-        Component metaVampiric = VampireRevamp.getMessage(creator, flaskVampKey);
+        Component metaVampiric = plugin.getMessage(creator, flaskVampKey);
 
         // ... create the item lore ...
-        List<Component> lore = new ArrayList<>(VampireRevamp.getMessageList(creator, SkillMessageKeys.FLASK_AMOUNT, new Tuple<>("{amount}", Component.text(amount / 2))));
+        List<Component> lore = new ArrayList<>(plugin.getMessageList(creator, SkillMessageKeys.FLASK_AMOUNT, new Tuple<>("{amount}", Component.text(amount / 2))));
         lore.add(metaVampiric);
 
         // ... and set the item meta ...
-        Component displayName = VampireRevamp.getMessage(creator, SkillMessageKeys.FLASK_NAME);
+        Component displayName = plugin.getMessage(creator, SkillMessageKeys.FLASK_NAME);
         PotionMeta meta = (PotionMeta) ret.getItemMeta();
         assert meta != null;
 
-        if (VampireRevamp.isPaperMc()) {
+        if (plugin.isPaperMc()) {
             BungeeComponentSerializer serializer = BungeeComponentSerializer.get();
             meta.setDisplayNameComponent(serializer.serialize(displayName));
             meta.setLoreComponents(lore.stream()
                     .map(serializer::serialize)
-                    .toList());
+                    .collect(Collectors.toList()));
         }
         else {
             LegacyComponentSerializer serializer = LegacyComponentSerializer.legacySection();
             meta.setDisplayName(serializer.serialize(displayName));
             meta.setLore(lore.stream()
                     .map(serializer::serialize)
-                    .toList());
+                    .collect(Collectors.toList()));
         }
         meta.addCustomEffect(BLOOD_FLASK_CUSTOM_EFFECT, false);
-        meta.addItemFlags(VampireRevamp.getVersionCompat().getHidePotionEffectsFlag(), ItemFlag.HIDE_ATTRIBUTES);
+        meta.addItemFlags(plugin.getVersionCompat().getHidePotionEffectsFlag(), ItemFlag.HIDE_ATTRIBUTES);
 
         PersistentDataContainer flaskDC = meta.getPersistentDataContainer();
         PersistentDataContainer flaskTag = flaskDC.getAdapterContext().newPersistentDataContainer();
@@ -80,7 +91,8 @@ public class BloodFlaskUtil {
         return ret;
     }
 
-    public static @Nullable BloodFlaskData getBloodFlaskData(@NotNull ItemStack item) {
+    @Nullable
+    public BloodFlaskData getBloodFlaskData(@NotNull ItemStack item) {
         Double amount;
         Boolean isVampiric;
         UUID owner;
@@ -97,7 +109,7 @@ public class BloodFlaskUtil {
         isVampiric = flaskTag.get(BLOOD_FLASK_VAMPIRIC, BooleanTagType.TYPE);
         owner = flaskTag.get(BLOOD_FLASK_OWNER, UUIDTagType.TYPE);
         if (amount == null || isVampiric == null || owner == null) {
-            VampireRevamp.log(Level.WARNING, "Found incomplete flask tag");
+            plugin.log(Level.WARNING, "Found incomplete flask tag");
             return null;
         }
 
@@ -119,7 +131,7 @@ public class BloodFlaskUtil {
         return false;
     }
 
-    public static boolean fillBottle(VPlayer vPlayer, double amount) {
+    public boolean fillBottle(VPlayer vPlayer, double amount) {
         Player player = vPlayer.getPlayer();
         if (player == null)
             return false;
@@ -127,7 +139,7 @@ public class BloodFlaskUtil {
             return false;
 
         PlayerInventory playerInventory = player.getInventory();
-        ItemStack flask = BloodFlaskUtil.createBloodFlask(player, amount, vPlayer.isVampire());
+        ItemStack flask = createBloodFlask(player, amount, vPlayer.isVampire());
         Map<Integer, ItemStack> result = playerInventory.addItem(flask);
         if (!result.isEmpty())
             player.getWorld().dropItem(player.getLocation(), flask);

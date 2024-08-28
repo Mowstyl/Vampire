@@ -29,23 +29,29 @@ import java.util.Set;
 public class BedListener implements Listener {
     private final Set<Player> sleepers = new HashSet<>();
     private final Set<Player> wakeUp = new HashSet<>();
+    public final PacketListener leaveButtonListener;
+    private final VampireRevamp plugin;
 
-    // net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket
-    public final PacketListener leaveButtonListener = new PacketAdapter(
-            VampireRevamp.getInstance(),
-            ListenerPriority.MONITOR,
-            PacketType.Play.Client.ENTITY_ACTION)
-    {
-        @Override
-        public void onPacketReceiving(PacketEvent event) {
-            EnumWrappers.PlayerAction action = event.getPacket().getPlayerActions().read(0);
-            if (action != EnumWrappers.PlayerAction.STOP_SLEEPING)
-                return;
 
-            Player player = event.getPlayer();
-            wakeUp.add(player);
-        }
-    };
+    public BedListener(VampireRevamp plugin) {
+        this.plugin = plugin;
+        // net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket
+        leaveButtonListener = new PacketAdapter(
+                plugin,
+                ListenerPriority.MONITOR,
+                PacketType.Play.Client.ENTITY_ACTION)
+        {
+            @Override
+            public void onPacketReceiving(PacketEvent event) {
+                EnumWrappers.PlayerAction action = event.getPacket().getPlayerActions().read(0);
+                if (action != EnumWrappers.PlayerAction.STOP_SLEEPING)
+                    return;
+
+                Player player = event.getPlayer();
+                wakeUp.add(player);
+            }
+        };
+    }
 
     // -------------------------------------------- //
     // SLEEP
@@ -53,7 +59,7 @@ public class BedListener implements Listener {
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = false)
     public void trySleep(PlayerBedEnterEvent event) {
-        if (VampireRevamp.getVampireConfig().general.isBlacklisted(event.getBed().getWorld()))
+        if (plugin.getVampireConfig().general.isBlacklisted(event.getBed().getWorld()))
             return;
         Player player = event.getPlayer();
         World world = event.getBed().getWorld();
@@ -62,14 +68,14 @@ public class BedListener implements Listener {
             return;
 
         // ... the player is a vampire ...
-        VPlayer vPlayer = VampireRevamp.getVPlayer(player);
+        VPlayer vPlayer = plugin.getVPlayer(player);
         if (vPlayer == null || !vPlayer.isVampire())
             return;
         // ... and tries to sleep at night ...
         long time = world.getTime();
         if (time >= 12000) {
             // ... we cancel
-            VampireRevamp.sendMessage(event.getPlayer(),
+            plugin.sendMessage(event.getPlayer(),
                     MessageType.INFO,
                     VampirismMessageKeys.CANT_SLEEP);
             event.setCancelled(true);
@@ -101,13 +107,13 @@ public class BedListener implements Listener {
         }
 
         // If day sleeping is allowed for vampires in this world ...
-        if (VampireRevamp.getVampireConfig().general.isBlacklisted(world)) {
+        if (plugin.getVampireConfig().general.isBlacklisted(world)) {
             sleepers.remove(player);
             return;
         }
 
         long time = world.getTime();
-        VPlayer vPlayer = VampireRevamp.getVPlayer(player);
+        VPlayer vPlayer = plugin.getVPlayer(player);
         // ... the player is not a vampire ...
         if (vPlayer == null || !vPlayer.isVampire()) {
             // ... we exit
@@ -120,7 +126,7 @@ public class BedListener implements Listener {
         }
         long worldPlayerCount = world.getPlayers().stream().filter((p) -> EntityUtil.isPlayer(p) && !p.isSleepingIgnored()).count();
         Integer percentage = 100;
-        if (VampireRevamp.getServerVersion().compareTo(new SemVer(1, 17)) >= 0) {
+        if (plugin.getServerVersion().compareTo(new SemVer(1, 17)) >= 0) {
             percentage = player.getWorld().getGameRuleValue(GameRule.PLAYERS_SLEEPING_PERCENTAGE);
             if (percentage == null) {
                 percentage = player.getWorld().getGameRuleDefault(GameRule.PLAYERS_SLEEPING_PERCENTAGE);

@@ -6,14 +6,17 @@ import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
 import java.time.ZonedDateTime;
-import java.util.logging.Level;
+
 
 public class TheTask implements Runnable {
+
+    private final VampireRevamp plugin;
     // -------------------------------------------- //
     // INSTANCE & CONSTRUCT
     // -------------------------------------------- //
 
-    public TheTask() {
+    public TheTask(VampireRevamp plugin) {
+        this.plugin = plugin;
         this.previousMillis = ZonedDateTime.now().toInstant().toEpochMilli();
     }
 
@@ -36,21 +39,16 @@ public class TheTask implements Runnable {
 
     @Override
     public void run() {
-        long now = System.currentTimeMillis();
+        long now = ZonedDateTime.now().toInstant().toEpochMilli();
 
         // Tick each online player
         for (Player player : Bukkit.getOnlinePlayers()) {
-            VPlayer vPlayer = VampireRevamp.getVPlayer(player);
+            VPlayer vPlayer = plugin.getVPlayer(player);
             if (vPlayer == null)
                 continue;
-            try {
-                // VampireRevamp.debugLog(Level.INFO, "Ticking " + player.getName());
-                vPlayer.tick(now - this.getPreviousMillis());
-                vPlayer.updateTruce(now, this.getPreviousMillis());
-            } catch (NullPointerException ex) {
-                VampireRevamp.log(Level.SEVERE, "While executing Vampire.TheTask: " + ex.getMessage());
-                ex.printStackTrace();
-            }
+            // VampireRevamp.debugLog(Level.INFO, "Ticking " + player.getName());
+            vPlayer.tick(now - this.getPreviousMillis());
+            vPlayer.updateTruce(now, this.getPreviousMillis());
         }
 
         this.setPreviousMillis(now);

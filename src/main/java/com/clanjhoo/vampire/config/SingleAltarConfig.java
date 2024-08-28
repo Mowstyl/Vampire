@@ -18,23 +18,26 @@ public class SingleAltarConfig {
     public final Material coreMaterial;
     public final Map<Material, Integer> buildMaterials;
     public final Set<ItemStack> activate;
+    private final VampireRevamp plugin;
 
-    public SingleAltarConfig(@NotNull Material coreMaterial, @NotNull Map<Material, Integer> buildMaterials, @NotNull Set<ItemStack> activate) {
+
+    public SingleAltarConfig(VampireRevamp plugin, @NotNull Material coreMaterial, @NotNull Map<Material, Integer> buildMaterials, @NotNull Set<ItemStack> activate) {
+        this.plugin = plugin;
         this.coreMaterial = coreMaterial;
         this.buildMaterials = buildMaterials;
         this.activate = activate;
     }
 
-    public SingleAltarConfig getSingleAltarConfig(@Nullable ConfigurationSection cs) {
+    public SingleAltarConfig getSingleAltarConfig(VampireRevamp plugin, @Nullable ConfigurationSection cs) {
         SingleAltarConfig sac = this;
 
         if (cs != null) {
-            Material core = null;
+            Material core;
             Set<ItemStack> act = null;
 
             core = Material.matchMaterial(cs.getString("coreMaterial"));
             if (core == null) {
-                VampireRevamp.log(Level.WARNING, "Material " + cs.getString("coreMaterial") + " doesn't exist!");
+                plugin.log(Level.WARNING, "Material " + cs.getString("coreMaterial") + " doesn't exist!");
                 core = this.coreMaterial;
             }
 
@@ -52,17 +55,17 @@ public class SingleAltarConfig {
                         if (mat != null && amount > 0) {
                             bm.put(mat, amount);
                         } else if (amount <= 0) {
-                            VampireRevamp.log(Level.WARNING, "Amount can't be less or equal than 0!");
+                            plugin.log(Level.WARNING, "Amount can't be less or equal than 0!");
                             bm = null;
                             break;
                         } else {
-                            VampireRevamp.log(Level.WARNING, "Material " + entry.getKey() + " doesn't exist!");
+                            plugin.log(Level.WARNING, "Material " + entry.getKey() + " doesn't exist!");
                             bm = null;
                             break;
                         }
                     }
                     catch (IllegalArgumentException ex) {
-                        VampireRevamp.log(Level.WARNING, "Material " + entry.getKey() + " doesn't exist!");
+                        plugin.log(Level.WARNING, "Material " + entry.getKey() + " doesn't exist!");
                         bm = null;
                         break;
                     }
@@ -73,11 +76,11 @@ public class SingleAltarConfig {
                 bm = this.buildMaterials;
 
             if (cs.contains("activate")) {
-                act = PluginConfig.getResources((List<Map<String, Object>>) cs.getList("activate"));
+                act = PluginConfig.getResources(plugin, (List<Map<String, Object>>) cs.getList("activate"));
             }
             act = act != null ? act : this.activate;
 
-            sac = new SingleAltarConfig(core, bm, act);
+            sac = new SingleAltarConfig(plugin, core, bm, act);
         }
 
         return sac;

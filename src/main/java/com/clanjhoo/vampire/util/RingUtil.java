@@ -8,9 +8,16 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataContainer;
 
 public class RingUtil {
-    public static final NamespacedKey SUN_RING_KEY = new NamespacedKey(VampireRevamp.getInstance(), "IgnoreRadiation");
+    private final VampireRevamp plugin;
+    public final NamespacedKey SUN_RING_KEY;
 
-    public static ItemStack getSunRing() {
+
+    public RingUtil(VampireRevamp plugin) {
+        this.plugin = plugin;
+        SUN_RING_KEY = new NamespacedKey(plugin, "IgnoreRadiation");
+    }
+
+    public ItemStack getSunRing() {
         ItemStack ring = new ItemStack(Material.IRON_NUGGET, 1);
         ItemMeta ringMeta = ring.getItemMeta();
         PersistentDataContainer ringDC =  ringMeta.getPersistentDataContainer();
@@ -19,7 +26,7 @@ public class RingUtil {
         return ring;
     }
 
-    public static boolean isSunRing(ItemStack item) {
+    public boolean isSunRing(ItemStack item) {
         if (!item.getType().equals(Material.IRON_NUGGET)) {
             return false;
         }

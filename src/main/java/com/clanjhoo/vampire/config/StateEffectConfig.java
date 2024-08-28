@@ -14,12 +14,16 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.logging.Level;
 
-public class StateEffectConfig implements Comparable<StateEffectConfig>{
+
+public class StateEffectConfig implements Comparable<StateEffectConfig> {
     public final EventPriority priority;
     public final Map<PotionEffectType, Integer> effectToStrength;
     public Function<VPlayer, Boolean> passesChecks;
+    private final VampireRevamp plugin;
 
-    public StateEffectConfig(EventPriority priority, Map<PotionEffectType, Integer> effectToStrength) {
+
+    public StateEffectConfig(VampireRevamp plugin, EventPriority priority, Map<PotionEffectType, Integer> effectToStrength) {
+        this.plugin = plugin;
         this.priority = priority;
         this.effectToStrength = effectToStrength;
     }
@@ -42,7 +46,7 @@ public class StateEffectConfig implements Comparable<StateEffectConfig>{
                 try {
                     epri = EventPriority.valueOf(aux.toUpperCase());
                 } catch (IllegalArgumentException ex) {
-                    VampireRevamp.log(Level.WARNING, "EventPriority " + aux + " doesn't exist!");
+                    plugin.log(Level.WARNING, "EventPriority " + aux + " doesn't exist!");
                 }
             }
             epri = epri != null ? epri : this.priority;
@@ -58,14 +62,14 @@ public class StateEffectConfig implements Comparable<StateEffectConfig>{
                         if (pet != null)
                             mes.put(pet, strength);
                         else
-                            VampireRevamp.log(Level.WARNING, "PotionEffectType " + entry.getKey() + " doesn't exist!");
+                            plugin.log(Level.WARNING, "PotionEffectType " + entry.getKey() + " doesn't exist!");
                     }
                 }
             }
             else {
                 mes = this.effectToStrength;
             }
-            result = new StateEffectConfig(epri, mes);
+            result = new StateEffectConfig(plugin, epri, mes);
 
             result.passesChecks = this.passesChecks;
         }
@@ -75,7 +79,22 @@ public class StateEffectConfig implements Comparable<StateEffectConfig>{
 
     @Override
     public int compareTo(StateEffectConfig o) {
-        return this.priority.compareTo(o.priority);
+        int val = this.priority.compareTo(o.priority);
+        if (val != 0)
+            return val;
+        return toString().compareTo(o.toString());
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof StateEffectConfig))
+            return false;
+        return toString().equals(o.toString());
+    }
+
+    @Override
+    public int hashCode() {
+        return toString().hashCode() + 6470;
     }
 
     // -------------------------------------------- //

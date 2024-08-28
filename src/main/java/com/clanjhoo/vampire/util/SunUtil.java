@@ -25,6 +25,12 @@ public class SunUtil
 	public final static double HALF_PI = Math.PI / 2;
 	public final static double MDTICKS_TO_ANGLE_FACTIOR = HALF_PI / HALF_DAYTIME_TICKS;
 
+
+	public final VampireRevamp plugin;
+
+	public SunUtil(VampireRevamp plugin) {
+		this.plugin = plugin;
+	}
 	// -------------------------------------------- //
 	// SOLAR RADIATION CALCULATION
 	// -------------------------------------------- //
@@ -33,12 +39,12 @@ public class SunUtil
 	 * This time of day relative to mid day.
 	 * 0 means midday. -7000 mean start of sunrise. +7000 means end of sundown.
 	 */
-	public static int calcMidDeltaTicks(World world, Player player)
+	public int calcMidDeltaTicks(World world, Player player)
 	{
 		long rtime = world.getTime();
 
-		if (VampireRevamp.isWorldGuardEnabled()) {
-			WorldGuardCompat wg = VampireRevamp.getWorldGuardCompat();
+		if (plugin.isWorldGuardEnabled()) {
+			WorldGuardCompat wg = plugin.getWorldGuardCompat();
 			rtime = wg.getTime(player, player.getLocation());
 		}
 
@@ -56,13 +62,13 @@ public class SunUtil
 	 * The insolation angle in radians.
 	 * 0 means directly from above. -Pi/2 means start of sunrise etc.
 	 */
-	public static double calcSunAngle(World world, Player player)
+	public double calcSunAngle(World world, Player player)
 	{
 		int mdticks = calcMidDeltaTicks(world, player);
 		return MDTICKS_TO_ANGLE_FACTIOR * mdticks;
 	}
 
-	public static double calcSolarRad(World world, Player player) {
+	public double calcSolarRad(World world, Player player) {
 		return calcSolarRad(world, player, false);
 	}
 	
@@ -70,22 +76,22 @@ public class SunUtil
 	 * A value between 0 and 1. 0 means no sun at all. 1 means sun directly from above.
 	 * http://en.wikipedia.org/wiki/Effect_of_sun_angle_on_climate
 	 */
-	public static double calcSolarRad(World world, Player player, boolean verbose)
+	public double calcSolarRad(World world, Player player, boolean verbose)
 	{
 		if (verbose)
-			VampireRevamp.log(Level.INFO, "Calculating radiation");
+			plugin.log(Level.INFO, "Calculating radiation");
 		if (world.getEnvironment() != Environment.NORMAL)
 			return 0d;
 		boolean storming = world.hasStorm();
 
 		if (verbose)
-			VampireRevamp.log(Level.INFO, "Storming: " + storming);
-		if (VampireRevamp.isWorldGuardEnabled()) {
-			WorldGuardCompat wg = VampireRevamp.getWorldGuardCompat();
+			plugin.log(Level.INFO, "Storming: " + storming);
+		if (plugin.isWorldGuardEnabled()) {
+			WorldGuardCompat wg = plugin.getWorldGuardCompat();
 			storming = !wg.isSkyClear(player, player.getLocation());
 		}
 		if (verbose)
-			VampireRevamp.log(Level.INFO, "Storming (after wg): " + storming);
+			plugin.log(Level.INFO, "Storming (after wg): " + storming);
 
 		if (storming) return 0d;
 		double angle = calcSunAngle(world, player);
@@ -93,9 +99,9 @@ public class SunUtil
 		if (absangle >= HALF_PI) return 0;
 		double a = HALF_PI - absangle;
 		if (verbose) {
-			VampireRevamp.log(Level.INFO, "Angle: " + angle);
-			VampireRevamp.log(Level.INFO, "a: " + a);
-			VampireRevamp.log(Level.INFO, "sina: " + Math.sin(a));
+			plugin.log(Level.INFO, "Angle: " + angle);
+			plugin.log(Level.INFO, "a: " + a);
+			plugin.log(Level.INFO, "sina: " + Math.sin(a));
 		}
 		//P.p.log("calcSolarRadiation", Math.sin(a));
 		return Math.sin(a);
@@ -146,7 +152,7 @@ public class SunUtil
 	 * The armor opacity against solar radiation.
 	 * http://en.wikipedia.org/wiki/Opacity_%28optics%29
 	 */
-	public static double calcArmorOpacity(Player player)
+	public double calcArmorOpacity(Player player)
 	{
 		double ret = 0;
 		for (ItemStack itemStack : player.getInventory().getArmorContents())
@@ -154,7 +160,7 @@ public class SunUtil
 			if (itemStack == null) continue;
 			if (itemStack.getAmount() == 0) continue;
 			if (itemStack.getType() == Material.AIR) continue;
-			ret += VampireRevamp.getVampireConfig().radiation.opacityPerArmorPiece;
+			ret += plugin.getVampireConfig().radiation.opacityPerArmorPiece;
 		}
 		return ret;
 	}
@@ -168,7 +174,7 @@ public class SunUtil
 	 * It is based on the irradiation from the sun but the 
 	 * opacity of the terrain and player armor is taken into acocunt.
 	 */
-	public static double calcPlayerIrradiation(Player player)
+	public double calcPlayerIrradiation(Player player)
 	{
 		// Player must exist.
 		if ( ! player.isOnline()) return 0;
@@ -191,5 +197,4 @@ public class SunUtil
 
 		return ret;
 	}
-	
 }

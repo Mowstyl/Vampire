@@ -10,8 +10,8 @@ import org.jetbrains.annotations.NotNull;
 public class VampireExpansion extends PlaceholderExpansion {
     private final VampireRevamp plugin;
 
-    public VampireExpansion() {
-        plugin = VampireRevamp.getInstance();
+    public VampireExpansion(VampireRevamp plugin) {
+        this.plugin = plugin;
     }
     /**
      * Because this is an internal class,
@@ -92,7 +92,7 @@ public class VampireExpansion extends PlaceholderExpansion {
             return "";
         }
 
-        VPlayer vPlayer = VampireRevamp.getVPlayer(player);
+        VPlayer vPlayer = plugin.getVPlayer(player);
         if (vPlayer == null){
             return "";
         }
@@ -114,10 +114,7 @@ public class VampireExpansion extends PlaceholderExpansion {
                     name = "None";
                 }
                 else {
-                    try {
-                        name = vPlayer.getMakerName();
-                    }
-                    catch (Exception ignored) {}
+                    name = vPlayer.getMakerName();
                     if (name == null) {
                         InfectionReason reason = vPlayer.getReason();
                         switch (reason) {
@@ -175,5 +172,11 @@ public class VampireExpansion extends PlaceholderExpansion {
         // We return null if an invalid placeholder (f.e. %someplugin_placeholder3%)
         // was provided
         return null;
+    }
+
+    @Override
+    public int hashCode() {
+        String hashable = getAuthor() + ":" + getIdentifier() + ":" + getVersion();
+        return hashable.hashCode() + 6470;
     }
 }

@@ -23,9 +23,11 @@ public class WorldGuardCompat {
     public final StateFlag ENTRY_VAMPIRES_FLAG;
     private final WorldGuard worldGuardInstance;
     private final WorldGuardPlugin worldGuardPlugin;
+    private final VampireRevamp plugin;
 
-    public WorldGuardCompat() {
-        boolean auxUseWG = VampireRevamp.getVampireConfig().compatibility.useWorldGuardRegions;
+    public WorldGuardCompat(VampireRevamp plugin) {
+        this.plugin = plugin;
+        boolean auxUseWG = plugin.getVampireConfig().compatibility.useWorldGuardRegions;
 
         worldGuardInstance = WorldGuard.getInstance();
         worldGuardPlugin = WorldGuardPlugin.inst();
@@ -33,7 +35,7 @@ public class WorldGuardCompat {
         ENTRY_VAMPIRES_FLAG = registerStateFlag("entry-vampires", true);
         useWG = auxUseWG && (ENTRY_VAMPIRES_FLAG != null || IRRADIATE_VAMPIRES_FLAG != null);
 
-        VampireRevamp.log(Level.INFO, "WorldGuard hooks enabled.");
+        plugin.log(Level.INFO, "WorldGuard hooks enabled.");
     }
 
     private StateFlag registerStateFlag(String flagName, boolean defaultValue) {
@@ -45,12 +47,12 @@ public class WorldGuardCompat {
         } catch (FlagConflictException ex) {
             Flag<?> existing = registry.get(flagName);
             if (existing instanceof StateFlag) {
-                VampireRevamp.log(Level.WARNING, "Other plugin created the " + flagName + " flag! Trying to use it");
+                plugin.log(Level.WARNING, "Other plugin created the " + flagName + " flag! Trying to use it");
                 newFlag = (StateFlag) existing;
             } else {
                 // types don't match - this is bad news! some other plugin conflicts with you
                 // hopefully this never actually happens
-                VampireRevamp.log(Level.SEVERE, "Other plugin created the " + flagName + " flag! Cannot solve it!");
+                plugin.log(Level.SEVERE, "Other plugin created the " + flagName + " flag! Cannot solve it!");
                 newFlag = null;
             }
         }
@@ -146,7 +148,7 @@ public class WorldGuardCompat {
 
     public void setEnabled(boolean enabled) {
         if (enabled && ENTRY_VAMPIRES_FLAG == null && IRRADIATE_VAMPIRES_FLAG == null) {
-            VampireRevamp.log(Level.WARNING, "WorldGuard plugin not detected. Disabling WorldGuard hooks.");
+            plugin.log(Level.WARNING, "WorldGuard plugin not detected. Disabling WorldGuard hooks.");
             return;
         }
         useWG = enabled;

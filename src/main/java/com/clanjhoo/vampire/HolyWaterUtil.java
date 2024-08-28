@@ -18,32 +18,40 @@ import org.bukkit.potion.PotionType;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 public class HolyWaterUtil {
+    private final VampireRevamp plugin;
+    public final NamespacedKey HOLY_WATER_KEY;
+    public final PotionEffect HOLY_WATER_CUSTOM_EFFECT;
 
-    public static final NamespacedKey HOLY_WATER_KEY = new NamespacedKey(VampireRevamp.getInstance(), "HolyWater");
-    public static final PotionEffect HOLY_WATER_CUSTOM_EFFECT = new PotionEffect(PotionEffectType.REGENERATION, 20, 0);
 
-    public static ItemStack createHolyWater(Player creator) {
+    public HolyWaterUtil(VampireRevamp plugin) {
+        this.plugin = plugin;
+        HOLY_WATER_KEY = new NamespacedKey(plugin, "HolyWater");
+        HOLY_WATER_CUSTOM_EFFECT = new PotionEffect(PotionEffectType.REGENERATION, 20, 0);
+    }
+
+    public ItemStack createHolyWater(Player creator) {
         ItemStack ret = new ItemStack(Material.SPLASH_POTION);
         PotionMeta meta = (PotionMeta) ret.getItemMeta();
         assert meta != null;
-        Component holyWaterName = VampireRevamp.getMessage(creator, HolyWaterMessageKeys.NAME);
-        List<Component> holyWaterLore = VampireRevamp.getMessageList(creator, HolyWaterMessageKeys.LORE);
-        VampireRevamp.getVersionCompat().setBasePotionType(meta, PotionType.WATER);
-        if (VampireRevamp.isPaperMc()) {
+        Component holyWaterName = plugin.getMessage(creator, HolyWaterMessageKeys.NAME);
+        List<Component> holyWaterLore = plugin.getMessageList(creator, HolyWaterMessageKeys.LORE);
+        plugin.getVersionCompat().setBasePotionType(meta, PotionType.WATER);
+        if (plugin.isPaperMc()) {
             BungeeComponentSerializer serializer = BungeeComponentSerializer.get();
             meta.setDisplayNameComponent(serializer.serialize(holyWaterName));
             meta.setLoreComponents(holyWaterLore.stream()
                     .map(serializer::serialize)
-                    .toList());
+                    .collect(Collectors.toList()));
         }
         else {
             LegacyComponentSerializer serializer = LegacyComponentSerializer.legacySection();
             meta.setDisplayName(serializer.serialize(holyWaterName));
             meta.setLore(holyWaterLore.stream()
                     .map(serializer::serialize)
-                    .toList());
+                    .collect(Collectors.toList()));
         }
         //meta.addCustomEffect(HOLY_WATER_CUSTOM_EFFECT, false);
         PersistentDataContainer potionDC = meta.getPersistentDataContainer();
@@ -53,17 +61,17 @@ public class HolyWaterUtil {
         return ret;
     }
 
-    public static boolean isHolyWater(ThrownPotion potion) {
+    public boolean isHolyWater(ThrownPotion potion) {
         return isHolyWater(potion.getItem());
     }
 
-    public static boolean isHolyWater(ItemStack item) {
+    public boolean isHolyWater(ItemStack item) {
         if (!item.getType().equals(Material.SPLASH_POTION))
             return false;
 
         PotionMeta meta = (PotionMeta) item.getItemMeta();
         assert meta != null;
-        if (!Objects.equals(VampireRevamp.getVersionCompat().getBasePotionType(meta), PotionType.WATER))
+        if (!Objects.equals(plugin.getVersionCompat().getBasePotionType(meta), PotionType.WATER))
             return false;
 
         PersistentDataContainer itemDC =  meta.getPersistentDataContainer();

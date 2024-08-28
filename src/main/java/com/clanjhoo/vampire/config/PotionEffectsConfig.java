@@ -11,6 +11,7 @@ import org.jetbrains.annotations.NotNull;
 import java.io.BufferedWriter;
 import java.util.HashMap;
 
+
 public class PotionEffectsConfig {
     public final int seconds;
     public final StateEffectConfig bloodlust;
@@ -19,8 +20,11 @@ public class PotionEffectsConfig {
     public final StateEffectConfig vampire;
     public final StateEffectConfig infected;
     public final StateEffectConfig human;
+    private final VampireRevamp plugin;
 
-    public PotionEffectsConfig() {
+
+    public PotionEffectsConfig(VampireRevamp plugin) {
+        this.plugin = plugin;
         seconds = 15;
         bloodlust = getBloodlust();
         bloodlust.passesChecks = VPlayer::isBloodlusting;
@@ -36,8 +40,9 @@ public class PotionEffectsConfig {
         human.passesChecks = VPlayer::isHuman;
     }
 
-    public PotionEffectsConfig(@NotNull ConfigurationSection cs) {
-        PotionEffectsConfig def = new PotionEffectsConfig();
+    public PotionEffectsConfig(VampireRevamp plugin, @NotNull ConfigurationSection cs) {
+        this.plugin = plugin;
+        PotionEffectsConfig def = new PotionEffectsConfig(plugin);
 
         seconds = cs.getInt("seconds", def.seconds);
         bloodlust = def.bloodlust.getStateEffectConfig(cs.getConfigurationSection("bloodlust"));
@@ -69,16 +74,18 @@ public class PotionEffectsConfig {
 
     private StateEffectConfig getBloodlust() {
         return new StateEffectConfig(
+                plugin,
                 EventPriority.HIGHEST,
                 CollectionUtil.map(
                         PotionEffectType.SPEED, 3,
-                        VampireRevamp.getVersionCompat().getJumpEffect(), 4
+                        plugin.getVersionCompat().getJumpEffect(), 4
                 )
         );
     }
 
     private StateEffectConfig getNightvision() {
         return new StateEffectConfig(
+                plugin,
                 EventPriority.HIGH,
                 CollectionUtil.map(
                         PotionEffectType.NIGHT_VISION, 1
@@ -88,27 +95,30 @@ public class PotionEffectsConfig {
 
     private StateEffectConfig getNosferatu() {
         return new StateEffectConfig(
+                plugin,
                 EventPriority.NORMAL,
                 CollectionUtil.map(
                         PotionEffectType.REGENERATION, 3,
                         PotionEffectType.SPEED, 1,
-                        VampireRevamp.getVersionCompat().getJumpEffect(), 2
+                        plugin.getVersionCompat().getJumpEffect(), 2
                 )
         );
     }
 
     private StateEffectConfig getVampire() {
         return new StateEffectConfig(
+                plugin,
                 EventPriority.NORMAL,
                 CollectionUtil.map(
                         PotionEffectType.SPEED, 1,
-                        VampireRevamp.getVersionCompat().getJumpEffect(), 1
+                        plugin.getVersionCompat().getJumpEffect(), 1
                 )
         );
     }
 
     private StateEffectConfig getInfected() {
         return new StateEffectConfig(
+                plugin,
                 EventPriority.NORMAL,
                 new HashMap<>()
         );
@@ -116,6 +126,7 @@ public class PotionEffectsConfig {
 
     private StateEffectConfig getHuman() {
         return new StateEffectConfig(
+                plugin,
                 EventPriority.NORMAL,
                 new HashMap<>()
         );

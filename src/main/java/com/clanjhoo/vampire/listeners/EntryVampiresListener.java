@@ -13,10 +13,18 @@ import org.bukkit.event.player.PlayerMoveEvent;
 
 
 public class EntryVampiresListener implements Listener {
+
+    private final VampireRevamp plugin;
+
+
+    public EntryVampiresListener(VampireRevamp plugin) {
+        this.plugin = plugin;
+    }
+
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onVampireEntry(PlayerMoveEvent event) {
         Player player = event.getPlayer();
-        VPlayer vPlayer = VampireRevamp.getVPlayer(player);
+        VPlayer vPlayer = plugin.getVPlayer(player);
         if (vPlayer == null || !vPlayer.isVampire()) {
             return;
         }
@@ -27,7 +35,7 @@ public class EntryVampiresListener implements Listener {
         if (EntityUtil.toBlockVector(to).subtract(EntityUtil.toBlockVector(from)).lengthSquared() == 0) {
             return;
         }
-        WorldGuardCompat wgc = VampireRevamp.getWorldGuardCompat();
+        WorldGuardCompat wgc = plugin.getWorldGuardCompat();
         boolean allowedFrom = wgc.canVampiresEnter(player, from);
         boolean allowedTo = wgc.canVampiresEnter(player, from);
         if (allowedFrom && !allowedTo) {

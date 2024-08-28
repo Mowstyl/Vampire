@@ -16,18 +16,20 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.PotionMeta;
 import org.bukkit.potion.PotionType;
 
-public class AltarLight extends Altar
-{
-	public AltarLight()
+public class AltarLight extends Altar {
+	private final HolyWaterUtil holyUtil;
+
+
+	public AltarLight(VampireRevamp plugin)
 	{
-		SingleAltarConfig lightAltar = VampireRevamp.getVampireConfig().altar.lightAltar;
+		SingleAltarConfig lightAltar = plugin.getVampireConfig().altar.lightAltar;
 		this.coreMaterial = lightAltar.coreMaterial;
-
 		this.materialCounts = lightAltar.buildMaterials;
-
 		this.resources = lightAltar.activate;
-
 		this.isDark = false;
+		this.plugin = plugin;
+		holyUtil = new HolyWaterUtil(plugin);
+		resUtil = new ResourceUtil(plugin);
 	}
 	
 	@Override
@@ -36,15 +38,15 @@ public class AltarLight extends Altar
 		boolean success = false;
 		watch(vPlayer, player);
 		
-		if (Perm.ALTAR_LIGHT.has(player, true)) {
+		if (resUtil.hasPermission(player, Perm.ALTAR_LIGHT, true)) {
 			if (!vPlayer.isVampire() && playerHoldsWaterBottle(player)) {
-				if (ResourceUtil.playerRemoveAttempt(player,
-						VampireRevamp.getVampireConfig().holyWater.resources,
+				if (resUtil.playerRemoveAttempt(player,
+						plugin.getVampireConfig().holyWater.resources,
 						HolyWaterMessageKeys.CREATE_SUCCESS,
 						HolyWaterMessageKeys.CREATE_FAIL)) {
-					Bukkit.getScheduler().scheduleSyncDelayedTask(VampireRevamp.getInstance(), () -> {
-						ResourceUtil.playerAdd(player, HolyWaterUtil.createHolyWater(player));
-						VampireRevamp.sendMessage(player,
+					Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, () -> {
+						ResourceUtil.playerAdd(player, holyUtil.createHolyWater(player));
+						plugin.sendMessage(player,
 								MessageType.INFO,
 								HolyWaterMessageKeys.CREATE_RESULT);
 						vPlayer.runFxEnderBurst();
@@ -53,18 +55,18 @@ public class AltarLight extends Altar
 				}
 			}
 			else {
-				VampireRevamp.sendMessage(player,
+				plugin.sendMessage(player,
 						MessageType.INFO,
 						AltarMessageKeys.ALTAR_LIGHT_COMMON);
 				vPlayer.runFxEnder();
 
 				if (vPlayer.isVampire()) {
-					if (ResourceUtil.playerRemoveAttempt(player,
+					if (resUtil.playerRemoveAttempt(player,
 							this.resources,
 							AltarMessageKeys.ACTIVATE_SUCCESS,
 							AltarMessageKeys.ACTIVATE_FAIL)) {
-						Bukkit.getScheduler().scheduleSyncDelayedTask(VampireRevamp.getInstance(), () -> {
-							VampireRevamp.sendMessage(player,
+						Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, () -> {
+							plugin.sendMessage(player,
 									MessageType.INFO,
 									AltarMessageKeys.ALTAR_LIGHT_VAMPIRE);
 							player.getWorld().strikeLightningEffect(player.getLocation().add(0, 3, 0));
@@ -74,11 +76,11 @@ public class AltarLight extends Altar
 						success = true;
 					}
 				} else if (vPlayer.isHealthy()) {
-					VampireRevamp.sendMessage(player,
+					plugin.sendMessage(player,
 							MessageType.INFO,
 							AltarMessageKeys.ALTAR_LIGHT_HEALTHY);
 				} else if (vPlayer.isInfected()) {
-					VampireRevamp.sendMessage(player,
+					plugin.sendMessage(player,
 							MessageType.INFO,
 							AltarMessageKeys.ALTAR_LIGHT_INFECTED);
 					vPlayer.setInfection(0);

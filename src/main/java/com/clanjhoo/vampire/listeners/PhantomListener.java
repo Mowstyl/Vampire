@@ -11,6 +11,13 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 
 public class PhantomListener implements Listener {
+
+    private final VampireRevamp plugin;
+
+
+    public PhantomListener(VampireRevamp plugin) {
+        this.plugin = plugin;
+    }
     // -------------------------------------------- //
     // INSTANCE & CONSTRUCT
     // -------------------------------------------- //
@@ -25,7 +32,7 @@ public class PhantomListener implements Listener {
             Phantom phan = (Phantom) e.getEntity();
             if (phan.getSpawningEntity() != null) {
                 Player player = Bukkit.getPlayer(phan.getSpawningEntity());
-                VPlayer vPlayer = VampireRevamp.getVPlayer(player);
+                VPlayer vPlayer = plugin.getVPlayer(player);
                 if (vPlayer != null && vPlayer.isVampire() && !vPlayer.truceIsBroken(System.currentTimeMillis())) {
                     e.setCancelled(true);
                 }

@@ -43,18 +43,6 @@ public enum Perm {
 	
 	// END OF LIST
 	;
-	
-	// -------------------------------------------- //
-	// HAS
-	// -------------------------------------------- //
-	
-	public boolean has(@NotNull Permissible permissible, boolean verboose) {
-		return ResourceUtil.hasPermission(permissible, this, verboose);
-	}
-	
-	public boolean has(@NotNull Permissible permissible) {
-		return ResourceUtil.hasPermission(permissible, this);
-	}
 
 	public static Perm getPermFromString(String command) {
 		Perm perm = null;

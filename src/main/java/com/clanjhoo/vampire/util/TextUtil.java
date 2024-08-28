@@ -29,6 +29,14 @@ import java.util.regex.Pattern;
 public class TextUtil {
     public static final Pattern PATTERN_NEWLINE = Pattern.compile("\\r?\\n");
 
+    private final VampireRevamp plugin;
+    private final ResourceUtil resUtil;
+
+
+    public TextUtil(VampireRevamp plugin) {
+        this.plugin = plugin;
+        resUtil = new ResourceUtil(plugin);
+    }
 
     public static Component capitalizeFirst(@NotNull Component text) {
         GsonComponentSerializer serializer = GsonComponentSerializer.gson();
@@ -79,10 +87,10 @@ public class TextUtil {
         return ret;
     }
 
-    public static Component getPlayerInfoHeader(boolean isVampire, boolean isNosferatu, Component playerName, CommandSender sender) {
+    public Component getPlayerInfoHeader(boolean isVampire, boolean isNosferatu, Component playerName, CommandSender sender) {
         Component start = Component.text("_______.[ ", NamedTextColor.GOLD);
 
-        Component playerStr = VampireRevamp.getMessage(sender, GrammarMessageKeys.PLAYER);
+        Component playerStr = plugin.getMessage(sender, GrammarMessageKeys.PLAYER);
         playerStr = capitalizeFirst(playerStr)
                 .append(Component.text(" "))
                 .color(isVampire
@@ -128,7 +136,7 @@ public class TextUtil {
         return List.of(header, name, version, website, authors, description);
     }
 
-    public static Component getCommandHelp(String command, RegisteredCommand<?> regCommand, CommandSender sender, int requireVampire) {
+    public Component getCommandHelp(String command, RegisteredCommand<?> regCommand, CommandSender sender, int requireVampire) {
         String commandStr = "/v";
         boolean isSuggestion = true;
 
@@ -150,16 +158,16 @@ public class TextUtil {
 
         Component params = Component.text(" " + command);
         if (sender instanceof Player) {
-            VPlayer vPlayer = VampireRevamp.getVPlayer(((Player) sender));
+            VPlayer vPlayer = plugin.getVPlayer(((Player) sender));
             int vampireLevel = (vPlayer == null || vPlayer.isHuman()) ? 0 : (vPlayer.isNosferatu() ? 2 : 1);
             boolean hasRequiredVLevel = requireVampire <= vampireLevel;
             if (!command.equals("vampire") && !command.equals("nosferatu")) {
                 Perm permission = Perm.getPermFromString(command);
                 if (permission == null) {
                     params = params.color(NamedTextColor.DARK_RED);
-                } else if (permission.has(sender) && hasRequiredVLevel) {
+                } else if (resUtil.hasPermission(sender, permission) && hasRequiredVLevel) {
                     params = params.color(NamedTextColor.AQUA);
-                } else if (permission.has(sender)) {
+                } else if (resUtil.hasPermission(sender, permission)) {
                     params = params.color(NamedTextColor.YELLOW);
                 } else {
                     params = params.color(NamedTextColor.RED);
@@ -169,9 +177,9 @@ public class TextUtil {
                 Perm permission2 = Perm.getPermFromString(command + " off");
                 if (permission1 == null || permission2 == null) {
                     params = params.color(NamedTextColor.DARK_RED);
-                } else if (permission1.has(sender) && permission2.has(sender)) {
+                } else if (resUtil.hasPermission(sender, permission1) && resUtil.hasPermission(sender, permission2)) {
                     params = params.color(NamedTextColor.AQUA);
-                } else if (permission1.has(sender) || permission2.has(sender)) {
+                } else if (resUtil.hasPermission(sender, permission1) || resUtil.hasPermission(sender, permission2)) {
                     params = params.color(NamedTextColor.YELLOW);
                 } else {
                     params = params.color(NamedTextColor.RED);
@@ -183,7 +191,7 @@ public class TextUtil {
         if (!command.equals("set")) {
             extra = Component.text(" " + regCommand.getSyntaxText(), NamedTextColor.DARK_AQUA)
                     .append(Component.text(" "))
-                    .append(VampireRevamp.getMessage(sender,
+                    .append(plugin.getMessage(sender,
                                     CommandMessageKeys.getProviderFromCommand(fullCowl.substring(3)))
                                     .color(NamedTextColor.YELLOW));
         }
@@ -208,10 +216,10 @@ public class TextUtil {
         return hovers;
     }
 
-    public static Component getHelpHeader(CommandHelp help, int maxPages, String command, CommandSender sender) {
+    public Component getHelpHeader(CommandHelp help, int maxPages, String command, CommandSender sender) {
         Component start = Component.text("_______.[ ", NamedTextColor.GOLD);
 
-        Component helpHeader = VampireRevamp.getMessage(sender,
+        Component helpHeader = plugin.getMessage(sender,
                         CommandMessageKeys.COMMAND_HELP_HEADER,
                         "{command}", command)
                 .color(NamedTextColor.DARK_GREEN);

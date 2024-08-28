@@ -10,7 +10,7 @@ import org.jetbrains.annotations.NotNull;
 public class VampireAPI {
 
     public static boolean isHealthy(@NotNull Player player) throws AssertionError {
-        VPlayer vPlayer = VampireRevamp.getVPlayer(player);
+        VPlayer vPlayer = VampireRevamp.getInstance().getVPlayer(player);
         if (vPlayer == null) {
             throw new AssertionError("Data not loaded yet");
         }
@@ -18,7 +18,7 @@ public class VampireAPI {
     }
 
     public static boolean isUnhealthy(@NotNull Player player) throws AssertionError {
-        VPlayer vPlayer = VampireRevamp.getVPlayer(player);
+        VPlayer vPlayer = VampireRevamp.getInstance().getVPlayer(player);
         if (vPlayer == null) {
             throw new AssertionError("Data not loaded yet");
         }
@@ -26,7 +26,7 @@ public class VampireAPI {
     }
 
     public static boolean isHuman(@NotNull Player player) throws AssertionError {
-        VPlayer vPlayer = VampireRevamp.getVPlayer(player);
+        VPlayer vPlayer = VampireRevamp.getInstance().getVPlayer(player);
         if (vPlayer == null) {
             throw new AssertionError("Data not loaded yet");
         }
@@ -34,7 +34,7 @@ public class VampireAPI {
     }
 
     public static boolean isInfected(@NotNull Player player) throws AssertionError {
-        VPlayer vPlayer = VampireRevamp.getVPlayer(player);
+        VPlayer vPlayer = VampireRevamp.getInstance().getVPlayer(player);
         if (vPlayer == null) {
             throw new AssertionError("Data not loaded yet");
         }
@@ -42,7 +42,7 @@ public class VampireAPI {
     }
 
     public static boolean isVampire(@NotNull Player player) throws AssertionError {
-        VPlayer vPlayer = VampireRevamp.getVPlayer(player);
+        VPlayer vPlayer = VampireRevamp.getInstance().getVPlayer(player);
         if (vPlayer == null) {
             throw new AssertionError("Data not loaded yet");
         }
@@ -50,7 +50,7 @@ public class VampireAPI {
     }
 
     public static boolean isNosferatu(@NotNull Player player) throws AssertionError {
-        VPlayer vPlayer = VampireRevamp.getVPlayer(player);
+        VPlayer vPlayer = VampireRevamp.getInstance().getVPlayer(player);
         if (vPlayer == null) {
             throw new AssertionError("Data not loaded yet");
         }
@@ -58,6 +58,6 @@ public class VampireAPI {
     }
 
     public static boolean isSunRing(@NotNull ItemStack item) {
-        return RingUtil.isSunRing(item);
+        return new RingUtil(VampireRevamp.getInstance()).isSunRing(item);
     }
 }

@@ -16,8 +16,11 @@ public class StorageConfig {
     public final String username;
     public final String password;
     public final String prefix;
+    private final VampireRevamp plugin;
 
-    public StorageConfig() {
+
+    public StorageConfig(VampireRevamp plugin) {
+        this.plugin = plugin;
         storageType = StorageType.JSON;
         address = "";
         port = 3306;
@@ -27,8 +30,9 @@ public class StorageConfig {
         prefix = "vampire_";
     }
 
-    public StorageConfig(@NotNull ConfigurationSection cs) {
-        StorageConfig def = new StorageConfig();
+    public StorageConfig(VampireRevamp plugin, @NotNull ConfigurationSection cs) {
+        this.plugin = plugin;
+        StorageConfig def = new StorageConfig(plugin);
 
         String driver = cs.getString("driver");
         if (driver == null || driver.equalsIgnoreCase("JSON")) {
@@ -41,7 +45,7 @@ public class StorageConfig {
             storageType = StorageType.MARIADB;
         }
         else {
-            VampireRevamp.log(Level.WARNING, "StorageType " + driver + " doesn't exist! Defaulting to json");
+            plugin.log(Level.WARNING, "StorageType " + driver + " doesn't exist! Defaulting to json");
             storageType = StorageType.JSON;
         }
         address = cs.getString("address", def.address);

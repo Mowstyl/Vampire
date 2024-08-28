@@ -7,6 +7,7 @@ import com.clanjhoo.vampire.config.PluginConfig;
 import com.clanjhoo.vampire.entity.VPlayer;
 import com.clanjhoo.vampire.keyproviders.CommandMessageKeys;
 import com.clanjhoo.vampire.util.EntityUtil;
+import com.clanjhoo.vampire.util.ResourceUtil;
 import com.clanjhoo.vampire.util.Tuple;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Material;
@@ -23,19 +24,22 @@ import java.util.Set;
 import java.util.logging.Level;
 
 public abstract class Altar {
-    public boolean isDark;
-    public Material coreMaterial;
-    public Map<Material, Integer> materialCounts;
-    public Set<ItemStack> resources;
+    boolean isDark;
+    Material coreMaterial;
+    Map<Material, Integer> materialCounts;
+    Set<ItemStack> resources;
+    VampireRevamp plugin;
+    ResourceUtil resUtil;
+
 
     public boolean evalBlockUse(Block coreBlock, Player player) {
         boolean blockUse = false;
 
-        VampireRevamp.debugLog(Level.INFO, "Someone clicked " + coreBlock.getType().name());
-        VampireRevamp.debugLog(Level.INFO, "Core is " + coreMaterial.name());
+        plugin.debugLog(Level.INFO, "Someone clicked " + coreBlock.getType().name());
+        plugin.debugLog(Level.INFO, "Core is " + coreMaterial.name());
         if (EntityUtil.isPlayer(player) && coreBlock.getType() == coreMaterial) {
-            VampireRevamp.debugLog(Level.INFO, "Player clicked core!");
-            PluginConfig conf = VampireRevamp.getVampireConfig();
+            plugin.debugLog(Level.INFO, "Player clicked core!");
+            PluginConfig conf = plugin.getVampireConfig();
 
             // Make sure we include the coreBlock material in the wanted ones
             if (!this.materialCounts.containsKey(this.coreMaterial)) {
@@ -57,15 +61,17 @@ public abstract class Altar {
                 // Is the altar complete?
                 if (this.sumCollection(missingMaterialCounts.values()) > 0) {
                     // Send info on what to do to finish the altar
-                    Component altarName = isDark ? VampireRevamp.getMessage(player, AltarMessageKeys.ALTAR_DARK_NAME) : VampireRevamp.getMessage(player, AltarMessageKeys.ALTAR_LIGHT_NAME);
-                    VampireRevamp.sendMessage(player,
+                    Component altarName = isDark
+                            ? plugin.getMessage(player, AltarMessageKeys.ALTAR_DARK_NAME)
+                            : plugin.getMessage(player, AltarMessageKeys.ALTAR_LIGHT_NAME);
+                    plugin.sendMessage(player,
                             MessageType.INFO,
                             AltarMessageKeys.INCOMPLETE,
                             new Tuple<>("{altar_name}", altarName));
                     for (Entry<Material, Integer> entry : missingMaterialCounts.entrySet()) {
                         Material material = entry.getKey();
                         Integer count = entry.getValue();
-                        VampireRevamp.sendMessage(player,
+                        plugin.sendMessage(player,
                                 MessageType.INFO,
                                 AltarMessageKeys.RESOURCE,
                                 "{amount}", count.toString(),
@@ -73,13 +79,13 @@ public abstract class Altar {
                     }
                 }
                 else {
-                    VPlayer vPlayer = VampireRevamp.getVPlayer(player);
+                    VPlayer vPlayer = plugin.getVPlayer(player);
                     if (vPlayer != null) {
                         blockUse = this.use(vPlayer, player);
                     }
                     else {
-                        VampireRevamp.log(Level.WARNING, "Couldn't find data for player " + player.getName() + " on altar click.");
-                        VampireRevamp.sendMessage(player,
+                        plugin.log(Level.WARNING, "Couldn't find data for player " + player.getName() + " on altar click.");
+                        plugin.sendMessage(player,
                                 MessageType.ERROR,
                                 CommandMessageKeys.DATA_NOT_FOUND);
                     }
@@ -92,7 +98,7 @@ public abstract class Altar {
     public abstract boolean use(VPlayer vPlayer, Player player);
 
     public void watch(VPlayer vPlayer, Player player) {
-        VampireRevamp.sendMessage(player,
+        plugin.sendMessage(player,
                 MessageType.INFO,
                 isDark ? AltarMessageKeys.ALTAR_DARK_DESC : AltarMessageKeys.ALTAR_LIGHT_DESC);
     }

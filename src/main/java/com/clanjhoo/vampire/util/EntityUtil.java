@@ -15,6 +15,13 @@ import java.util.logging.Level;
 
 public class EntityUtil {
 
+    private final VampireRevamp plugin;
+
+    public EntityUtil(VampireRevamp plugin) {
+        this.plugin = plugin;
+    }
+
+
     public static Player getAsPlayer(Entity entity) {
         Player player = null;
 
@@ -110,9 +117,8 @@ public class EntityUtil {
         return weapon;
     }
 
-    public static boolean despawnBats(Player p) {
+    public boolean despawnBats(Player p) {
         boolean result = false;
-        VampireRevamp plugin = VampireRevamp.getInstance();
 
         try {
             if (plugin.batmap.containsKey(p.getUniqueId())) {
@@ -138,9 +144,8 @@ public class EntityUtil {
         return result;
     }
 
-    public static boolean spawnBats(Player p, int qty) {
+    public boolean spawnBats(Player p, int qty) {
         boolean result = false;
-        VampireRevamp plugin = VampireRevamp.getInstance();
 
         try {
             if (plugin.batmap.containsKey(p.getUniqueId())) {
@@ -160,7 +165,7 @@ public class EntityUtil {
             result = true;
         }
         catch (Exception ex) {
-            VampireRevamp.log(Level.WARNING, "Error spawning bats!: " + ex.getMessage());
+            plugin.log(Level.WARNING, "Error spawning bats!: " + ex.getMessage());
             ex.printStackTrace();
         }
 

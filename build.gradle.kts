@@ -2,6 +2,7 @@ plugins {
     `java-library`
     alias(libs.plugins.shadowPlugin)
     alias(libs.plugins.generatePOMPlugin)
+    alias(libs.plugins.spotBugsPlugin)
 }
 
 
@@ -16,7 +17,7 @@ maven.pom {
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
+        languageVersion = JavaLanguageVersion.of(17)
         vendor = JvmVendorSpec.ORACLE
     }
 }
@@ -144,7 +145,6 @@ tasks {
     }
 
     shadowJar {
-        //archiveFileName.set("${rootProject.name}-${version}.jar")
         relocate("co.aikar.commands", "co.aikar.${rootProject.name.lowercase()}.acf")
         relocate("co.aikar.locales", "co.aikar.${rootProject.name.lowercase()}.locales")
         relocate("com.clanjhoo.dbhandler", "com.clanjhoo.${rootProject.name.lowercase()}.dbhandler")
@@ -159,5 +159,13 @@ tasks {
         exclude("META-INF/maven/net.jodah/**")
         exclude("META-INF/maven/org.slf4j/**")
         exclude("META-INF/maven/com.clanjhoo/dbhandler/**")
+    }
+
+    spotbugsMain {
+        reports.create("html") {
+            required = true
+            outputLocation = file("$buildDir/reports/spotbugs.html")
+            setStylesheet("fancy-hist.xsl")
+        }
     }
 }

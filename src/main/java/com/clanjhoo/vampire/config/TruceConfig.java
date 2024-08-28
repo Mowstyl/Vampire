@@ -15,14 +15,18 @@ import java.util.logging.Level;
 public class TruceConfig {
     public final int breakMillis;
     public final boolean checkGamemode;
+    private final VampireRevamp plugin;
 
-    public TruceConfig() {
+
+    public TruceConfig(VampireRevamp plugin) {
+        this.plugin = plugin;
         breakMillis = 60000;
         checkGamemode = false;
     }
 
-    public TruceConfig(@NotNull ConfigurationSection cs) {
-        TruceConfig def = new TruceConfig();
+    public TruceConfig(VampireRevamp plugin, @NotNull ConfigurationSection cs) {
+        this.plugin = plugin;
+        TruceConfig def = new TruceConfig(plugin);
 
         breakMillis = cs.getInt("breakMillis", def.breakMillis);
 
@@ -38,7 +42,7 @@ public class TruceConfig {
                     auxSEnts.add(aux);
                 }
                 catch (IllegalArgumentException ex) {
-                    VampireRevamp.log(Level.WARNING, "EntityType " + entName + " doesn't exist!");
+                    plugin.log(Level.WARNING, "EntityType " + entName + " doesn't exist!");
                 }
             }
         }

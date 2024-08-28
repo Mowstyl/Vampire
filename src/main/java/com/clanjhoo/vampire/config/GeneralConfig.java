@@ -22,8 +22,11 @@ public class GeneralConfig {
     private final Set<String> worldBlacklist;
     public final Locale defaultLocale;
     public final boolean vampiresUseFoodAsBlood;
+    private final VampireRevamp plugin;
 
-    public GeneralConfig() {
+
+    public GeneralConfig(VampireRevamp plugin) {
+        this.plugin = plugin;
         debug = false;
         taskDelayMillis = 500;
         batTaskDelayMillis = 100;
@@ -34,8 +37,9 @@ public class GeneralConfig {
         vampiresUseFoodAsBlood = false;
     }
 
-    public GeneralConfig(@NotNull ConfigurationSection cs) {
-        GeneralConfig def = new GeneralConfig();
+    public GeneralConfig(VampireRevamp plugin, @NotNull ConfigurationSection cs) {
+        this.plugin = plugin;
+        GeneralConfig def = new GeneralConfig(plugin);
 
         debug = cs.getBoolean("debug", def.debug);
         taskDelayMillis = cs.getInt("taskDelayMillis", def.taskDelayMillis);
@@ -47,7 +51,7 @@ public class GeneralConfig {
             for (String matName : auxLMats) {
                 Material aux = Material.matchMaterial(matName);
                 if (aux == null)
-                    VampireRevamp.log(Level.WARNING, "Material " + matName + " doesn't exist!");
+                    plugin.log(Level.WARNING, "Material " + matName + " doesn't exist!");
                 else
                     auxSMats.add(aux);
             }

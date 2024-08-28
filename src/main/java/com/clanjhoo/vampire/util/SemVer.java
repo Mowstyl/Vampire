@@ -30,6 +30,19 @@ public class SemVer implements Comparable<SemVer> {
     }
 
     @Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof SemVer))
+            return false;
+        SemVer other = (SemVer) obj;
+        return this.major == other.major && this.minor == other.minor && this.patch == other.patch;
+    }
+
+    @Override
+    public int hashCode() {
+        return toString().hashCode() + 6470;
+    }
+
+    @Override
     public String toString() {
         if (patch > 0)
             return major + "." + minor + "." + patch;

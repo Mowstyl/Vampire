@@ -147,6 +147,13 @@ public class VPlayer {
      * TRANSIENT: is this player is changing its appearance due to batusi
      */
     private transient boolean isDisguising = false;
+    /**
+     * TRANSIENT:
+     */
+    private final transient VampireRevamp plugin;
+    private final transient EntityUtil entityUtil;
+    private final transient RingUtil ringUtil;
+    private final transient SunUtil sunUtil;
 
 
     // -------------------------------------------- //
@@ -161,6 +168,10 @@ public class VPlayer {
         this.makerUUID = null;
         this.intending = false;
         this.usingNightVision = false;
+        plugin = VampireRevamp.getInstance();
+        entityUtil = new EntityUtil(plugin);
+        ringUtil = new RingUtil(plugin);
+        sunUtil = new SunUtil(plugin);
     }
 
     public void invite(String regionName) {
@@ -201,12 +212,12 @@ public class VPlayer {
                 this.setInfection(0);
 
                 Player player = Bukkit.getPlayer(uuid);
-                if (VampireRevamp.getInstance().permissionGroupEnabled())
-                    VampireRevamp.getInstance().setVampireGroup(player, val);
+                if (plugin.permissionGroupEnabled())
+                    plugin.setVampireGroup(player, val);
                 if (player != null) {
-                    PluginConfig conf = VampireRevamp.getVampireConfig();
+                    PluginConfig conf = plugin.getVampireConfig();
                     if (this.vampire) {
-                        VampireRevamp.sendMessage(player,
+                        plugin.sendMessage(player,
                                 MessageType.INFO,
                                 VampirismMessageKeys.TURNED_VAMPIRE);
                         this.runFxShriek();
@@ -216,7 +227,7 @@ public class VPlayer {
                         conf.potionEffects.human.removePotionEffects(player);
                         // player.setSleepingIgnored(true);
                     } else {
-                        VampireRevamp.sendMessage(player,
+                        plugin.sendMessage(player,
                                 MessageType.INFO,
                                 VampirismMessageKeys.CURED_VAMPIRE);
                         this.runFxEnder();
@@ -265,12 +276,12 @@ public class VPlayer {
                     Player player = Bukkit.getPlayer(uuid);
                     if (player != null) {
                         if (this.infection > 0D && !this.isVampire()) {
-                            VampireRevamp.sendMessage(player,
+                            plugin.sendMessage(player,
                                     MessageType.INFO,
                                     InfectionMessageKeys.CURED);
                         }
                         this.infection = 0D;
-                        VampireRevamp.getVampireConfig().potionEffects.infected.removePotionEffects(player);
+                        plugin.getVampireConfig().potionEffects.infected.removePotionEffects(player);
                     }
                 } else {
                     this.infection = val;
@@ -304,11 +315,11 @@ public class VPlayer {
 
             // plugin.log(this.getReasonDesc(false));
             if (reason.isNoticeable())
-                VampireRevamp.sendMessage(player,
+                plugin.sendMessage(player,
                         MessageType.INFO,
                         reason.getDescKey(),
-                        new Tuple<>("{player}", VampireRevamp.getMessage(player, GrammarMessageKeys.YOU)),
-                        new Tuple<>("{to_be_past}", VampireRevamp.getMessage(player, GrammarMessageKeys.TO_BE_2ND_PAST)),
+                        new Tuple<>("{player}", plugin.getMessage(player, GrammarMessageKeys.YOU)),
+                        new Tuple<>("{to_be_past}", plugin.getMessage(player, GrammarMessageKeys.TO_BE_2ND_PAST)),
                         new Tuple<>("{parent}", Component.text(parent)));
             this.addInfection(val);
         }
@@ -339,7 +350,10 @@ public class VPlayer {
         this.makerUUID = makerUUID;
     }
 
+    @Nullable
     public String getMakerName() {
+        if (makerUUID == null)
+            return null;
         return Bukkit.getOfflinePlayer(this.makerUUID).getName();
     }
 
@@ -356,22 +370,22 @@ public class VPlayer {
         Player p = Bukkit.getPlayer(uuid);
 
         if (p == null) {
-            VampireRevamp.log(Level.WARNING, "An offline player is trying to infect on intend!");
+            plugin.log(Level.WARNING, "An offline player is trying to infect on intend!");
             return;
         }
-        if (!VampireRevamp.getVampireConfig().vampire.intend.enabled) {
-            Component intendAction = VampireRevamp.getMessage(p, GrammarMessageKeys.INTEND);
-            VampireRevamp.sendMessage(p,
+        if (!plugin.getVampireConfig().vampire.intend.enabled) {
+            Component intendAction = plugin.getMessage(p, GrammarMessageKeys.INTEND);
+            plugin.sendMessage(p,
                     MessageType.ERROR,
                     CommandMessageKeys.DISABLED_ACTION,
                     new Tuple<>("{action}", intendAction));
             return;
         }
 
-        Component on = VampireRevamp.getMessage(p, GrammarMessageKeys.ON);
-        Component off = VampireRevamp.getMessage(p, GrammarMessageKeys.OFF);
+        Component on = plugin.getMessage(p, GrammarMessageKeys.ON);
+        Component off = plugin.getMessage(p, GrammarMessageKeys.OFF);
 
-        VampireRevamp.sendMessage(p,
+        plugin.sendMessage(p,
                 MessageType.INFO,
                 CommandMessageKeys.SHOW_INTENT,
                 new Tuple<>("{enabled}", isIntending() ? on : off),
@@ -383,23 +397,23 @@ public class VPlayer {
     }
 
     public void setBloodlusting(boolean val) {
-        VampireRevamp.debugLog(Level.INFO, "Changing bloodlust");
+        plugin.debugLog(Level.INFO, "Changing bloodlust");
         Player me = Bukkit.getPlayer(uuid);
         if (me == null) {
-            VampireRevamp.log(Level.WARNING, "An offline player is trying to bloodlust!");
+            plugin.log(Level.WARNING, "An offline player is trying to bloodlust!");
             return;
         }
-        PluginConfig conf = VampireRevamp.getVampireConfig();
+        PluginConfig conf = plugin.getVampireConfig();
 
-        Component bloodlustAction = VampireRevamp.getMessage(me, GrammarMessageKeys.BLOODLUST);
+        Component bloodlustAction = plugin.getMessage(me, GrammarMessageKeys.BLOODLUST);
         bloodlustAction = TextUtil.capitalizeFirst(bloodlustAction);
 
         if (this.bloodlusting == val) {
             // No real change - just view the info.
-            VampireRevamp.debugLog(Level.INFO, "This is not a change!");
-            Component on = VampireRevamp.getMessage(me, GrammarMessageKeys.ON);
-            Component off = VampireRevamp.getMessage(me, GrammarMessageKeys.OFF);
-            VampireRevamp.sendMessage(me,
+            plugin.debugLog(Level.INFO, "This is not a change!");
+            Component on = plugin.getMessage(me, GrammarMessageKeys.ON);
+            Component off = plugin.getMessage(me, GrammarMessageKeys.OFF);
+            plugin.sendMessage(me,
                     MessageType.INFO,
                     GrammarMessageKeys.X_IS_Y,
                     new Tuple<>("{key}", bloodlustAction),
@@ -409,54 +423,54 @@ public class VPlayer {
 
         if (val) { // Enabling bloodlust
             // There are a few rules to when you can turn it on:
-            VampireRevamp.debugLog(Level.INFO, "Za warudo has changed!");
+            plugin.debugLog(Level.INFO, "Za warudo has changed!");
             if (!this.isVampire()) {
-                VampireRevamp.debugLog(Level.INFO, "Non non non again!");
-                Component vampireType = VampireRevamp.getMessage(me, GrammarMessageKeys.VAMPIRE_TYPE);
-                VampireRevamp.sendMessage(me,
+                plugin.debugLog(Level.INFO, "Non non non again!");
+                Component vampireType = plugin.getMessage(me, GrammarMessageKeys.VAMPIRE_TYPE);
+                plugin.sendMessage(me,
                         MessageType.ERROR,
                         GrammarMessageKeys.ONLY_TYPE_CAN_ACTION,
                         new Tuple<>("{vampire_type}", vampireType),
                         new Tuple<>("{action}", bloodlustAction));
             } else if (this.getFood() != null && this.getFood() < conf.vampire.bloodlust.minFood) {
-                VampireRevamp.debugLog(Level.INFO, "Too hungry!");
-                VampireRevamp.sendMessage(me,
+                plugin.debugLog(Level.INFO, "Too hungry!");
+                plugin.sendMessage(me,
                         MessageType.ERROR,
                         SkillMessageKeys.BLOODLUST_LOW_FOOD);
             } else if (conf.vampire.bloodlust.checkGamemode &&
                             (me.getGameMode() == GameMode.CREATIVE ||
                              me.getGameMode() == GameMode.SPECTATOR)) { // or offline :P but offline players wont see the message
-                VampireRevamp.debugLog(Level.INFO, "Le bad gamemode!");
-                VampireRevamp.sendMessage(me,
+                plugin.debugLog(Level.INFO, "Le bad gamemode!");
+                plugin.sendMessage(me,
                         MessageType.ERROR,
                         SkillMessageKeys.BLOODLUST_GAMEMODE_CHECK);
             } else if (!conf.vampire.bloodlust.enabled) {
-                VampireRevamp.debugLog(Level.INFO, "Bloodlust config disabled!");
-                VampireRevamp.sendMessage(me,
+                plugin.debugLog(Level.INFO, "Bloodlust config disabled!");
+                plugin.sendMessage(me,
                         MessageType.ERROR,
                         CommandMessageKeys.DISABLED_ACTION,
                         new Tuple<>("{action}", bloodlustAction));
             } else {
                 this.bloodlusting = true;
-                VampireRevamp.debugLog(Level.INFO, "enabling bloodlust");
+                plugin.debugLog(Level.INFO, "enabling bloodlust");
                 this.update();
-                VampireRevamp.debugLog(Level.INFO, "updated!");
-                Component on = VampireRevamp.getMessage(me, GrammarMessageKeys.ON);
-                VampireRevamp.sendMessage(me,
+                plugin.debugLog(Level.INFO, "updated!");
+                Component on = plugin.getMessage(me, GrammarMessageKeys.ON);
+                plugin.sendMessage(me,
                         MessageType.INFO,
                         CommandMessageKeys.SHOW_BLOODLUST,
                         new Tuple<>("{bloodlust}", bloodlustAction),
                         new Tuple<>("{enabled}", on),
                         new Tuple<>("{percent}", Component.text(String.format("%.1f", this.combatDamageFactor() * 100))));
-                VampireRevamp.debugLog(Level.INFO, "sent message to " + me);
+                plugin.debugLog(Level.INFO, "sent message to " + me);
             }
         }
         else { // Disabling bloodlust
             this.bloodlusting = false;
             conf.potionEffects.bloodlust.removePotionEffects(me);
             this.update();
-            Component off = VampireRevamp.getMessage(me, GrammarMessageKeys.OFF);
-            VampireRevamp.sendMessage(me,
+            Component off = plugin.getMessage(me, GrammarMessageKeys.OFF);
+            plugin.sendMessage(me,
                     MessageType.INFO,
                     CommandMessageKeys.SHOW_BLOODLUST,
                     new Tuple<>("{bloodlust}", bloodlustAction),
@@ -472,13 +486,13 @@ public class VPlayer {
     public void setUsingNightVision(boolean val) {
         Player me = Bukkit.getPlayer(uuid);
         if (me == null) {
-            VampireRevamp.log(Level.WARNING, "An offline player is trying to use nightvision!");
+            plugin.log(Level.WARNING, "An offline player is trying to use nightvision!");
             return;
         }
 
         // If an actual change is being made ...
         if (this.usingNightVision != val) {
-            PluginConfig conf = VampireRevamp.getVampireConfig();
+            PluginConfig conf = plugin.getVampireConfig();
             // ... do change stuff ...
             if (conf.vampire.nightvision.enabled) {
                 this.usingNightVision = val;
@@ -490,17 +504,17 @@ public class VPlayer {
                 this.update();
 
                 Component onString = val ?
-                        VampireRevamp.getMessage(me, GrammarMessageKeys.ON) :
-                        VampireRevamp.getMessage(me, GrammarMessageKeys.OFF);
+                        plugin.getMessage(me, GrammarMessageKeys.ON) :
+                        plugin.getMessage(me, GrammarMessageKeys.OFF);
 
-                VampireRevamp.sendMessage(me,
+                plugin.sendMessage(me,
                         MessageType.INFO,
                         CommandMessageKeys.SHOW_NIGHTVISION,
                         new Tuple<>("{enabled}", onString));
             }
             else {
-                Component nightvisionAction = VampireRevamp.getMessage(me, GrammarMessageKeys.NIGHTVISION);
-                VampireRevamp.sendMessage(me,
+                Component nightvisionAction = plugin.getMessage(me, GrammarMessageKeys.NIGHTVISION);
+                plugin.sendMessage(me,
                         MessageType.ERROR,
                         CommandMessageKeys.DISABLED_ACTION,
                         new Tuple<>("{action}", nightvisionAction));
@@ -627,7 +641,7 @@ public class VPlayer {
     public void runFxSmokeBurst() {
         Player me = Bukkit.getPlayer(uuid);
         if (me != null) {
-            double dcount = VampireRevamp.getVampireConfig().specialEffects.smokeBurstCount;
+            double dcount = plugin.getVampireConfig().specialEffects.smokeBurstCount;
             long lcount = MathUtil.probabilityRound(dcount);
             for (long i = lcount; i > 0; i--) FxUtil.smoke(me);
         }
@@ -637,7 +651,7 @@ public class VPlayer {
     public void runFxEnderBurst() {
         Player me = Bukkit.getPlayer(uuid);
         if (me != null) {
-            double dcount = VampireRevamp.getVampireConfig().specialEffects.enderBurstCount;
+            double dcount = plugin.getVampireConfig().specialEffects.enderBurstCount;
             long lcount = MathUtil.probabilityRound(dcount);
             for (long i = lcount; i > 0; i--) FxUtil.ender(me, 0);
         }
@@ -647,7 +661,7 @@ public class VPlayer {
     public void runFxFlameBurst() {
         Player me = Bukkit.getPlayer(uuid);
         if (me != null) {
-            double dcount = VampireRevamp.getVampireConfig().specialEffects.flameBurstCount;
+            double dcount = plugin.getVampireConfig().specialEffects.flameBurstCount;
             long lcount = MathUtil.probabilityRound(dcount);
             for (long i = lcount; i > 0; i--) FxUtil.flame(me);
         }
@@ -661,13 +675,13 @@ public class VPlayer {
         // You must be online to shriek
         Player me = Bukkit.getPlayer(uuid);
         if (me == null) {
-            VampireRevamp.log(Level.WARNING, "An offline player is trying to shriek!");
+            plugin.log(Level.WARNING, "An offline player is trying to shriek!");
             return;
         }
 
-        if (!VampireRevamp.getVampireConfig().vampire.intend.enabled) {
-            Component shriekAction = VampireRevamp.getMessage(me, GrammarMessageKeys.SHRIEK);
-            VampireRevamp.sendMessage(me,
+        if (!plugin.getVampireConfig().vampire.intend.enabled) {
+            Component shriekAction = plugin.getMessage(me, GrammarMessageKeys.SHRIEK);
+            plugin.sendMessage(me,
                     MessageType.ERROR,
                     CommandMessageKeys.DISABLED_ACTION,
                     new Tuple<>("{action}", shriekAction));
@@ -676,7 +690,7 @@ public class VPlayer {
 
         // You must be a vampire to shriek
         if (this.isVampire()) {
-            PluginConfig conf = VampireRevamp.getVampireConfig();
+            PluginConfig conf = plugin.getVampireConfig();
             long now = System.currentTimeMillis();
 
             long millisSinceLastShriekWaitMessage = now - this.lastShriekWaitMessageMillis;
@@ -686,7 +700,7 @@ public class VPlayer {
 
                 if (millisToWait > 0) {
                     long secondsToWait = (long) Math.ceil(millisToWait / 1000D);
-                    VampireRevamp.sendMessage(me,
+                    plugin.sendMessage(me,
                             MessageType.ERROR,
                             SkillMessageKeys.SHRIEK_WAIT,
                             "{seconds}", String.format("%d", secondsToWait));
@@ -698,9 +712,9 @@ public class VPlayer {
                 }
             }
         } else {
-            Component vampireType = VampireRevamp.getMessage(me, GrammarMessageKeys.VAMPIRE_TYPE);
-            Component shriekAction = VampireRevamp.getMessage(me, GrammarMessageKeys.SHRIEK);
-            VampireRevamp.sendMessage(me,
+            Component vampireType = plugin.getMessage(me, GrammarMessageKeys.VAMPIRE_TYPE);
+            Component shriekAction = plugin.getMessage(me, GrammarMessageKeys.SHRIEK);
+            plugin.sendMessage(me,
                     MessageType.ERROR,
                     GrammarMessageKeys.ONLY_TYPE_CAN_ACTION,
                     new Tuple<>("{vampire_type}", vampireType),
@@ -719,22 +733,21 @@ public class VPlayer {
         Player player = Bukkit.getPlayer(uuid);
         if (player == null)
             return false;
-        return VampireRevamp.getInstance().batEnabled.getOrDefault(player.getUniqueId(), false);
+        return plugin.batEnabled.getOrDefault(player.getUniqueId(), false);
     }
 
     private void enableBatusi(int numberOfBats, boolean silent) {
         Player me = Bukkit.getPlayer(uuid);
         if (me == null) {
-            VampireRevamp.log(Level.WARNING, "An offline player is trying to batusi!");
+            plugin.log(Level.WARNING, "An offline player is trying to batusi!");
             return;
         }
 
-        VampireRevamp plugin = VampireRevamp.getInstance();
-        PluginConfig conf = VampireRevamp.getVampireConfig();
+        PluginConfig conf = plugin.getVampireConfig();
 
         if (!conf.vampire.batusi.enabled) {
-            Component batusiAction = VampireRevamp.getMessage(me, GrammarMessageKeys.BATUSI);
-            VampireRevamp.sendMessage(me,
+            Component batusiAction = plugin.getMessage(me, GrammarMessageKeys.BATUSI);
+            plugin.sendMessage(me,
                     MessageType.ERROR,
                     CommandMessageKeys.DISABLED_ACTION,
                     new Tuple<>("{action}", batusiAction));
@@ -743,55 +756,54 @@ public class VPlayer {
 
         CommandMessageKeys messageKey = CommandMessageKeys.BATUSI_ALREADY_USED;
         if (!plugin.batEnabled.getOrDefault(me.getUniqueId(), false)) {
-            VampireRevamp.debugLog(Level.INFO, "Enabling batusi!");
-            EntityUtil.spawnBats(me, numberOfBats);
-            VampireRevamp.debugLog(Level.INFO, "Bats spawned!");
+            plugin.debugLog(Level.INFO, "Enabling batusi!");
+            entityUtil.spawnBats(me, numberOfBats);
+            plugin.debugLog(Level.INFO, "Bats spawned!");
             messageKey = CommandMessageKeys.BATUSI_TOGGLED_ON;
             this.hadFlight = me.getAllowFlight();
             plugin.batEnabled.put(me.getUniqueId(), true);
         }
-        if (plugin.isDisguiseEnabled) {
+        if (plugin.isDisguiseEnabled()) {
             this.isDisguising = true;
             DisguiseUtil.disguiseBat(me);
             this.isDisguising = false;
-            VampireRevamp.debugLog(Level.INFO, "Disguised enabled!");
+            plugin.debugLog(Level.INFO, "Disguised enabled!");
         }
         if (conf.vampire.batusi.enableFlight) {
             me.setAllowFlight(true);
             me.setFlying(true);
-            VampireRevamp.debugLog(Level.INFO, "Flight enabled!");
+            plugin.debugLog(Level.INFO, "Flight enabled!");
         }
         if (!silent)
-            VampireRevamp.sendMessage(me, MessageType.INFO, messageKey);
-        VampireRevamp.debugLog(Level.INFO, "Batusi message sent!");
+            plugin.sendMessage(me, MessageType.INFO, messageKey);
+        plugin.debugLog(Level.INFO, "Batusi message sent!");
     }
 
     private void disableBatusi(boolean silent) {
-        VampireRevamp plugin = VampireRevamp.getInstance();
         Player sender = Bukkit.getPlayer(uuid);
 
         if (sender == null || !plugin.batEnabled.getOrDefault(sender.getUniqueId(), false))
             return;
 
         try {
-            EntityUtil.despawnBats(sender);
-            if (plugin.isDisguiseEnabled) {
+            entityUtil.despawnBats(sender);
+            if (plugin.isDisguiseEnabled()) {
                 this.isDisguising = true;
                 DisguiseUtil.undisguise(sender);
                 this.isDisguising = false;
             }
-            if (VampireRevamp.getVampireConfig().vampire.batusi.enableFlight) {
+            if (plugin.getVampireConfig().vampire.batusi.enableFlight) {
                 sender.setAllowFlight(this.hadFlight && sender.getAllowFlight());
                 sender.setFlying(sender.getAllowFlight() && sender.isFlying());
             }
             plugin.batEnabled.put(sender.getUniqueId(), false);
             if (!silent)
-                VampireRevamp.sendMessage(sender,
+                plugin.sendMessage(sender,
                         MessageType.INFO,
                         CommandMessageKeys.BATUSI_TOGGLED_OFF);
         }
         catch (Exception ex) {
-            VampireRevamp.sendMessage(sender,
+            plugin.sendMessage(sender,
                     MessageType.INFO,
                     CommandMessageKeys.BATUSI_ERROR);
             plugin.getLogger().log(Level.WARNING, "Error while removing bat cloud!: " + ex.getMessage());
@@ -809,7 +821,7 @@ public class VPlayer {
 
     public void update() {
         Player player = Bukkit.getPlayer(uuid);
-        PluginConfig conf = VampireRevamp.getVampireConfig();
+        PluginConfig conf = plugin.getVampireConfig();
 
         if (player != null) {
             if (!conf.general.isBlacklisted(player.getWorld())) {
@@ -824,30 +836,30 @@ public class VPlayer {
                 this.setTemp(0);
             }
         }
-        VampireRevamp.debugLog(Level.INFO, "Updated");
+        plugin.debugLog(Level.INFO, "Updated");
     }
 
     public void updateBatusiOnTeleport() {
         if (this.isBatusi()) {
             AtomicInteger aliveBats = new AtomicInteger(0);
-            VampireRevamp.getInstance().batmap.get(uuid).forEach((le) -> {
+            plugin.batmap.get(uuid).forEach((le) -> {
                 if (le.isDead())
                     return;
                 le.remove();
-                VampireRevamp.getInstance().bats.remove(le);
+                plugin.bats.remove(le);
                 aliveBats.getAndIncrement();
             });
-            VampireRevamp.getInstance().batmap.remove(uuid);
+            plugin.batmap.remove(uuid);
             disableBatusi(true);
             Bukkit.getScheduler().runTaskLater(
-                    VampireRevamp.getInstance(),
+                    plugin,
                     () -> enableBatusi(aliveBats.get(), true),
                     1);
         }
     }
 
     public boolean canHaveNosferatuEffects() {
-        PluginConfig conf = VampireRevamp.getVampireConfig();
+        PluginConfig conf = plugin.getVampireConfig();
         return this.isNosferatu() &&
                 (!conf.radiation.removeBuffs.enabled ||
                  !conf.radiation.removeBuffs.affectNosferatu ||
@@ -855,7 +867,7 @@ public class VPlayer {
     }
 
     public boolean canHaveVampireEffects() {
-        PluginConfig conf = VampireRevamp.getVampireConfig();
+        PluginConfig conf = plugin.getVampireConfig();
         return this.isVampire() &&
                 (!conf.radiation.removeBuffs.enabled ||
                         this.getTemp() <= conf.radiation.removeBuffs.temperature);
@@ -866,13 +878,13 @@ public class VPlayer {
     // -------------------------------------------- //
 
     public void updatePotionEffects() {
-        // VampireRevamp.debugLog(Level.INFO, "Updating potion effects...");
+        // plugin.debugLog(Level.INFO, "Updating potion effects...");
         // Find the player and their conf
         Player player = Bukkit.getPlayer(uuid);
         if (player == null || player.isDead()) {
             return;
         }
-        PluginConfig conf = VampireRevamp.getVampireConfig();
+        PluginConfig conf = plugin.getVampireConfig();
         final int targetDuration = conf.potionEffects.seconds * 20;
 
         // TODO: I made this dirty fix for lower tps.
@@ -888,9 +900,9 @@ public class VPlayer {
         Collections.sort(effectConfs);
 
         for (StateEffectConfig effectConf : effectConfs) {
-            //VampireRevamp.debugLog(Level.INFO, "Group: " + effectConf.toString());
+            //plugin.debugLog(Level.INFO, "Group: " + effectConf.toString());
             if (effectConf.passesChecks.apply(this)) {
-                //VampireRevamp.debugLog(Level.INFO, "Passes!");
+                //plugin.debugLog(Level.INFO, "Passes!");
                 effectConf.addPotionEffects(player, targetDuration);
             }
         }
@@ -913,15 +925,15 @@ public class VPlayer {
     // -------------------------------------------- //
 
     public boolean isWearingRing(@NotNull Player player) {
-        PluginConfig conf = VampireRevamp.getVampireConfig();
+        PluginConfig conf = plugin.getVampireConfig();
         if (conf.radiation.radiationRingEnabled)
-            return RingUtil.isSunRing(player.getInventory().getItemInOffHand());
+            return ringUtil.isSunRing(player.getInventory().getItemInOffHand());
         return false;
     }
 
     public void tick(long millis) {
         Player player = Bukkit.getPlayer(uuid);
-        PluginConfig conf = VampireRevamp.getVampireConfig();
+        PluginConfig conf = plugin.getVampireConfig();
         if (player != null && player.getGameMode() != GameMode.SPECTATOR && !conf.general.isBlacklisted(player.getWorld())) {
             if (!isWearingRing(player)) {
                 this.tickRadTemp(millis);
@@ -938,18 +950,18 @@ public class VPlayer {
         // Update rad and temp
         Player me = Bukkit.getPlayer(uuid);
         if (me != null) {
-            PluginConfig conf = VampireRevamp.getVampireConfig();
+            PluginConfig conf = plugin.getVampireConfig();
             if (me.getGameMode() != GameMode.CREATIVE && this.isVampire() && !me.isDead()) {
                 double irradiation = 0;
                 boolean irradiationEnabled = true;
 
-                if (VampireRevamp.isWorldGuardEnabled()) {
-                    WorldGuardCompat wg = VampireRevamp.getWorldGuardCompat();
+                if (plugin.isWorldGuardEnabled()) {
+                    WorldGuardCompat wg = plugin.getWorldGuardCompat();
                     irradiationEnabled = wg.isIrradiationEnabled(me, me.getLocation());
                 }
 
                 if (irradiationEnabled) {
-                    irradiation = SunUtil.calcPlayerIrradiation(me);
+                    irradiation = sunUtil.calcPlayerIrradiation(me);
                 }
 
                 this.rad = conf.radiation.baseRadiation + irradiation;
@@ -967,7 +979,7 @@ public class VPlayer {
         Player me = Bukkit.getPlayer(uuid);
         if (this.isInfected() && me != null) {
             int indexOld = this.infectionGetMessageIndex();
-            PluginConfig conf = VampireRevamp.getVampireConfig();
+            PluginConfig conf = plugin.getVampireConfig();
             this.addInfection(millis * conf.infection.amountPerMilli);
             int indexNew = this.infectionGetMessageIndex();
 
@@ -975,12 +987,12 @@ public class VPlayer {
                 if (conf.infection.progressDamage != 0)
                     me.damage(conf.infection.progressDamage);
                 if (conf.infection.progressNauseaTicks > 0)
-                    FxUtil.ensure(VampireRevamp.getVersionCompat().getNauseaEffect(), me, conf.infection.progressNauseaTicks);
+                    FxUtil.ensure(plugin.getVersionCompat().getNauseaEffect(), me, conf.infection.progressNauseaTicks);
 
-                VampireRevamp.sendMessage(me,
+                plugin.sendMessage(me,
                         MessageType.INFO,
                         InfectionMessageKeys.getFeeling(indexNew));
-                VampireRevamp.sendMessage(me,
+                plugin.sendMessage(me,
                         MessageType.INFO,
                         InfectionMessageKeys.getHint(ThreadLocalRandom.current().nextInt(InfectionMessageKeys.getMaxHint())));
             }
@@ -996,7 +1008,7 @@ public class VPlayer {
         if (me == null) {
             return;
         }
-        PluginConfig conf = VampireRevamp.getVampireConfig();
+        PluginConfig conf = plugin.getVampireConfig();
         boolean enabled = (this.isVampire() && conf.vampire.regen.enabled) ||
                           (this.isNosferatu() && conf.vampire.regenNosferatu.enabled);
         boolean buffsActive = !conf.radiation.removeBuffs.enabled ||
@@ -1031,7 +1043,7 @@ public class VPlayer {
         if (me == null) {
             return;
         }
-        PluginConfig conf = VampireRevamp.getVampireConfig();
+        PluginConfig conf = plugin.getVampireConfig();
         if (this.isVampire() && this.isBloodlusting()
                 && !me.isDead()
                 && me.getGameMode() != GameMode.CREATIVE) {
@@ -1050,7 +1062,7 @@ public class VPlayer {
         Player me = Bukkit.getPlayer(uuid);
         if (me != null && !me.isDead()
                 && me.getGameMode() != GameMode.CREATIVE) {
-            PluginConfig conf = VampireRevamp.getVampireConfig();
+            PluginConfig conf = plugin.getVampireConfig();
 
             // FX: Smoke
             if (this.fxSmokeMillis > 0) {
@@ -1103,17 +1115,17 @@ public class VPlayer {
         if (me != null) {
             VPlayer vyou = this.tradeOfferedFrom;
             Player you = vyou == null ? null : vyou.getPlayer();
-            PluginConfig conf = VampireRevamp.getVampireConfig();
-            Component yourName = Component.text(you.getDisplayName());
+            PluginConfig conf = plugin.getVampireConfig();
+            Component yourName = you == null ? null : Component.text(you.getDisplayName());
 
             // Any offer available?
             if (you == null || System.currentTimeMillis() - this.tradeOfferedAtMillis > conf.trade.offerToleranceMillis) {
-                VampireRevamp.sendMessage(me,
+                plugin.sendMessage(me,
                         MessageType.ERROR,
                         TradingMessageKeys.ACCEPT_NONE);
             } // Standing close enough?
             else if (!this.withinDistanceOf(vyou, conf.trade.offerMaxDistance)) {
-                VampireRevamp.sendMessage(me,
+                plugin.sendMessage(me,
                         MessageType.ERROR,
                         TradingMessageKeys.NOT_CLOSE,
                         new Tuple<>("{player}", yourName));
@@ -1131,10 +1143,10 @@ public class VPlayer {
                 }
 
                 if (this.tradeOfferedAmount > enough) {
-                    VampireRevamp.sendMessage(you,
+                    plugin.sendMessage(you,
                             MessageType.ERROR,
                             TradingMessageKeys.LACKING_OUT);
-                    VampireRevamp.sendMessage(me,
+                    plugin.sendMessage(me,
                             MessageType.ERROR,
                             TradingMessageKeys.LACKING_IN,
                             new Tuple<>("{player}", yourName));
@@ -1161,12 +1173,12 @@ public class VPlayer {
                         }
                     }
                     // Trader Messages
-                    VampireRevamp.sendMessage(you,
+                    plugin.sendMessage(you,
                             MessageType.INFO,
                             TradingMessageKeys.TRANSFER_OUT,
                             new Tuple<>("{player}", merName),
                             new Tuple<>("{amount}", amountComp));
-                    VampireRevamp.sendMessage(me,
+                    plugin.sendMessage(me,
                             MessageType.INFO,
                             TradingMessageKeys.TRANSFER_IN,
                             new Tuple<>("{player}", yourName),
@@ -1182,7 +1194,7 @@ public class VPlayer {
                             player.playEffect(l1, Effect.POTION_BREAK, 5);
                             player.playEffect(l2, Effect.POTION_BREAK, 5);
                             if (!player.equals(me) && !player.equals(you)) {
-                                VampireRevamp.sendMessage(player,
+                                plugin.sendMessage(player,
                                         MessageType.INFO,
                                         TradingMessageKeys.SEEN,
                                         new Tuple<>("{player}", merName),
@@ -1204,18 +1216,18 @@ public class VPlayer {
         Player you = vyou.getPlayer();
         Player me = Bukkit.getPlayer(uuid);
         if (you != null && me != null) {
-            PluginConfig conf = VampireRevamp.getVampireConfig();
+            PluginConfig conf = plugin.getVampireConfig();
             Component yourName = Component.text(you.getDisplayName());
             if (!this.withinDistanceOf(vyou, conf.trade.offerMaxDistance)) {
-                VampireRevamp.sendMessage(me,
+                plugin.sendMessage(me,
                         MessageType.INFO,
                         TradingMessageKeys.NOT_CLOSE,
                         new Tuple<>("{player}", yourName));
             } else if (me.equals(you)) {
-                VampireRevamp.sendMessage(me,
+                plugin.sendMessage(me,
                         MessageType.INFO,
                         TradingMessageKeys.SELF);
-                FxUtil.ensure(VampireRevamp.getVersionCompat().getNauseaEffect(), me, 12 * 20);
+                FxUtil.ensure(plugin.getVersionCompat().getNauseaEffect(), me, 12 * 20);
             } else {
                 Component merName = Component.text(me.getDisplayName());
                 Component amountComp = Component.text(String.format("%.1f", amount));
@@ -1223,25 +1235,25 @@ public class VPlayer {
                 vyou.tradeOfferedAtMillis = System.currentTimeMillis();
                 vyou.tradeOfferedAmount = amount;
 
-                VampireRevamp.sendMessage(me,
+                plugin.sendMessage(me,
                         MessageType.INFO,
                         TradingMessageKeys.OFFER_OUT,
                         new Tuple<>("{player}", yourName),
                         new Tuple<>("{amount}", amountComp));
 
-                VampireRevamp.sendMessage(you,
+                plugin.sendMessage(you,
                         MessageType.INFO,
                         TradingMessageKeys.OFFER_IN,
                         new Tuple<>("{player}", merName),
                         new Tuple<>("{amount}", amountComp));
 
-                VampireRevamp.sendMessage(you,
+                plugin.sendMessage(you,
                         MessageType.INFO,
                         TradingMessageKeys.ACCEPT_HELP);
             }
         }
         else {
-            VampireRevamp.sendMessage(sender,
+            plugin.sendMessage(sender,
                     MessageType.ERROR,
                     CommandMessageKeys.DATA_NOT_FOUND);
         }
@@ -1278,7 +1290,7 @@ public class VPlayer {
         Player player = Bukkit.getPlayer(uuid);
         if (player != null) {
             if (!this.truceIsBroken(when)) {
-                VampireRevamp.sendMessage(player,
+                plugin.sendMessage(player,
                         MessageType.INFO,
                         VampirismMessageKeys.TRUCE_BROKEN);
             }
@@ -1289,7 +1301,7 @@ public class VPlayer {
     public void truceRestore() {
         Player me = Bukkit.getPlayer(uuid);
         if (me != null) {
-            VampireRevamp.sendMessage(me,
+            plugin.sendMessage(me,
                     MessageType.INFO,
                     VampirismMessageKeys.TRUCE_RESTORED);
             // Untarget the player.
@@ -1311,7 +1323,7 @@ public class VPlayer {
     }
 
     private void setTruceRestoreTimestamp(long timeBroken) {
-        long aux = timeBroken + VampireRevamp.getVampireConfig().truce.breakMillis;
+        long aux = timeBroken + plugin.getVampireConfig().truce.breakMillis;
         if (truceRestoreTimestamp < aux) {
             this.truceRestoreTimestamp = aux;
         }
@@ -1326,7 +1338,7 @@ public class VPlayer {
         Player me = Bukkit.getPlayer(uuid);
 
         if (me != null) {
-            PluginConfig conf = VampireRevamp.getVampireConfig();
+            PluginConfig conf = plugin.getVampireConfig();
             if (this.isBloodlusting())
                 damageFactor = conf.vampire.bloodlust.damageFactor;
             else
@@ -1342,7 +1354,7 @@ public class VPlayer {
         Player me = Bukkit.getPlayer(uuid);
         if (me != null) {
             if (this.isVampire()) {
-                PluginConfig conf = VampireRevamp.getVampireConfig();
+                PluginConfig conf = plugin.getVampireConfig();
                 if (this.isIntending())
                     infectRisk = conf.vampire.intend.infectionChance;
                 else
