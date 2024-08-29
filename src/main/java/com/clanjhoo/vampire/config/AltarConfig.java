@@ -1,8 +1,8 @@
 package com.clanjhoo.vampire.config;
 
 import com.clanjhoo.vampire.VampireRevamp;
+import com.clanjhoo.vampire.compat.VersionCompat;
 import com.clanjhoo.vampire.util.CollectionUtil;
-import com.clanjhoo.vampire.util.SemVer;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.inventory.ItemStack;
@@ -11,6 +11,7 @@ import org.jetbrains.annotations.NotNull;
 import java.io.BufferedWriter;
 import java.util.Map;
 import java.util.Set;
+
 
 public class AltarConfig {
     public final int searchRadius;
@@ -26,6 +27,8 @@ public class AltarConfig {
         searchRadius = 10;
         minRatioForInfo = 0;
         checkIfBlockInHand = true;
+
+        VersionCompat vCompat = plugin.getVersionCompat();
         Map<Material, Integer> buildDark = CollectionUtil.map(
                 Material.OBSIDIAN, 30,
                 Material.DEAD_BUSH, 5,
@@ -37,16 +40,9 @@ public class AltarConfig {
                 PluginConfig.getIngredient(plugin, Material.REDSTONE, 10)
         );
 
-        if (new SemVer(1, 13).compareTo(plugin.getServerVersion()) <= 0) {
-            buildDark.put(Material.COBWEB, 5);
-            activateDark.add(PluginConfig.getIngredient(plugin, Material.MUSHROOM_STEW, 1));
-            activateDark.add(PluginConfig.getIngredient(plugin, Material.GUNPOWDER, 10));
-        }
-        else {
-            buildDark.put(Material.getMaterial("WEB"), 5);
-            activateDark.add(PluginConfig.getIngredient(plugin, Material.getMaterial("MUSHROOM_SOUP"), 1));
-            activateDark.add(PluginConfig.getIngredient(plugin, Material.getMaterial("SULPHUR"), 10));
-        }
+        buildDark.put(Material.COBWEB, 5);
+        activateDark.add(PluginConfig.getIngredient(plugin, vCompat.getMushroomStew(), 1));
+        activateDark.add(PluginConfig.getIngredient(plugin, vCompat.getGunpowder(), 10));
 
         darkAltar = new SingleAltarConfig(
                 plugin,
@@ -62,14 +58,8 @@ public class AltarConfig {
                 Material.LAPIS_BLOCK, 1
         );
 
-        if (new SemVer(1, 13).compareTo(plugin.getServerVersion()) <= 0) {
-            buildLight.put(Material.POPPY, 5);
-            buildLight.put(Material.DANDELION, 5);
-        }
-        else {
-            buildLight.put(Material.getMaterial("RED_ROSE"), 5);
-            buildLight.put(Material.getMaterial("YELLOW_FLOWER"), 5);
-        }
+        buildLight.put(vCompat.getPoppy(), 5);
+        buildLight.put(vCompat.getDandelion(), 5);
 
         lightAltar = new SingleAltarConfig(
                 plugin,

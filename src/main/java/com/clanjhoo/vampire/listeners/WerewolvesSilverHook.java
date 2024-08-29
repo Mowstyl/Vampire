@@ -13,6 +13,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.logging.Level;
@@ -68,9 +69,10 @@ public class WerewolvesSilverHook implements Listener {
         if (!(rawDamager instanceof LivingEntity))
             return;
         LivingEntity damager = (LivingEntity) rawDamager;
-        if (damager.getEquipment() == null)
+        EntityEquipment damagerEquipment = damager.getEquipment();
+        if (damagerEquipment == null)
             return;
-        ItemStack weapon = damager.getEquipment().getItemInMainHand();
+        ItemStack weapon = damagerEquipment.getItemInMainHand();
         boolean isSilverSword = plugin.getWerewolvesCompat().isSilverSword(weapon);
         if (!isSilverSword)
             return;

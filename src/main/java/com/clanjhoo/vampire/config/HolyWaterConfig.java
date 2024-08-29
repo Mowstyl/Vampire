@@ -13,6 +13,7 @@ import java.io.BufferedWriter;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Level;
 
 public class HolyWaterConfig {
     public final int splashRadius;
@@ -29,12 +30,13 @@ public class HolyWaterConfig {
                 PluginConfig.getIngredient(plugin, Material.POTION, 1, PotionType.WATER)
         );
 
-        if (new SemVer(1, 14).compareTo(plugin.getServerVersion()) <= 0) {
-            resources.add(PluginConfig.getIngredient(plugin, Material.LAPIS_LAZULI, 1));
+        String lapisMaterial = "LAPIS_LAZULI";
+        short lapisDamage = 0;
+        if (plugin.getServerVersion().compareTo(new SemVer(1, 14)) < 0) {
+            lapisMaterial = "INK_SACK";
+            lapisDamage = 4;
         }
-        else {
-            resources.add(PluginConfig.getIngredient(plugin, Material.getMaterial("INK_SACK"), 1, (short) 4));
-        }
+        resources.add(PluginConfig.getIngredient(plugin, Material.valueOf(lapisMaterial), 1, lapisDamage));
     }
 
     public HolyWaterConfig(VampireRevamp plugin, @NotNull ConfigurationSection cs) {
@@ -46,7 +48,15 @@ public class HolyWaterConfig {
 
         Set<ItemStack> resset = null;
         if (cs.contains("resources")) {
-            resset = PluginConfig.getResources(plugin, (List<Map<String, Object>>) cs.getList("resources"));
+            List<?> resources = cs.getList("resources");
+            try {
+                if (resources != null) {
+                    resset = PluginConfig.getResources(plugin, (List<Map<String, Object>>) resources);
+                }
+            }
+            catch (ClassCastException ex) {
+                plugin.log(Level.WARNING, "Wrong format for resources in holy water config");
+            }
         }
         resources = resset != null ? resset : def.resources;
     }

@@ -10,6 +10,9 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 
+import java.time.ZonedDateTime;
+import java.util.UUID;
+
 public class PhantomListener implements Listener {
 
     private final VampireRevamp plugin;
@@ -30,10 +33,12 @@ public class PhantomListener implements Listener {
     public void onPhantomSpawn(CreatureSpawnEvent e) {
         if ((e.getEntity() instanceof Phantom) && e.getSpawnReason() == CreatureSpawnEvent.SpawnReason.NATURAL) {
             Phantom phan = (Phantom) e.getEntity();
-            if (phan.getSpawningEntity() != null) {
-                Player player = Bukkit.getPlayer(phan.getSpawningEntity());
+            UUID playerUUID = phan.getSpawningEntity();
+            if (playerUUID != null) {
+                Player player = Bukkit.getPlayer(playerUUID);
                 VPlayer vPlayer = plugin.getVPlayer(player);
-                if (vPlayer != null && vPlayer.isVampire() && !vPlayer.truceIsBroken(System.currentTimeMillis())) {
+                long now = ZonedDateTime.now().toInstant().toEpochMilli();
+                if (vPlayer != null && vPlayer.isVampire() && !vPlayer.truceIsBroken(now)) {
                     e.setCancelled(true);
                 }
             }

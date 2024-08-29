@@ -36,10 +36,10 @@ public class InfectionChangeEvent extends Event {
         this.infection = infection;
     }
 
-    private final VPlayer uplayer;
+    private final VPlayer vPlayer;
 
-    public VPlayer getUplayer() {
-        return this.uplayer;
+    public VPlayer getVPlayer() {
+        return this.vPlayer;
     }
 
     // -------------------------------------------- //
@@ -48,7 +48,7 @@ public class InfectionChangeEvent extends Event {
 
     public InfectionChangeEvent(double infection, VPlayer uplayer) {
         this.infection = infection;
-        this.uplayer = uplayer;
+        this.vPlayer = uplayer;
     }
 
     public void setCancelled(boolean cancel) {

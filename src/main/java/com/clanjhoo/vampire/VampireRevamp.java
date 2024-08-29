@@ -80,7 +80,6 @@ public class VampireRevamp extends JavaPlugin {
 	private AltarDark altarDark;
 	private AltarLight altarLight;
 	private SemVer serverVersion;
-	private boolean disabled = false;
 	private WorldGuardCompat wg = null;
 	private ProtocolLibCompat plc = null;
 	private WerewolfCompat ww;
@@ -193,7 +192,6 @@ public class VampireRevamp extends JavaPlugin {
 			log(Level.SEVERE, "Error found while detecting server version. Version: " + versionString);
 			ex.printStackTrace();
 			setEnabled(false);
-			disabled = true;
 			return;
 		}
 
@@ -206,7 +204,6 @@ public class VampireRevamp extends JavaPlugin {
 			log(Level.SEVERE, "Error found while loading methods for minecraft version: " + versionString);
 			ex.printStackTrace();
 			setEnabled(false);
-			disabled = true;
 			return;
 		}
 
@@ -236,8 +233,13 @@ public class VampireRevamp extends JavaPlugin {
 
 		try {
 			File localesFolder = new File(this.getDataFolder() + "/locales");
-			if (!localesFolder.exists())
-				localesFolder.mkdir();
+			if (!localesFolder.exists()) {
+				if (!localesFolder.mkdirs()) {
+					log(Level.SEVERE, "The locales folder could not be created! Disabling plugin!");
+					setEnabled(false);
+					return;
+				}
+			}
 			String[] providedLocales = new String[]{"lang_en.yml", "lang_es.yml"};
 			for (String locale : providedLocales) {
 				File localeFile = new File(localesFolder, locale);
@@ -261,7 +263,11 @@ public class VampireRevamp extends JavaPlugin {
 		File dataFolder = this.getDataFolder();
 		File configFile = new File(dataFolder, "config.yml");
 		if (!dataFolder.exists()) {
-			dataFolder.mkdir();
+			if (!dataFolder.mkdirs()) {
+				log(Level.SEVERE, "The plugin folder could not be created! Disabling plugin!");
+				setEnabled(false);
+				return;
+			}
 		}
 
 		if (!configFile.exists()) {
@@ -394,11 +400,11 @@ public class VampireRevamp extends JavaPlugin {
 						5 * 60 * 1000,
 						data);
 				vPlayerManager.initialize();
-			} catch (IOException ex) {
-				log(Level.SEVERE, "Couldn't create storage! Disabling plugin!");
+			}
+			catch (IOException ex) {
+				log(Level.SEVERE, "Could not instantiate VPlayer manager! Disabling plugin!");
 				ex.printStackTrace();
-				getServer().getPluginManager().disablePlugin(this);
-				disabled = true;
+				setEnabled(false);
 				return false;
 			}
 		}
@@ -453,8 +459,9 @@ public class VampireRevamp extends JavaPlugin {
 		finally {
 			if (!hasDefaultLocale) {
 				Level msgLevel = disableOnFail ? Level.SEVERE : Level.WARNING;
-				log(msgLevel, "Couldn't load the default locale file!");
+				log(msgLevel, "Could not load the default locale file!");
 				if (disableOnFail) {
+					setEnabled(false);
 					getServer().getPluginManager().disablePlugin(this);
 				}
 				finalResult = false;
@@ -474,12 +481,7 @@ public class VampireRevamp extends JavaPlugin {
 	}
 
 	@Override
-	public void onEnable()
-	{
-		if (disabled) {
-			return;
-		}
-
+	public void onEnable() {
 		// Initialize an audiences instance for the plugin
 		this.adventure = BukkitAudiences.create(this);
 
@@ -627,9 +629,6 @@ public class VampireRevamp extends JavaPlugin {
 			this.adventure.close();
 			this.adventure = null;
 		}
-		if (disabled) {
-			return;
-		}
 		BukkitScheduler scheduler = getServer().getScheduler();
 		scheduler.cancelTask(cleanTaskId);
 		scheduler.cancelTask(theTaskId);
@@ -772,7 +771,8 @@ public class VampireRevamp extends JavaPlugin {
 			wereKey = GrammarMessageKeys.TO_BE_2ND_PAST;
 		}
 		else {
-			you = Component.text(target.getName());
+			String name = target.getName();
+			you = Component.text(name != null ? name : "UNKNOWN");
 			areKey = GrammarMessageKeys.TO_BE_3RD;
 			wereKey = GrammarMessageKeys.TO_BE_3RD_PAST;
 		}

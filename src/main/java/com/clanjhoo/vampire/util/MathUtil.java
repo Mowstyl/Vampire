@@ -7,16 +7,14 @@ import java.math.RoundingMode;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class MathUtil {
-    public static <T extends Number> T limitNumber(T d, T min, T max) {
-        if (d.doubleValue() < min.doubleValue()) {
+    public static <T extends Number> T limitNumber(T value, T min, T max) {
+        if (value.doubleValue() < min.doubleValue())
             return min;
-        }
 
-        if (d.doubleValue() > max.doubleValue()) {
+        if (value.doubleValue() > max.doubleValue())
             return max;
-        }
 
-        return d;
+        return value;
     }
 
     public static long probabilityRound(double value) {

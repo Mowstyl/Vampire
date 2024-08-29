@@ -46,7 +46,7 @@ public class WerewolvesHybridHook implements Listener {
         if (!plugin.getVampireConfig().compatibility.preventWerewolfHybrids)
             return;
 
-        VPlayer uplayer = event.getUplayer();
+        VPlayer uplayer = event.getVPlayer();
         if (uplayer == null) {
             event.setCancelled(true);
             return;
@@ -74,7 +74,7 @@ public class WerewolvesHybridHook implements Listener {
         if (!plugin.getVampireConfig().compatibility.preventWerewolfHybrids)
             return;
 
-        VPlayer uplayer = event.getUplayer();
+        VPlayer uplayer = event.getVPlayer();
         if (uplayer == null) {
             event.setCancelled(true);
             return;

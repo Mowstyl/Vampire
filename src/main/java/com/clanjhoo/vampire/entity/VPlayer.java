@@ -6,6 +6,7 @@ import com.clanjhoo.dbhandler.annotations.Entity;
 import com.clanjhoo.dbhandler.annotations.NotNullField;
 import com.clanjhoo.dbhandler.annotations.PrimaryKey;
 import com.clanjhoo.vampire.InfectionReason;
+import com.clanjhoo.vampire.compat.VersionCompat;
 import com.clanjhoo.vampire.compat.WorldGuardCompat;
 import com.clanjhoo.vampire.keyproviders.*;
 import com.clanjhoo.vampire.VampireRevamp;
@@ -18,14 +19,15 @@ import com.clanjhoo.vampire.util.*;
 import net.kyori.adventure.text.Component;
 import org.bukkit.*;
 import org.bukkit.attribute.Attribute;
+import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.entity.Creature;
-import org.bukkit.entity.EntityCategory;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.potion.PotionEffect;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.time.ZonedDateTime;
 import java.util.*;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.ThreadLocalRandom;
@@ -691,7 +693,7 @@ public class VPlayer {
         // You must be a vampire to shriek
         if (this.isVampire()) {
             PluginConfig conf = plugin.getVampireConfig();
-            long now = System.currentTimeMillis();
+            long now = ZonedDateTime.now().toInstant().toEpochMilli();
 
             long millisSinceLastShriekWaitMessage = now - this.lastShriekWaitMessageMillis;
             if (millisSinceLastShriekWaitMessage >= conf.vampire.shriek.waitMessageCooldownMillis) {
@@ -901,7 +903,7 @@ public class VPlayer {
 
         for (StateEffectConfig effectConf : effectConfs) {
             //plugin.debugLog(Level.INFO, "Group: " + effectConf.toString());
-            if (effectConf.passesChecks.apply(this)) {
+            if (effectConf.getPassesChecks().apply(this)) {
                 //plugin.debugLog(Level.INFO, "Passes!");
                 effectConf.addPotionEffects(player, targetDuration);
             }
@@ -1019,20 +1021,23 @@ public class VPlayer {
         double foodPerMilli = this.isNosferatu() ? conf.vampire.regenNosferatu.foodPerMilli : conf.vampire.regen.foodPerMilli;
         double healthPerFood = this.isNosferatu() ? conf.vampire.regenNosferatu.healthPerFood : conf.vampire.regen.healthPerFood;
 
+        AttributeInstance maxHealthAttr = me.getAttribute(Attribute.GENERIC_MAX_HEALTH);
+        double maxHealth = 20;
+        if (maxHealthAttr != null)
+            maxHealth = maxHealthAttr.getValue();
         if (enabled
+                && maxHealthAttr != null
                 && buffsActive
                 && me.getGameMode() != GameMode.CREATIVE
                 && !me.isDead()
-                && me.getHealth() < (int) me.getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue()
+                && me.getHealth() < maxHealth
                 && this.getFood() >= minFood) {
-            long millisSinceLastDamage = System.currentTimeMillis() - this.lastDamageMillis;
+            long millisSinceLastDamage = ZonedDateTime.now().toInstant().toEpochMilli() - this.lastDamageMillis;
             if (millisSinceLastDamage >= delayMillis) {
                 double foodDiff = this.addFood(-foodPerMilli * millis);
                 double healthTarget = me.getHealth() - foodDiff * healthPerFood;
 
-                healthTarget = Math.min(healthTarget, me.getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue());
-                healthTarget = Math.max(healthTarget, 0D);
-
+                healthTarget = MathUtil.limitNumber(healthTarget, 0D, maxHealth);
                 me.setHealth(healthTarget);
             }
         }
@@ -1119,7 +1124,7 @@ public class VPlayer {
             Component yourName = you == null ? null : Component.text(you.getDisplayName());
 
             // Any offer available?
-            if (you == null || System.currentTimeMillis() - this.tradeOfferedAtMillis > conf.trade.offerToleranceMillis) {
+            if (you == null || ZonedDateTime.now().toInstant().toEpochMilli() - this.tradeOfferedAtMillis > conf.trade.offerToleranceMillis) {
                 plugin.sendMessage(me,
                         MessageType.ERROR,
                         TradingMessageKeys.ACCEPT_NONE);
@@ -1232,7 +1237,7 @@ public class VPlayer {
                 Component merName = Component.text(me.getDisplayName());
                 Component amountComp = Component.text(String.format("%.1f", amount));
                 vyou.tradeOfferedFrom = this;
-                vyou.tradeOfferedAtMillis = System.currentTimeMillis();
+                vyou.tradeOfferedAtMillis = ZonedDateTime.now().toInstant().toEpochMilli();
                 vyou.tradeOfferedAmount = amount;
 
                 plugin.sendMessage(me,
@@ -1304,20 +1309,17 @@ public class VPlayer {
             plugin.sendMessage(me,
                     MessageType.INFO,
                     VampirismMessageKeys.TRUCE_RESTORED);
+            VersionCompat vCompat = plugin.getVersionCompat();
             // Untarget the player.
             me.getWorld().getNearbyEntities(
                     me.getLocation(),
                     50,
                     50,
                     50,
-                    (e) -> {
-                        if (e instanceof Creature) {
-                            Creature creat = (Creature) e;
-                            if (creat.getCategory() == EntityCategory.UNDEAD && creat.getType() != EntityType.WITHER)
-                                return me.equals(creat.getTarget());
-                        }
-                        return false;
-                    })
+                    (e) -> e.getType() != EntityType.WITHER
+                            && vCompat.isUndead(e.getType())
+                            && e instanceof Creature
+                            && me.equals(((Creature) e).getTarget()))
                     .forEach((le) -> ((Creature) le).setTarget(null));
         }
     }

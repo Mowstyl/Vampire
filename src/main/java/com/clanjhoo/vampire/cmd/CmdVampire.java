@@ -17,6 +17,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.attribute.Attribute;
+import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -150,7 +151,8 @@ public class CmdVampire extends BaseCommand {
 		Component on = plugin.getMessage(sender, GrammarMessageKeys.ON);
 		Component off = plugin.getMessage(sender, GrammarMessageKeys.OFF);
 
-		Component playerName = Component.text(offlinePlayer.getName());
+		String name = offlinePlayer.getName();
+		Component playerName = Component.text(name != null ? name : "UNKNOWN");
 
 		plugin.sendMessage(sender, textUtil.getPlayerInfoHeader(vPlayer.isVampire(),
 				vPlayer.isNosferatu(),
@@ -1117,7 +1119,7 @@ public class CmdVampire extends BaseCommand {
 		@CommandCompletion("@range:0-20 @players")
 		@Description("{@@commands.set_health_description}")
 		@Syntax("<val> [player=you]")
-		public void onSetHealth(CommandSender sender, int value, @Optional String targetName) {
+		public void onSetHealth(CommandSender sender, double value, @Optional String targetName) {
 			Player player = null;
 			if (targetName != null) {
 				player = Bukkit.getPlayer(targetName);
@@ -1141,8 +1143,12 @@ public class CmdVampire extends BaseCommand {
 				return;
 			}
 
-			Integer res = MathUtil.limitNumber(value, 0, (int) player.getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue());
-			player.setHealth(res);
+			AttributeInstance maxHealthAttr = player.getAttribute(Attribute.GENERIC_MAX_HEALTH);
+			double maxHealth = 20;
+			if (maxHealthAttr != null)
+				maxHealth = maxHealthAttr.getValue();
+			double newHealth = MathUtil.limitNumber(value, 0D, maxHealth);
+			player.setHealth(newHealth);
 
 			Component attributeName = plugin.getMessage(sender, CommandMessageKeys.SET_HEALTH_ATTRIBUTE);
 			Component displayName = Component.text(player.getDisplayName());
@@ -1151,7 +1157,7 @@ public class CmdVampire extends BaseCommand {
 					CommandMessageKeys.SET_CHANGED_VALUE,
 					new Tuple<>("{player}", displayName),
 					new Tuple<>("{attribute}", attributeName),
-					new Tuple<>("{value}", Component.text(String.format("%d", res))));
+					new Tuple<>("{value}", Component.text(String.format("%f", newHealth))));
 		}
 	}
 

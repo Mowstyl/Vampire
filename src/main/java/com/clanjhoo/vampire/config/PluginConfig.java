@@ -1,9 +1,11 @@
 package com.clanjhoo.vampire.config;
 
 import com.clanjhoo.vampire.VampireRevamp;
+import com.clanjhoo.vampire.compat.VersionCompat;
 import com.clanjhoo.vampire.util.CollectionUtil;
 import com.clanjhoo.vampire.util.SemVer;
 import org.bukkit.Material;
+import org.bukkit.Registry;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.EntityType;
@@ -20,6 +22,7 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.logging.Level;
+import java.util.stream.Collectors;
 
 public class PluginConfig {
     private static final int LAST_VERSION = 1;
@@ -38,6 +41,7 @@ public class PluginConfig {
     public final RadiationConfig radiation;
     public final StorageConfig storage;
     private final VampireRevamp plugin;
+    private final VersionCompat vCompat;
 
     private static final double NO_BLOOD = 0;
     private static final double NON_HUMAN = 0.25;
@@ -45,7 +49,8 @@ public class PluginConfig {
     private static final double HUMAN = 0.5;
     private static final double PLAYER = 1;
 
-    private static final Map<EntityType, Double> baseFoodQuotient = CollectionUtil.map(
+    // private final Map<EntityType, Double> baseFoodQuotient = null;
+        /* = CollectionUtil.map(
             EntityType.PLAYER, PLAYER,
             EntityType.BAT, NON_HUMAN,
             EntityType.CHICKEN, NON_HUMAN,
@@ -85,7 +90,7 @@ public class PluginConfig {
             EntityType.WITCH, HUMAN,
             EntityType.ENDER_DRAGON, BOSS,
             EntityType.ILLUSIONER, HUMAN
-    );
+    ); */
 
     public static boolean writeLine(BufferedWriter configWriter, String text, String indent, int level) {
         boolean res = false;
@@ -120,9 +125,7 @@ public class PluginConfig {
                 for (Map.Entry<?, ?> entry : itemMap.entrySet()) {
                     String key = entry.getKey().toString();
                     if (entry.getKey() instanceof PotionEffectType)
-                        key = plugin.getServerVersion().compareTo(new SemVer(1, 18)) < 0
-                                ? ((PotionEffectType) entry.getKey()).getName()
-                                : ((PotionEffectType) entry.getKey()).getKey().toString();
+                        key = plugin.getVersionCompat().getPotionEffectName((PotionEffectType) entry.getKey());
                     res = res && writeLine(configWriter, "- " + key + ": " + entry.getValue().toString(), indent, level + 1);
                 }
             }
@@ -296,8 +299,9 @@ public class PluginConfig {
         return res;
     }
 
-    public static void updateFoodMap() {
-        SemVer version = VampireRevamp.getInstance().getServerVersion();
+    /*
+    public void updateFoodMap() {
+        SemVer version = plugin.getServerVersion();
 
         if (new SemVer(1, 13).compareTo(version) <= 0) {
             baseFoodQuotient.put(EntityType.COD, NON_HUMAN);
@@ -318,20 +322,20 @@ public class PluginConfig {
         }
 
         if (new SemVer(1, 15).compareTo(version) <= 0) {
-            baseFoodQuotient.put(EntityType.BEE, NO_BLOOD);
+            baseFoodQuotient.put(EntityType.valueOf("BEE"), NO_BLOOD);
         }
 
         if (new SemVer(1, 16).compareTo(version) <= 0) {
-            baseFoodQuotient.put(EntityType.STRIDER, NON_HUMAN);
-            baseFoodQuotient.put(EntityType.PIGLIN, HUMAN);
-            baseFoodQuotient.put(EntityType.HOGLIN, NON_HUMAN);
+            baseFoodQuotient.put(EntityType.valueOf("STRIDER"), NON_HUMAN);
+            baseFoodQuotient.put(EntityType.valueOf("PIGLIN"), HUMAN);
+            baseFoodQuotient.put(EntityType.valueOf("HOGLIN"), NON_HUMAN);
         }
     }
+    */
 
     public PluginConfig(VampireRevamp plugin) {
         this.plugin = plugin;
-
-        updateFoodMap();
+        vCompat = plugin.getVersionCompat();
 
         version = LAST_VERSION;
         general = new GeneralConfig(plugin);
@@ -342,8 +346,26 @@ public class PluginConfig {
         truce = new TruceConfig(plugin);
         infection = new InfectionConfig(plugin);
         trade = new TradeConfig();
-        fullFoodQuotient = baseFoodQuotient;
-
+        fullFoodQuotient = Arrays.stream(EntityType.values())
+                .filter(EntityType::isAlive)
+                .collect(Collectors.toMap(
+                        et -> et,
+                        (entityType) -> {
+                            if (entityType == EntityType.PLAYER)
+                                return PLAYER;
+                            if (vCompat.isGolem(entityType)
+                                    || vCompat.isSkeleton(entityType)
+                                    || vCompat.isSlime(entityType)
+                                    || vCompat.isArthropod(entityType)
+                                    || vCompat.isElemental(entityType)
+                                    || vCompat.isSpirit(entityType))
+                                return NO_BLOOD;
+                            if (vCompat.isBoss(entityType))
+                                return BOSS;
+                            if (vCompat.isHumanoid(entityType))
+                                return HUMAN;
+                            return NON_HUMAN;
+                        }));
         holyWater = new HolyWaterConfig(plugin);
         altar = new AltarConfig(plugin);
         radiation = new RadiationConfig(plugin);
@@ -353,6 +375,7 @@ public class PluginConfig {
     public PluginConfig(VampireRevamp plugin, FileConfiguration config) {
         ConfigurationSection aux;
         this.plugin = plugin;
+        vCompat = plugin.getVersionCompat();
 
         version = config.getInt("version", LAST_VERSION);
 

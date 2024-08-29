@@ -27,17 +27,17 @@ public class PotionEffectsConfig {
         this.plugin = plugin;
         seconds = 15;
         bloodlust = getBloodlust();
-        bloodlust.passesChecks = VPlayer::isBloodlusting;
+        bloodlust.setPassesChecks(VPlayer::isBloodlusting);
         nightvision = getNightvision();
-        nightvision.passesChecks = VPlayer::isUsingNightVision;
+        nightvision.setPassesChecks(VPlayer::isUsingNightVision);
         nosferatu = getNosferatu();
-        nosferatu.passesChecks = VPlayer::canHaveNosferatuEffects;
+        nosferatu.setPassesChecks(VPlayer::canHaveNosferatuEffects);
         vampire = getVampire();
-        vampire.passesChecks = VPlayer::canHaveVampireEffects;
+        vampire.setPassesChecks(VPlayer::canHaveVampireEffects);
         infected = getInfected();
-        infected.passesChecks = VPlayer::isInfected;
+        infected.setPassesChecks(VPlayer::isInfected);
         human = getHuman();
-        human.passesChecks = VPlayer::isHuman;
+        human.setPassesChecks(VPlayer::isHuman);
     }
 
     public PotionEffectsConfig(VampireRevamp plugin, @NotNull ConfigurationSection cs) {

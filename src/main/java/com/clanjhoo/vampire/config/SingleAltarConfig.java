@@ -32,12 +32,20 @@ public class SingleAltarConfig {
         SingleAltarConfig sac = this;
 
         if (cs != null) {
-            Material core;
+            Material core = null;
             Set<ItemStack> act = null;
 
-            core = Material.matchMaterial(cs.getString("coreMaterial"));
+            String matName = cs.getString("coreMaterial");
+            if (matName != null) {
+                core = Material.matchMaterial(matName);
+                if (core == null) {
+                    core = Material.matchMaterial(matName, true);
+                    if (core != null)
+                        plugin.log(Level.WARNING, "Altar core material " + matName + " is legacy. Please use " + core.name() + " instead.");
+                }
+            }
             if (core == null) {
-                plugin.log(Level.WARNING, "Material " + cs.getString("coreMaterial") + " doesn't exist!");
+                plugin.log(Level.WARNING, "Altar core material " + cs.getString("coreMaterial") + " doesn't exist!");
                 core = this.coreMaterial;
             }
 
@@ -76,7 +84,15 @@ public class SingleAltarConfig {
                 bm = this.buildMaterials;
 
             if (cs.contains("activate")) {
-                act = PluginConfig.getResources(plugin, (List<Map<String, Object>>) cs.getList("activate"));
+                List<?> activate = cs.getList("activate");
+                try {
+                    if (activate != null) {
+                        act = PluginConfig.getResources(plugin, (List<Map<String, Object>>) activate);
+                    }
+                }
+                catch (ClassCastException ex) {
+                    plugin.log(Level.WARNING, "Wrong format for activate in " + coreMaterial + " altar config");
+                }
             }
             act = act != null ? act : this.activate;
 

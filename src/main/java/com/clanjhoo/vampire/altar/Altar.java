@@ -14,7 +14,9 @@ import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.jetbrains.annotations.Contract;
 
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -32,7 +34,10 @@ public abstract class Altar {
     ResourceUtil resUtil;
 
 
-    public boolean evalBlockUse(Block coreBlock, Player player) {
+    @Contract("null, _ -> false; _, null -> false")
+    public boolean evalBlockUse(@Nullable Block coreBlock, @Nullable Player player) {
+        if (coreBlock == null || player == null)
+            return false;
         boolean blockUse = false;
 
         plugin.debugLog(Level.INFO, "Someone clicked " + coreBlock.getType().name());

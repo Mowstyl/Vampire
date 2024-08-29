@@ -114,26 +114,35 @@ public class TextUtil {
     }
 
     public static List<Component> getPluginDescription(Plugin plugin) {
-        Component header = getPluginDescriptionHeader();
-        Component name = Component.text("Name: ", NamedTextColor.LIGHT_PURPLE)
-                .append(Component.text(plugin.getDescription().getName(), NamedTextColor.AQUA));
+        List<Component> description = new ArrayList<>(6);
 
-        Component version = Component.text("Version: ", NamedTextColor.LIGHT_PURPLE)
-                .append(Component.text(plugin.getDescription().getVersion(), NamedTextColor.AQUA));
+        description.add(getPluginDescriptionHeader());
 
-        Component website = Component.text("Website: ", NamedTextColor.LIGHT_PURPLE)
-                .append(Component.text(plugin.getDescription().getWebsite(), NamedTextColor.AQUA)
-                        .clickEvent(ClickEvent.openUrl(plugin.getDescription().getWebsite())));
+        description.add(Component.text("Name: ", NamedTextColor.LIGHT_PURPLE)
+                .append(Component.text(plugin.getDescription().getName(), NamedTextColor.AQUA)));
 
-        Component authors = Component.text("Authors: ", NamedTextColor.LIGHT_PURPLE)
+        description.add(Component.text("Version: ", NamedTextColor.LIGHT_PURPLE)
+                .append(Component.text(plugin.getDescription().getVersion(), NamedTextColor.AQUA)));
+
+        String rawWebsite = plugin.getDescription().getDescription();
+        if (rawWebsite != null) {
+            description.add(Component.text("Website: ", NamedTextColor.LIGHT_PURPLE)
+                    .append(Component.text(rawWebsite, NamedTextColor.AQUA)
+                            .clickEvent(ClickEvent.openUrl(rawWebsite))));
+        }
+
+        description.add(Component.text("Authors: ", NamedTextColor.LIGHT_PURPLE)
                 .append(Component.text(
                         String.join(", ", plugin.getDescription().getAuthors()),
-                        NamedTextColor.AQUA));
+                        NamedTextColor.AQUA)));
 
-        Component description = Component.text("Description: ", NamedTextColor.LIGHT_PURPLE)
-                .append(Component.text(plugin.getDescription().getDescription(), NamedTextColor.YELLOW));
+        String rawDescription = plugin.getDescription().getDescription();
+        if (rawDescription != null) {
+            description.add(Component.text("Description: ", NamedTextColor.LIGHT_PURPLE)
+                    .append(Component.text(rawDescription, NamedTextColor.YELLOW)));
+        }
 
-        return List.of(header, name, version, website, authors, description);
+        return description;
     }
 
     public Component getCommandHelp(String command, RegisteredCommand<?> regCommand, CommandSender sender, int requireVampire) {

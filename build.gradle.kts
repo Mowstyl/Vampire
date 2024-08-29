@@ -1,3 +1,7 @@
+// import com.github.spotbugs.snom.Confidence
+// import com.github.spotbugs.snom.Effort
+
+
 plugins {
     `java-library`
     alias(libs.plugins.shadowPlugin)
@@ -92,7 +96,7 @@ repositories {
 }
 
 dependencies {
-    //compileOnly(libs.spigotmc.spigotapi)
+    // compileOnly(libs.spigotmc.spigotapi)
     compileOnly(libs.papermc.paperapi)
     compileOnly(libs.sk89q.worldedit.core) {
         isTransitive = false
@@ -165,9 +169,19 @@ tasks {
     spotbugsMain {
         reports.create("html") {
             required = true
-            outputLocation = file("$buildDir/reports/spotbugs.html")
+            outputLocation = file("${layout.buildDirectory.get()}/reports/spotbugs.html")
             setStylesheet("fancy-hist.xsl")
         }
     }
     */
 }
+
+/*
+spotbugs {
+    ignoreFailures = false
+    showStackTraces = true
+    showProgress = true
+    effort = Effort.DEFAULT
+    reportLevel = Confidence.DEFAULT
+}
+*/

@@ -13,6 +13,7 @@ import com.clanjhoo.vampire.util.*;
 import net.kyori.adventure.text.Component;
 import org.bukkit.*;
 import org.bukkit.attribute.Attribute;
+import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.block.Block;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
@@ -27,6 +28,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.projectiles.BlockProjectileSource;
 import org.bukkit.projectiles.ProjectileSource;
 
+import java.time.ZonedDateTime;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.logging.Level;
@@ -54,6 +56,7 @@ public class ListenerMain implements Listener {
     public void onDataLoad(VampireLoadedEvent ev) {
         if (ev.getResult() == LoadResult.SUCCESS) {
             VPlayer vPlayer = ev.getData();
+            assert vPlayer != null;
             plugin.storeVPlayer(vPlayer);
             Player p = vPlayer.getPlayer();
             if (p != null)
@@ -62,9 +65,16 @@ public class ListenerMain implements Listener {
         else {
             UUID uuid = (UUID) ev.getKeys().get(0);
             OfflinePlayer oPlayer = Bukkit.getOfflinePlayer(uuid);
-            plugin.log(Level.WARNING,
-                    "There was an error while loading data for player " + oPlayer.getName() + ".");
-            ev.getException().printStackTrace();
+            String name = oPlayer.getName();
+            if (name != null)
+                plugin.log(Level.WARNING,
+                        "There was an error while loading data for player " + oPlayer.getName() + ".");
+            else
+                plugin.log(Level.WARNING,
+                        "There was an error while loading data for player with uuid " + uuid + ".");
+            Exception ex = ev.getException();
+            assert ex != null;
+            ex.printStackTrace();
         }
     }
 
@@ -326,7 +336,7 @@ public class ListenerMain implements Listener {
                     return;
                 // ... and that player is a vampire ...
                 // ... that has not recently done something to break the truce...
-                if (vPlayer.isVampire() && !vPlayer.truceIsBroken(System.currentTimeMillis())) {
+                if (vPlayer.isVampire() && !vPlayer.truceIsBroken(ZonedDateTime.now().toInstant().toEpochMilli())) {
                     plugin.debugLog(Level.INFO, "Vampire detected, cancelling target");
                     event.setTarget(null);
                     event.setCancelled(true);
@@ -353,7 +363,7 @@ public class ListenerMain implements Listener {
                 if (EntityUtil.isPlayer(damager)) {
                     if (conf.truce.checkGamemode && ((Player) damager).getGameMode() == GameMode.CREATIVE)
                         return;
-                    long now = System.currentTimeMillis();
+                    long now = ZonedDateTime.now().toInstant().toEpochMilli();
                     VPlayer vpDamager = plugin.getVPlayer((Player) damager);
                     if (vpDamager == null) {
                         plugin.log(Level.WARNING, "There was an error while loading " + damager.getName() + " data");
@@ -380,7 +390,7 @@ public class ListenerMain implements Listener {
         Entity entity = event.getEntity();
 
         if (EntityUtil.isPlayer(entity)) {
-            final long timestamp = System.currentTimeMillis();
+            final long timestamp = ZonedDateTime.now().toInstant().toEpochMilli();
             VPlayer vPlayer = plugin.getVPlayer((Player) entity);
             if (vPlayer == null) {
                 plugin.log(Level.WARNING, "There was an error while loading " + entity.getName() + " data");
@@ -577,7 +587,10 @@ public class ListenerMain implements Listener {
         // If cake eating is not allowed for vampires ...
         if (EntityUtil.isPlayer(player) && !conf.vampire.canEatCake) {
             // ... and the player right-clicks a cake block ...
-            if (event.getAction() == Action.RIGHT_CLICK_BLOCK && event.getClickedBlock().getType() == Material.CAKE) {
+            Block clicked = event.getClickedBlock();
+            if (clicked != null
+                    && event.getAction() == Action.RIGHT_CLICK_BLOCK
+                    && clicked.getType() == Material.CAKE) {
                 // ... and the player is a vampire ...
                 VPlayer vPlayer = plugin.getVPlayer(player);
                 if (vPlayer == null || !vPlayer.isVampire())
@@ -587,7 +600,7 @@ public class ListenerMain implements Listener {
                 plugin.sendMessage(player,
                         MessageType.ERROR,
                         VampirismMessageKeys.CANT_EAT_ITEM,
-                        "{item}", event.getClickedBlock().getType().name());
+                        "{item}", clicked.getType().name());
             }
         }
     }
@@ -624,10 +637,17 @@ public class ListenerMain implements Listener {
                                 damage = damagee.getHealth();
 
                             double food = damage * fullFoodQuotient;
-                            if (conf.general.useOldFoodFormula)
-                                food = damage / damagee.getAttribute(Attribute.GENERIC_MAX_HEALTH).getBaseValue()
-                                        * fullFoodQuotient
-                                        * vPlayer.getPlayer().getAttribute(Attribute.GENERIC_MAX_HEALTH).getBaseValue();
+                            if (conf.general.useOldFoodFormula) {
+                                AttributeInstance maxHealthDamagee = damagee.getAttribute(Attribute.GENERIC_MAX_HEALTH);
+                                double baseMaxHealthDamagee = 20;
+                                if (maxHealthDamagee != null)
+                                    baseMaxHealthDamagee = maxHealthDamagee.getBaseValue();
+                                AttributeInstance maxHealthDamager = damagee.getAttribute(Attribute.GENERIC_MAX_HEALTH);
+                                double baseMaxHealthDamager = 20;
+                                if (maxHealthDamager != null)
+                                    baseMaxHealthDamager = maxHealthDamager.getBaseValue();
+                                food = damage / baseMaxHealthDamagee * fullFoodQuotient * baseMaxHealthDamager;
+                            }
                             vPlayer.addFood(food);
                         }
                     }
@@ -783,10 +803,11 @@ public class ListenerMain implements Listener {
         Action action = event.getAction();
         // ... without a placeable item in hand ...
         // ... and the event isn't fired with the off-hand ...
+        ItemStack item = event.getItem();
         if (action == Action.RIGHT_CLICK_BLOCK &&
                 event.getHand() != EquipmentSlot.OFF_HAND &&
                 (!plugin.getVampireConfig().altar.checkIfBlockInHand
-                        || (!event.isBlockInHand() && !(event.getItem() != null && event.getItem().getType() == Material.REDSTONE)))) {
+                        || (!event.isBlockInHand() && !(item != null && item.getType() == Material.REDSTONE)))) {
             plugin.debugLog(Level.INFO, "Without block in hand");
             // ... run altar logic.
             Player player = event.getPlayer();

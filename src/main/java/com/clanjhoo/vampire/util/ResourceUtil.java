@@ -58,19 +58,19 @@ public class ResourceUtil {
 		return "vampire." + enumName.toLowerCase().replace('_', '.');
 	}
 
-	public static boolean playerHas(Player player, ItemStack stack) {
+	public boolean playerHas(Player player, ItemStack stack) {
 		Material requiredType = stack.getType();
 		int requiredAmount = stack.getAmount();
 		PotionType requiredPotion = null;
 		if (requiredType == Material.POTION) {
-			requiredPotion = ((PotionMeta) stack.getItemMeta()).getBasePotionData().getType();
+			requiredPotion = plugin.getVersionCompat().getBasePotionType((PotionMeta) stack.getItemMeta());
 		}
 		
 		int actualAmount = 0;
-		for (ItemStack pstack : player.getInventory().getContents()) {
-			if (pstack != null && pstack.getType() == requiredType) {
+		for (ItemStack pstack : player.getInventory().getStorageContents()) {
+			if (pstack.getType() == requiredType) {
 				if (requiredPotion == null
-						|| ((PotionMeta) pstack.getItemMeta()).getBasePotionData().getType() == requiredPotion) {
+						|| plugin.getVersionCompat().getBasePotionType((PotionMeta) pstack.getItemMeta()) == requiredPotion) {
 					actualAmount += pstack.getAmount();
 				}
 			}
@@ -79,7 +79,7 @@ public class ResourceUtil {
 		return actualAmount >= requiredAmount;
 	}
 	
-	public static boolean playerHas(Player player, Collection<? extends ItemStack> stacks) {
+	public boolean playerHas(Player player, Collection<? extends ItemStack> stacks) {
 		boolean hasAll = true;
 		for (ItemStack stack : stacks) {
 			if (!playerHas(player, stack)) {

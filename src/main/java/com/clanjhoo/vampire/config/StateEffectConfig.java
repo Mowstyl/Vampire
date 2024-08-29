@@ -16,9 +16,9 @@ import java.util.logging.Level;
 
 
 public class StateEffectConfig implements Comparable<StateEffectConfig> {
-    public final EventPriority priority;
-    public final Map<PotionEffectType, Integer> effectToStrength;
-    public Function<VPlayer, Boolean> passesChecks;
+    private final EventPriority priority;
+    private final Map<PotionEffectType, Integer> effectToStrength;
+    private Function<VPlayer, Boolean> passesChecks;
     private final VampireRevamp plugin;
 
 
@@ -75,6 +75,14 @@ public class StateEffectConfig implements Comparable<StateEffectConfig> {
         }
 
         return result;
+    }
+
+    public void setPassesChecks(Function<VPlayer, Boolean> passesChecks) {
+        this.passesChecks = passesChecks;
+    }
+
+    public Function<VPlayer, Boolean> getPassesChecks() {
+        return passesChecks;
     }
 
     @Override

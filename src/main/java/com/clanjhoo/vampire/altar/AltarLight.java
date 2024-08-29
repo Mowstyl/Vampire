@@ -92,7 +92,7 @@ public class AltarLight extends Altar {
 		return success;
 	}
 	
-	protected static boolean playerHoldsWaterBottle(Player player)
+	protected boolean playerHoldsWaterBottle(Player player)
 	{
 		boolean holdsWater = false;
 
@@ -100,7 +100,7 @@ public class AltarLight extends Altar {
 			ItemStack item = player.getInventory().getItemInMainHand();
 			if (item != null && item.getType() == Material.POTION && item.hasItemMeta() && item.getItemMeta() instanceof PotionMeta) {
 				PotionMeta potionMeta = (PotionMeta) item.getItemMeta();
-				holdsWater = potionMeta.getBasePotionData().getType() == PotionType.WATER;
+				holdsWater = plugin.getVersionCompat().getBasePotionType(potionMeta) == PotionType.WATER;
 			}
 		}
 
