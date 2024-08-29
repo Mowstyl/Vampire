@@ -5,6 +5,7 @@ public class SemVer implements Comparable<SemVer> {
     private final int minor;
     private final int patch;
 
+
     public SemVer(int major) {
         this(major, 0, 0);
     }

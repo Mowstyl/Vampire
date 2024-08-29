@@ -33,19 +33,19 @@ import java.util.logging.Level;
 
 
 public final class VersionCompat {
-    private final static SemVer v1_21 = new SemVer(1, 21);  // Breeze mob
-    private final static SemVer v1_20_6 = new SemVer(1, 20, 6);
-    private final static SemVer v1_20_5 = new SemVer(1, 20, 5);
-    private final static SemVer v1_20_3 = new SemVer(1, 20, 3);
-    private final static SemVer v1_20_2 = new SemVer(1, 20, 2);
-    private final static SemVer v1_19 = new SemVer(1, 19);  // Warden
-    private final static SemVer v1_18 = new SemVer(1, 18);  // NamespacedKeys
-    private final static SemVer v1_17 = new SemVer(1, 17);  // AbstractSkeleton
-    private final static SemVer v1_16_2 = new SemVer(1, 16, 2);  // EntityCategory
-    private final static SemVer v1_16 = new SemVer(1, 16);  // Nether Update
-    private final static SemVer v1_15 = new SemVer(1, 15);  // Bees
-    private final static SemVer v1_13 = new SemVer(1, 13);
-    private final static SemVer minSupported = new SemVer(1, 14);  // PersistentDataContainer
+    public final static SemVer v1_21 = new SemVer(1, 21);  // Breeze mob
+    public final static SemVer v1_20_6 = new SemVer(1, 20, 6);
+    public final static SemVer v1_20_5 = new SemVer(1, 20, 5);
+    public final static SemVer v1_20_3 = new SemVer(1, 20, 3);
+    public final static SemVer v1_20_2 = new SemVer(1, 20, 2);
+    public final static SemVer v1_19 = new SemVer(1, 19);  // Warden
+    public final static SemVer v1_18 = new SemVer(1, 18);  // NamespacedKeys
+    public final static SemVer v1_17 = new SemVer(1, 17);  // AbstractSkeleton
+    public final static SemVer v1_16_2 = new SemVer(1, 16, 2);  // EntityCategory
+    public final static SemVer v1_16 = new SemVer(1, 16);  // Nether Update
+    public final static SemVer v1_15 = new SemVer(1, 15);  // Bees
+    public final static SemVer v1_13 = new SemVer(1, 13);
+    public final static SemVer minSupported = new SemVer(1, 14);  // PersistentDataContainer
 
     private final SemVer currentVersion;
     private final VampireRevamp plugin;
