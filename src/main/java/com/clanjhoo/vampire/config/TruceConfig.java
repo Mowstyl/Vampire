@@ -46,7 +46,7 @@ public class TruceConfig {
             auxSEnts = new HashSet<>();
             for (String entName : auxLEnts) {
                 try {
-                    EntityType aux = EntityType.valueOf(entName);
+                    EntityType aux = plugin.getVersionCompat().getEntityTypeByName(entName);
                     auxSEnts.add(aux);
                 }
                 catch (IllegalArgumentException ex) {

@@ -2,7 +2,7 @@ name: ${rootProject.projectName}
 main: ${rootProject.group}.${rootProject.name}.${rootProject.projectName}
 version: ${rootProject.version}
 description: ${rootProject.description}
-api-version: "1.16"
+api-version: "1.14"
 authors: [Cayorion, Mowstyl]
 website: https://clanjhoo.com
 softdepend: [WorldEdit, WorldGuard, LibsDisguises, PlaceholderAPI, Vault, ProtocolLib]

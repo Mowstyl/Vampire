@@ -4,6 +4,7 @@ import com.clanjhoo.vampire.VampireRevamp;
 import com.clanjhoo.vampire.compat.VersionCompat;
 import com.clanjhoo.vampire.util.CollectionUtil;
 import com.clanjhoo.vampire.util.SemVer;
+import org.bukkit.Keyed;
 import org.bukkit.Material;
 import org.bukkit.Registry;
 import org.bukkit.configuration.ConfigurationSection;
@@ -123,10 +124,15 @@ public class PluginConfig {
                 configWriter.newLine();
                 res = true;
                 for (Map.Entry<?, ?> entry : itemMap.entrySet()) {
-                    String key = entry.getKey().toString();
-                    if (entry.getKey() instanceof PotionEffectType)
-                        key = plugin.getVersionCompat().getPotionEffectName((PotionEffectType) entry.getKey());
-                    res = res && writeLine(configWriter, "- " + key + ": " + entry.getValue().toString(), indent, level + 1);
+                    Object key = entry.getKey();
+                    String strong;
+                    if (key instanceof Keyed)
+                        strong = ((Keyed) key).getKey().toString();
+                    else if (key instanceof PotionEffectType)
+                        strong = ((PotionEffectType) key).getName();
+                    else
+                        strong = key.toString();
+                    res = res && writeLine(configWriter, "- " + strong + ": " + entry.getValue().toString(), indent, level + 1);
                 }
             }
         } catch (IOException ex) {
@@ -181,7 +187,13 @@ public class PluginConfig {
                 res = true;
                 for (ItemStack item : itemSet) {
                     ItemMeta meta = item.getItemMeta();
-                    res = res && writeLine(configWriter, "- material: " + item.getType(), indent, level + 1);
+                    Material type = item.getType();
+                    String strType;
+                    if (type instanceof Keyed)
+                        strType = ((Keyed) type).getKey().toString();
+                    else
+                        strType = type.toString();
+                    res = res && writeLine(configWriter, "- material: " + strType, indent, level + 1);
                     res = res && writeLine(configWriter, "  amount: " + item.getAmount(), indent, level + 1);
                     if (meta instanceof Damageable) {
                         Damageable dmg = (Damageable) meta;
@@ -206,6 +218,7 @@ public class PluginConfig {
 
     protected static boolean writeCollection(BufferedWriter configWriter, String header, Collection<?> itemSet, String indent, int level) {
         boolean res;
+        VampireRevamp plugin = VampireRevamp.getInstance();
         try {
             for (int i = 0; i < level; i++)
                 configWriter.write(indent);
@@ -219,8 +232,16 @@ public class PluginConfig {
             else {
                 configWriter.newLine();
                 res = true;
-                for (Object o : itemSet)
-                    res = res && writeLine(configWriter, "- " + o.toString(), indent, level + 1);
+                for (Object o : itemSet) {
+                    String strong;
+                    if (o instanceof Keyed)
+                        strong = ((Keyed) o).getKey().toString();
+                    else if (o instanceof PotionEffectType)
+                        strong = ((PotionEffectType) o).getName();
+                    else
+                        strong = o.toString();
+                    res = res && writeLine(configWriter, "- " + strong, indent, level + 1);
+                }
             }
         } catch (IOException ex) {
             res = false;
@@ -451,7 +472,7 @@ public class PluginConfig {
             ffq = new HashMap<>();
             for (Map.Entry<?, ?> entry : auxffq.entrySet()) {
                 try {
-                    EntityType ent = EntityType.valueOf(((String) entry.getKey()).toUpperCase());
+                    EntityType ent = plugin.getVersionCompat().getEntityTypeByName((String) entry.getKey());;
                     double quotient = (Double) entry.getValue();
 
                     ffq.put(ent, quotient);
@@ -566,7 +587,7 @@ public class PluginConfig {
             int amount = (Integer) source.getOrDefault("amount", 1);
 
             if (matName != null && amount > 0) {
-                Material material = Material.matchMaterial(matName);
+                Material material = plugin.getVersionCompat().getMaterialByName(matName);
 
                 if (material != null && (!forceBlock || material.isBlock())) {
                     if (source.containsKey("durability")) {

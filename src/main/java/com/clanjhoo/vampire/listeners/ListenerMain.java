@@ -269,7 +269,9 @@ public class ListenerMain implements Listener {
             return;
         // If a noncreative player ...
         Player player = event.getPlayer();
-        if (!EntityUtil.isPlayer(player) || player.getGameMode() == GameMode.CREATIVE)
+        if (!EntityUtil.isPlayer(player)
+                || player.getGameMode() == GameMode.CREATIVE
+                || player.getGameMode() == GameMode.SPECTATOR)
             return;
         // ... moved between two blocks ...
         Block from = event.getFrom().getBlock();
@@ -353,26 +355,23 @@ public class ListenerMain implements Listener {
         if (EventUtil.isCombatEvent(event)) {
             // ... to a creature that cares about the truce with vampires...
             PluginConfig conf = plugin.getVampireConfig();
-            if (event.getEntity() instanceof Creature) {
-                Creature creat = (Creature) event.getEntity();
-                if (creat.getCategory() != EntityCategory.UNDEAD || creat.getType() == EntityType.WITHER)
-                    return;
-                // ... and the liable damager is a vampire ...
-                Entity damager = EventUtil.getLiableDamager(event);
+            if (!conf.truce.entityTypes.contains(event.getEntityType()))
+                return;
+            // ... and the liable damager is a vampire ...
+            Entity damager = EventUtil.getLiableDamager(event);
 
-                if (EntityUtil.isPlayer(damager)) {
-                    if (conf.truce.checkGamemode && ((Player) damager).getGameMode() == GameMode.CREATIVE)
-                        return;
-                    long now = ZonedDateTime.now().toInstant().toEpochMilli();
-                    VPlayer vpDamager = plugin.getVPlayer((Player) damager);
-                    if (vpDamager == null) {
-                        plugin.log(Level.WARNING, "There was an error while loading " + damager.getName() + " data");
-                        return;
-                    }
-                    if (vpDamager.isVampire()) {
-                        // Then that vampire broke the truce.
-                        vpDamager.truceBreak(now);
-                    }
+            if (EntityUtil.isPlayer(damager)) {
+                if (conf.truce.checkGamemode && ((Player) damager).getGameMode() == GameMode.CREATIVE)
+                    return;
+                long now = ZonedDateTime.now().toInstant().toEpochMilli();
+                VPlayer vpDamager = plugin.getVPlayer((Player) damager);
+                if (vpDamager == null) {
+                    plugin.log(Level.WARNING, "There was an error while loading " + damager.getName() + " data");
+                    return;
+                }
+                if (vpDamager.isVampire()) {
+                    // Then that vampire broke the truce.
+                    vpDamager.truceBreak(now);
                 }
             }
         }

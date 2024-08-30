@@ -37,7 +37,7 @@ public class BloodFlaskUtil {
 
     public BloodFlaskUtil(VampireRevamp plugin) {
         this.plugin = plugin;
-        BLOOD_FLASK_CUSTOM_EFFECT = new PotionEffect(plugin.getVersionCompat().getStrengthEffect(), 20, 0);
+        BLOOD_FLASK_CUSTOM_EFFECT = new PotionEffect(plugin.getVersionCompat().getPotionEffectByName("strength"), 20, 0);
         BLOOD_FLASK_KEY = new NamespacedKey(plugin, "flask");
         BLOOD_FLASK_AMOUNT = new NamespacedKey(plugin, "amount");
         BLOOD_FLASK_VAMPIRIC = new NamespacedKey(plugin, "vampiric");

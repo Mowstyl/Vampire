@@ -2,6 +2,7 @@ package com.clanjhoo.vampire.config;
 
 import com.clanjhoo.vampire.VampireRevamp;
 import com.clanjhoo.vampire.entity.VPlayer;
+import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.event.EventPriority;
@@ -56,7 +57,7 @@ public class StateEffectConfig implements Comparable<StateEffectConfig> {
                 mes = new HashMap<>();
                 for (Map<?, ?> minimap : auxLES) {
                     for (Map.Entry<?, ?> entry : minimap.entrySet()) {
-                        PotionEffectType pet = PotionEffectType.getByName((String) entry.getKey());
+                        PotionEffectType pet = plugin.getVersionCompat().getPotionEffectByName((String) entry.getKey());
                         int strength = (Integer) entry.getValue();
 
                         if (pet != null)

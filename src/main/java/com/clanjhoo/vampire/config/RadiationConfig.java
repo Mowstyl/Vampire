@@ -33,10 +33,10 @@ public class RadiationConfig {
         tempPerRadAndMilli = 0.0001;
         removeBuffs = new RadiationEffectConfig(true, 0.2, true);
         effects = CollectionUtil.list(
-                new RadiationEffectConfig(plugin.getVersionCompat().getNauseaEffect(), 0, 0.2, 200, false),
+                new RadiationEffectConfig(plugin.getVersionCompat().getPotionEffectByName("nausea"), 0, 0.2, 200, false),
                 new RadiationEffectConfig(PotionEffectType.WEAKNESS, 1, 0.3, 200, false),
                 new RadiationEffectConfig(PotionEffectType.WEAKNESS, 0, 0.3, 200, true),
-                new RadiationEffectConfig(plugin.getVersionCompat().getSlownessEffect(), 0, 0.5, 200, false),
+                new RadiationEffectConfig(plugin.getVersionCompat().getPotionEffectByName("slowness"), 0, 0.5, 200, false),
                 new RadiationEffectConfig(PotionEffectType.BLINDNESS, 0, 0.8, 200, false)
         );
         burn = new RadiationEffectConfig(true, 0.9, 60, true);
@@ -77,7 +77,7 @@ public class RadiationConfig {
                     switch (key) {
                         case "type":
                             String typeName = (String) entry.getValue();
-                            type = PotionEffectType.getByName(typeName);
+                            type = plugin.getVersionCompat().getPotionEffectByName(typeName);
 
                             if (type == null) {
                                 plugin.log(Level.WARNING, "PotionEffectType " + typeName + " doesn't exist!");

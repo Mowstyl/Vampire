@@ -41,8 +41,8 @@ public class AltarConfig {
         );
 
         buildDark.put(Material.COBWEB, 5);
-        activateDark.add(PluginConfig.getIngredient(plugin, vCompat.getMushroomStew(), 1));
-        activateDark.add(PluginConfig.getIngredient(plugin, vCompat.getGunpowder(), 10));
+        activateDark.add(PluginConfig.getIngredient(plugin, vCompat.getMaterialByName("mushroom_stew"), 1));
+        activateDark.add(PluginConfig.getIngredient(plugin, vCompat.getMaterialByName("gunpowder"), 10));
 
         darkAltar = new SingleAltarConfig(
                 plugin,
@@ -58,8 +58,8 @@ public class AltarConfig {
                 Material.LAPIS_BLOCK, 1
         );
 
-        buildLight.put(vCompat.getPoppy(), 5);
-        buildLight.put(vCompat.getDandelion(), 5);
+        buildLight.put(vCompat.getMaterialByName("poppy"), 5);
+        buildLight.put(vCompat.getMaterialByName("dandelion"), 5);
 
         lightAltar = new SingleAltarConfig(
                 plugin,

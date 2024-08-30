@@ -1,9 +1,11 @@
 package com.clanjhoo.vampire.config;
 
 import com.clanjhoo.vampire.VampireRevamp;
+import org.bukkit.Keyed;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.potion.PotionEffectType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -37,15 +39,10 @@ public class SingleAltarConfig {
 
             String matName = cs.getString("coreMaterial");
             if (matName != null) {
-                core = Material.matchMaterial(matName);
-                if (core == null) {
-                    core = Material.matchMaterial(matName, true);
-                    if (core != null)
-                        plugin.log(Level.WARNING, "Altar core material " + matName + " is legacy. Please use " + core.name() + " instead.");
-                }
+                core = plugin.getVersionCompat().getMaterialByName(matName);
             }
             if (core == null) {
-                plugin.log(Level.WARNING, "Altar core material " + cs.getString("coreMaterial") + " doesn't exist!");
+                plugin.log(Level.WARNING, "Altar core material " + matName + " doesn't exist!");
                 core = this.coreMaterial;
             }
 
@@ -104,11 +101,16 @@ public class SingleAltarConfig {
 
     protected boolean saveConfigToFile(BufferedWriter configWriter, String indent, int level) {
         boolean result = PluginConfig.writeLine(configWriter, "# Core material of the altar", indent, level);
-        result = result && PluginConfig.writeLine(configWriter, "coreMaterial: " + this.coreMaterial, indent, level);
+        String strong;
+        if (coreMaterial instanceof Keyed)
+            strong = ((Keyed) coreMaterial).getKey().toString();
+        else
+            strong = coreMaterial.toString();
+        result = result && PluginConfig.writeLine(configWriter, "coreMaterial: " + strong, indent, level);
         result = result && PluginConfig.writeLine(configWriter, "# Block counts needed to build the altar", indent, level);
-        result = result && PluginConfig.writeMap(configWriter, "buildMaterials:",  this.buildMaterials, indent, level);
+        result = result && PluginConfig.writeMap(configWriter, "buildMaterials:",  buildMaterials, indent, level);
         result = result && PluginConfig.writeLine(configWriter, "# Item counts needed to activate the altar", indent, level);
-        result = result && PluginConfig.writeItemCollection(configWriter, "activate:",  this.activate, indent, level);
+        result = result && PluginConfig.writeItemCollection(configWriter, "activate:",  activate, indent, level);
 
         return result;
     }

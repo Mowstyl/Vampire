@@ -49,7 +49,7 @@ public class GeneralConfig {
         if (cs.contains("dropSelfMaterials")) {
             auxLMats = cs.getStringList("dropSelfMaterials");
             for (String matName : auxLMats) {
-                Material aux = Material.matchMaterial(matName);
+                Material aux = plugin.getVersionCompat().getMaterialByName(matName);
                 if (aux == null)
                     plugin.log(Level.WARNING, "Material " + matName + " doesn't exist!");
                 else

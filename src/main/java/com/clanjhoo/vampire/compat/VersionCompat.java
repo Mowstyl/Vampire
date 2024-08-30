@@ -2,10 +2,7 @@ package com.clanjhoo.vampire.compat;
 
 import com.clanjhoo.vampire.VampireRevamp;
 import com.clanjhoo.vampire.util.SemVer;
-import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.NamespacedKey;
-import org.bukkit.Tag;
+import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
 import org.bukkit.entity.*;
@@ -30,6 +27,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
+import java.util.regex.Pattern;
 
 
 public final class VersionCompat {
@@ -44,8 +42,9 @@ public final class VersionCompat {
     public final static SemVer v1_16_2 = new SemVer(1, 16, 2);  // EntityCategory
     public final static SemVer v1_16 = new SemVer(1, 16);  // Nether Update
     public final static SemVer v1_15 = new SemVer(1, 15);  // Bees
+    public final static SemVer v1_14 = new SemVer(1, 14);  // PersistentDataContainer
     public final static SemVer v1_13 = new SemVer(1, 13);
-    public final static SemVer minSupported = new SemVer(1, 14);  // PersistentDataContainer
+    public final static SemVer minSupported = new SemVer(1, 17);  // Java 17
 
     private final SemVer currentVersion;
     private final VampireRevamp plugin;
@@ -72,69 +71,9 @@ public final class VersionCompat {
         undeadMobsPre1205.add(EntityType.WITHER_SKELETON);
         undeadMobsPre1205.add(EntityType.WITHER);
         undeadMobsPre1205.add(EntityType.PHANTOM);
-        if (currentVersion.compareTo(v1_16) < 0) {
-            undeadMobsPre1205.add(EntityType.valueOf("PIG_ZOMBIE"));
-        }
-        else {
-            undeadMobsPre1205.add(EntityType.valueOf("ZOMBIFIED_PIGLIN"));
+        undeadMobsPre1205.add(getEntityTypeByName("zombified_piglin"));
+        if (currentVersion.compareTo(v1_16) >= 0)
             undeadMobsPre1205.add(EntityType.valueOf("ZOGLIN"));
-        }
-    }
-
-    @NotNull
-    public Material getShortGrass() {
-        if (currentVersion.compareTo(v1_20_3) < 0) {
-            return Material.valueOf("GRASS");
-        }
-        return Material.valueOf("SHORT_GRASS");
-    }
-
-    @NotNull
-    public Material getMushroomStew() {
-        if (currentVersion.compareTo(v1_13) < 0) {
-            return Material.valueOf("MUSHROOM_SOUP");
-        }
-        return Material.valueOf("MUSHROOM_STEW");
-    }
-
-    @NotNull
-    public Material getGunpowder() {
-        if (currentVersion.compareTo(v1_13) < 0) {
-            return Material.valueOf("SULPHUR");
-        }
-        return Material.valueOf("GUNPOWDER");
-    }
-
-    @NotNull
-    public Material getPoppy() {
-        if (currentVersion.compareTo(v1_13) < 0) {
-            return Material.valueOf("RED_ROSE");
-        }
-        return Material.valueOf("POPPY");
-    }
-
-    @NotNull
-    public Material getDandelion() {
-        if (currentVersion.compareTo(v1_13) < 0) {
-            return Material.valueOf("YELLOW_FLOWER");
-        }
-        return Material.valueOf("DANDELION");
-    }
-
-    @NotNull
-    public EntityType getMooshroom() {
-        if (currentVersion.compareTo(v1_20_5) < 0) {
-            return EntityType.valueOf("MUSHROOM_COW");
-        }
-        return EntityType.valueOf("MOOSHROOM");
-    }
-
-    @NotNull
-    public EntityType getSnowman() {
-        if (currentVersion.compareTo(v1_20_5) < 0) {
-            return EntityType.valueOf("SNOWMAN");
-        }
-        return EntityType.valueOf("SNOW_GOLEM");
     }
 
     @NotNull
@@ -145,72 +84,144 @@ public final class VersionCompat {
         return ItemFlag.valueOf("HIDE_ADDITIONAL_TOOLTIP");
     }
 
-    @NotNull
-    public PotionEffectType getNauseaEffect() {
-        PotionEffectType type;
+    private static final Pattern VALID_KEY = Pattern.compile("[a-z0-9/._-]+");
 
-        if (currentVersion.compareTo(v1_20_5) < 0)
-            type = PotionEffectType.getByName("CONFUSION");
-        else
-            type = PotionEffectType.getByName("NAUSEA");
-
-        if (type == null)
-            throw new IllegalArgumentException();
-        return type;
-    }
-
-    @NotNull
-    public PotionEffectType getJumpEffect() {
-        PotionEffectType type;
-
-        if (currentVersion.compareTo(v1_20_5) < 0)
-            type = PotionEffectType.getByName("JUMP");
-        else
-            type = PotionEffectType.getByName("JUMP_BOOST");
-
-        if (type == null)
-            throw new IllegalArgumentException();
-        return type;
-    }
-
-    @NotNull
-    public PotionEffectType getSlownessEffect() {
-        PotionEffectType type;
-
-        if (currentVersion.compareTo(v1_20_5) < 0)
-            type = PotionEffectType.getByName("SLOW");
-        else
-            type = PotionEffectType.getByName("SLOWNESS");
-
-        if (type == null)
-            throw new IllegalArgumentException();
-        return type;
-    }
-
-    @NotNull
-    public PotionEffectType getStrengthEffect() {
-        PotionEffectType type;
-
-        if (currentVersion.compareTo(v1_20_5) < 0)
-            type = PotionEffectType.getByName("INCREASE_DAMAGE");
-        else
-            type = PotionEffectType.getByName("STRENGTH");
-
-        if (type == null)
-            throw new IllegalArgumentException();
-        return type;
-    }
-
-    public String getPotionEffectName(PotionEffectType type) {
-        if (currentVersion.compareTo(v1_18) < 0) {
-            return type.getName();
+    @Nullable
+    public static NamespacedKey keyFromString(@NotNull String raw) {
+        // Extracted from SpigotMC NamespacedKey.fromString
+        if (raw.isEmpty())
+            throw new IllegalArgumentException("Input string must not be empty or null");
+        raw = raw.toLowerCase();
+        String[] components = raw.split(":", 3);
+        if (components.length > 2) {
+            return null;
+        } else {
+            String key = components.length == 2 ? components[1] : "";
+            String namespace;
+            if (components.length == 1) {
+                namespace = components[0];
+                if (!namespace.isEmpty() && VALID_KEY.matcher(namespace).matches()) {
+                    return NamespacedKey.minecraft(namespace);
+                } else {
+                    return null;
+                }
+            } else if (components.length == 2 && !VALID_KEY.matcher(key).matches()) {
+                return null;
+            } else {
+                namespace = components[0];
+                if (namespace.isEmpty()) {
+                    return NamespacedKey.minecraft(key);
+                } else {
+                    return !VALID_KEY.matcher(namespace).matches() ? null : new NamespacedKey(namespace, key);
+                }
+            }
         }
-        try {
-            NamespacedKey key = (NamespacedKey) PotionEffectType.class.getMethod("getKey").invoke(type);
-            return key.toString();
-        } catch (InvocationTargetException | IllegalAccessException | NoSuchMethodException ex) {
-            throw new RuntimeException(ex);
+    }
+
+    @Nullable
+    public Material getMaterialByName(@NotNull String name) {
+        NamespacedKey key = keyFromString(name);
+        if(key == null)
+            throw new IllegalArgumentException(name + " is not a valid key");
+        String raw = key.getKey().toString();
+
+        if (raw.equalsIgnoreCase("mushroom_soup"))
+            name = new NamespacedKey(key.getNamespace(), "mushroom_stew").toString();
+        else if (raw.equalsIgnoreCase("sulphur"))
+            name = new NamespacedKey(key.getNamespace(), "gunpowder").toString();
+        else {
+            if (currentVersion.compareTo(v1_20_3) >= 0) {
+                if (raw.equalsIgnoreCase("grass"))
+                    name = new NamespacedKey(key.getNamespace(), "short_grass").toString();
+            }
+            else {
+                if (raw.equalsIgnoreCase("short_grass"))
+                    name = new NamespacedKey(key.getNamespace(), "grass").toString();
+            }
+            if (currentVersion.compareTo(v1_13) >= 0) {
+                if (raw.equalsIgnoreCase("red_rose"))
+                    name = new NamespacedKey(key.getNamespace(), "poppy").toString();
+                if (raw.equalsIgnoreCase("yellow_flower"))
+                    name = new NamespacedKey(key.getNamespace(), "dandelion").toString();
+            }
+            else {
+                if (raw.equalsIgnoreCase("poppy"))
+                    name = new NamespacedKey(key.getNamespace(), "red_rose").toString();
+                if (raw.equalsIgnoreCase("dandelion"))
+                    name = new NamespacedKey(key.getNamespace(), "yellow_flower").toString();
+            }
         }
+
+        Material type = Material.matchMaterial(name);
+        if (type == null) {
+            type = Material.matchMaterial(name, true);
+            if (type != null)
+                plugin.log(Level.WARNING, "Material " + raw + " is legacy. Please use " + type.name() + " instead.");
+        }
+
+        return type;
+    }
+
+    @Nullable
+    public PotionEffectType getPotionEffectByName(@NotNull String name) {
+        PotionEffectType type;
+        NamespacedKey key = keyFromString(name);
+        if(key == null)
+            throw new IllegalArgumentException(name + " is not a valid key");
+        String raw = key.getKey().toString();
+
+        if (currentVersion.compareTo(v1_18) >= 0) {
+            if (raw.equalsIgnoreCase("jump"))
+                key = new NamespacedKey(key.getNamespace(), "jump_boost");
+            else if (raw.equalsIgnoreCase("confusion"))
+                key = new NamespacedKey(key.getNamespace(), "nausea");
+            else if (raw.equalsIgnoreCase("increase_damage"))
+                key = new NamespacedKey(key.getNamespace(), "strength");
+            else if (raw.equalsIgnoreCase("slow"))
+                key = new NamespacedKey(key.getNamespace(), "slowness");
+        }
+        else {
+            if (raw.equalsIgnoreCase("jump_boost"))
+                key = new NamespacedKey(key.getNamespace(), "jump");
+            else if (raw.equalsIgnoreCase("nausea"))
+                key = new NamespacedKey(key.getNamespace(), "confusion");
+            else if (raw.equalsIgnoreCase("strength"))
+                key = new NamespacedKey(key.getNamespace(), "increase_damage");
+            else if (raw.equalsIgnoreCase("slowness"))
+                key = new NamespacedKey(key.getNamespace(), "slow");
+        }
+
+        if (Keyed.class.isAssignableFrom(PotionEffectType.class)) {
+            try {
+                type = (PotionEffectType) PotionEffectType.class.getMethod("getByKey", NamespacedKey.class).invoke(null, key);
+            } catch (InvocationTargetException | IllegalAccessException | NoSuchMethodException ex) {
+                throw new RuntimeException(ex);
+            }
+        }
+        else {
+            type = PotionEffectType.getByName(key.getKey());
+        }
+
+        return type;
+    }
+
+    @Nullable
+    public EntityType getEntityTypeByName(@NotNull String name) {
+        NamespacedKey key = keyFromString(name);
+        if(key == null)
+            throw new IllegalArgumentException(name + " is not a valid key");
+        String raw = key.getKey();
+
+        if (currentVersion.compareTo(v1_16) >= 0) {
+            if (raw.equalsIgnoreCase("pig_zombie"))
+                key = new NamespacedKey(key.getNamespace(), "zombified_piglin");
+        }
+        else {
+            if (raw.equalsIgnoreCase("zombified_piglin"))
+                key = new NamespacedKey(key.getNamespace(), "pig_zombie");
+        }
+
+        return EntityType.fromName(key.getKey());
     }
 
     @Nullable
@@ -269,8 +280,10 @@ public final class VersionCompat {
                 aux = potDataClazz.getMethod("isUpgraded");
                 aux = potDataClazz.getMethod("getType");
             }
-            aux = PotionMeta.class.getMethod("setBasePotionType", PotionType.class);
-            aux = PotionMeta.class.getMethod("getBasePotionType");
+            else {
+                aux = PotionMeta.class.getMethod("setBasePotionType", PotionType.class);
+                aux = PotionMeta.class.getMethod("getBasePotionType");
+            }
         } catch (ClassNotFoundException | NoSuchMethodException e) {
             throw new RuntimeException(e);
         }
@@ -439,7 +452,7 @@ public final class VersionCompat {
         try {
             if (currentVersion.compareTo(v1_20_5) >= 0) {
                 Class<?> dmgSourceClazz = Class.forName("org.bukkit.damage.DamageSource");
-                Class<?> dmgSrcBuilderClazz = Class.forName("org.bukkit.damage.DamageSource.Builder");
+                Class<?> dmgSrcBuilderClazz = Class.forName("org.bukkit.damage.DamageSource$Builder");
                 Class<?> dmgTypeClazz = Class.forName("org.bukkit.damage.DamageType");
 
                 Object magicDmgType = dmgTypeClazz.getField("MAGIC").get(null);
@@ -525,7 +538,7 @@ public final class VersionCompat {
         try {
             if (currentVersion.compareTo(v1_20_5) >= 0) {
                 Class<?> dmgSourceClazz = Class.forName("org.bukkit.damage.DamageSource");
-                Class<?> dmgSrcBuilderClazz = Class.forName("org.bukkit.damage.DamageSource.Builder");
+                Class<?> dmgSrcBuilderClazz = Class.forName("org.bukkit.damage.DamageSource$Builder");
                 Class<?> dmgTypeClazz = Class.forName("org.bukkit.damage.DamageType");
 
                 Object magicDmgType = dmgTypeClazz.getField("MAGIC").get(null);
@@ -568,19 +581,30 @@ public final class VersionCompat {
     }
 
     public void test() {
-        getShortGrass();
-        getMushroomStew();
-        getGunpowder();
-        getPoppy();
-        getDandelion();
-        getMooshroom();
-        getSnowman();
         getHidePotionEffectsFlag();
-        getNauseaEffect();
-        getJumpEffect();
-        getSlownessEffect();
-        getStrengthEffect();
-        getPotionEffectName(PotionEffectType.BLINDNESS);
+
+        if(getPotionEffectByName("jump_boost") == null)
+            throw new AssertionError("Error testing jump_boost effect getter");
+        if(getPotionEffectByName("jump_boost") != getPotionEffectByName("jump"))
+            throw new AssertionError("Error comparing jump effect getters");
+        if (currentVersion.compareTo(v1_18) >= 0) {
+            if (getPotionEffectByName("minecraft:blindness") == null)
+                throw new AssertionError("Error testing blindness effect getter with namespace");
+        }
+        if(getPotionEffectByName("nausea") == null)
+            throw new AssertionError("Error testing nausea effect getter");
+        if(getPotionEffectByName("strength") == null)
+            throw new AssertionError("Error testing strength effect getter");
+        if(getPotionEffectByName("slowness") == null)
+            throw new AssertionError("Error testing slowness effect getter");
+
+        if(getEntityTypeByName("PIG_ZOMBIE") != getEntityTypeByName("zombified_piglin"))
+            throw new AssertionError("Error testing zombified piglin entity type getter");
+        if (currentVersion.compareTo(v1_18) >= 0) {
+            if(getEntityTypeByName("minecraft:zombie") != EntityType.ZOMBIE)
+                throw new AssertionError("Error testing zombie entity type getter with namespace");
+        }
+
         testPotionMetaMethods();
         testEventMethods();
     }

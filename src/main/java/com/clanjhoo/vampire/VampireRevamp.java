@@ -196,42 +196,6 @@ public class VampireRevamp extends JavaPlugin {
 		}
 
 		try {
-			vc = new VersionCompat(this, serverVersion);
-			// Test versionCompat is working
-			vc.test();
-		}
-		catch (Exception ex) {
-			log(Level.SEVERE, "Error found while loading methods for minecraft version: " + versionString);
-			ex.printStackTrace();
-			setEnabled(false);
-			return;
-		}
-
-
-		try {
-			this.saveDefaultConfig();
-		}
-		catch (Exception ex) {
-			log(Level.WARNING, "Error found while saving default config.yml!");
-			ex.printStackTrace();
-		}
-
-		vPlayerManager = null;
-		loadConfig(true);
-
-		// WorldGuard compat
-		if (Bukkit.getPluginManager().getPlugin("WorldGuard") != null)
-			wg = new WorldGuardCompat(this);
-		else
-			log(Level.WARNING, "WorldGuard plugin not detected. Disabled WorldGuard compat.");
-
-		// ProtocolLib compat
-		if (Bukkit.getPluginManager().getPlugin("ProtocolLib") != null)
-			plc = new ProtocolLibCompat(this);
-		else
-			log(Level.WARNING, "ProtocolLib plugin not detected. Disabled ProtocolLib compat.");
-
-		try {
 			File localesFolder = new File(this.getDataFolder() + "/locales");
 			if (!localesFolder.exists()) {
 				if (!localesFolder.mkdirs()) {
@@ -271,8 +235,10 @@ public class VampireRevamp extends JavaPlugin {
 		}
 
 		if (!configFile.exists()) {
+			log(Level.INFO, "Generating default config.yml...");
 			PluginConfig conf = new PluginConfig(this);
 			conf.saveConfigToFile(configFile);
+			log(Level.INFO, "Done!");
 		}
 	}
 
@@ -485,6 +451,42 @@ public class VampireRevamp extends JavaPlugin {
 		// Initialize an audiences instance for the plugin
 		this.adventure = BukkitAudiences.create(this);
 
+		try {
+			vc = new VersionCompat(this, serverVersion);
+			// Test versionCompat is working
+			vc.test();
+		}
+		catch (Exception ex) {
+			log(Level.SEVERE, "Error found while loading methods for minecraft version: " + serverVersion);
+			ex.printStackTrace();
+			setEnabled(false);
+			return;
+		}
+
+
+		try {
+			this.saveDefaultConfig();
+		}
+		catch (Exception ex) {
+			log(Level.WARNING, "Error found while saving default config.yml!");
+			ex.printStackTrace();
+		}
+
+		vPlayerManager = null;
+		loadConfig(true);
+
+		// WorldGuard compat
+		if (Bukkit.getPluginManager().getPlugin("WorldGuard") != null)
+			wg = new WorldGuardCompat(this);
+		else
+			log(Level.WARNING, "WorldGuard plugin not detected. Disabled WorldGuard compat.");
+
+		// ProtocolLib compat
+		if (Bukkit.getPluginManager().getPlugin("ProtocolLib") != null)
+			plc = new ProtocolLibCompat(this);
+		else
+			log(Level.WARNING, "ProtocolLib plugin not detected. Disabled ProtocolLib compat.");
+
 		isDisguiseEnabled = Bukkit.getPluginManager().isPluginEnabled("LibsDisguises");
 
 		if (conf.compatibility.useVampirePermGroup) {
@@ -587,6 +589,7 @@ public class VampireRevamp extends JavaPlugin {
 			getLogger().log(level, rawMessage);
 			return;
 		}
+		rawMessage = "[" + getName() + "] " + rawMessage;
 		TextColor color = null;
 		if (level == Level.SEVERE)
 			color = NamedTextColor.RED;

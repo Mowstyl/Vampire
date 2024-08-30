@@ -953,7 +953,9 @@ public class VPlayer {
         Player me = Bukkit.getPlayer(uuid);
         if (me != null) {
             PluginConfig conf = plugin.getVampireConfig();
-            if (me.getGameMode() != GameMode.CREATIVE && this.isVampire() && !me.isDead()) {
+            if (me.getGameMode() != GameMode.CREATIVE
+                    && me.getGameMode() != GameMode.SPECTATOR
+                    && this.isVampire() && !me.isDead()) {
                 double irradiation = 0;
                 boolean irradiationEnabled = true;
 
@@ -989,7 +991,7 @@ public class VPlayer {
                 if (conf.infection.progressDamage != 0)
                     me.damage(conf.infection.progressDamage);
                 if (conf.infection.progressNauseaTicks > 0)
-                    FxUtil.ensure(plugin.getVersionCompat().getNauseaEffect(), me, conf.infection.progressNauseaTicks);
+                    FxUtil.ensure(plugin.getVersionCompat().getPotionEffectByName("nausea"), me, conf.infection.progressNauseaTicks);
 
                 plugin.sendMessage(me,
                         MessageType.INFO,
@@ -1029,6 +1031,7 @@ public class VPlayer {
                 && maxHealthAttr != null
                 && buffsActive
                 && me.getGameMode() != GameMode.CREATIVE
+                && me.getGameMode() != GameMode.SPECTATOR
                 && !me.isDead()
                 && me.getHealth() < maxHealth
                 && this.getFood() >= minFood) {
@@ -1051,7 +1054,8 @@ public class VPlayer {
         PluginConfig conf = plugin.getVampireConfig();
         if (this.isVampire() && this.isBloodlusting()
                 && !me.isDead()
-                && me.getGameMode() != GameMode.CREATIVE) {
+                && me.getGameMode() != GameMode.CREATIVE
+                && me.getGameMode() != GameMode.SPECTATOR) {
             this.addFood(millis * conf.vampire.bloodlust.foodPerMilli);
             if (this.getFood() < conf.vampire.bloodlust.minFood)
                 this.setBloodlusting(false);
@@ -1066,7 +1070,8 @@ public class VPlayer {
     public void tickEffects(long millis) {
         Player me = Bukkit.getPlayer(uuid);
         if (me != null && !me.isDead()
-                && me.getGameMode() != GameMode.CREATIVE) {
+                && me.getGameMode() != GameMode.CREATIVE
+                && me.getGameMode() != GameMode.SPECTATOR) {
             PluginConfig conf = plugin.getVampireConfig();
 
             // FX: Smoke
@@ -1232,7 +1237,7 @@ public class VPlayer {
                 plugin.sendMessage(me,
                         MessageType.INFO,
                         TradingMessageKeys.SELF);
-                FxUtil.ensure(plugin.getVersionCompat().getNauseaEffect(), me, 12 * 20);
+                FxUtil.ensure(plugin.getVersionCompat().getPotionEffectByName("nausea"), me, 12 * 20);
             } else {
                 Component merName = Component.text(me.getDisplayName());
                 Component amountComp = Component.text(String.format("%.1f", amount));

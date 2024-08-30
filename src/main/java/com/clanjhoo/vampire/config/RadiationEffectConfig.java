@@ -1,5 +1,6 @@
 package com.clanjhoo.vampire.config;
 
+import org.bukkit.Keyed;
 import org.bukkit.potion.PotionEffectType;
 
 import java.util.ArrayList;
@@ -39,25 +40,30 @@ public class RadiationEffectConfig {
 
         if (type == null) {
             data.add("# Whether or not to enable this feature");
-            data.add("enabled: " + this.enabled);
+            data.add("enabled: " + enabled);
         }
         else {
             data.add("# PotionEffectType");
-            data.add("type: " + this.type.getName());
+            String strong;
+            if (type instanceof Keyed)
+                strong = ((Keyed) type).getKey().toString();
+            else
+                strong = type.getName();
+            data.add("type: " + strong);
             data.add("# Amplifier");
-            data.add("strength: " + this.strength);
+            data.add("strength: " + strength);
         }
         data.add("# Temperature needed to be reached to apply this effect");
-        data.add("temperature: " + this.temperature);
+        data.add("temperature: " + temperature);
         if (ticks > 0) {
             data.add("# Duration of the effect in ticks");
-            data.add("ticks: " + this.ticks);
+            data.add("ticks: " + ticks);
         }
         if (type == null)
             data.add("# Whether or not this feature ALSO affects nosferatu vampires or only basic vampires");
         else
             data.add("# Whether this feature affects ONLY nosferatu vampires or affects ONLY basic vampires");
-        data.add("affectNosferatu: " + this.affectNosferatu);
+        data.add("affectNosferatu: " + affectNosferatu);
 
         return data;
     }

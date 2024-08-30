@@ -78,7 +78,7 @@ public class PotionEffectsConfig {
                 EventPriority.HIGHEST,
                 CollectionUtil.map(
                         PotionEffectType.SPEED, 3,
-                        plugin.getVersionCompat().getJumpEffect(), 4
+                        plugin.getVersionCompat().getPotionEffectByName("jump_boost"), 4
                 )
         );
     }
@@ -100,7 +100,7 @@ public class PotionEffectsConfig {
                 CollectionUtil.map(
                         PotionEffectType.REGENERATION, 3,
                         PotionEffectType.SPEED, 1,
-                        plugin.getVersionCompat().getJumpEffect(), 2
+                        plugin.getVersionCompat().getPotionEffectByName("jump_boost"), 2
                 )
         );
     }
@@ -111,7 +111,7 @@ public class PotionEffectsConfig {
                 EventPriority.NORMAL,
                 CollectionUtil.map(
                         PotionEffectType.SPEED, 1,
-                        plugin.getVersionCompat().getJumpEffect(), 1
+                        plugin.getVersionCompat().getPotionEffectByName("jump_boost"), 1
                 )
         );
     }
