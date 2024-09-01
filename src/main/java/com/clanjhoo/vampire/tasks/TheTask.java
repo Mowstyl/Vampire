@@ -29,14 +29,6 @@ public class TheTask implements Runnable {
     // When did the last invocation occur?
     private long previousMillis;
 
-    public long getPreviousMillis() {
-        return this.previousMillis;
-    }
-
-    public void setPreviousMillis(long previousMillis) {
-        this.previousMillis = previousMillis;
-    }
-
     @Override
     public void run() {
         long now = ZonedDateTime.now().toInstant().toEpochMilli();
@@ -47,10 +39,10 @@ public class TheTask implements Runnable {
             if (vPlayer == null)
                 continue;
             // VampireRevamp.debugLog(Level.INFO, "Ticking " + player.getName());
-            vPlayer.tick(now - this.getPreviousMillis());
-            vPlayer.updateTruce(now, this.getPreviousMillis());
+            vPlayer.tick(now - previousMillis);
+            vPlayer.updateTruce(now, previousMillis);
         }
 
-        this.setPreviousMillis(now);
+        previousMillis = now;
     }
 }

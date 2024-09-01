@@ -3,11 +3,13 @@ package com.clanjhoo.vampire.util;
 import com.clanjhoo.vampire.VampireRevamp;
 
 import com.clanjhoo.vampire.compat.WorldGuardCompat;
+import com.clanjhoo.vampire.entity.VPlayer;
 import org.bukkit.*;
 import org.bukkit.World.Environment;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.util.RayTraceResult;
 
 import java.util.logging.Level;
 
@@ -67,42 +69,28 @@ public class SunUtil
 		int mdticks = calcMidDeltaTicks(world, player);
 		return MDTICKS_TO_ANGLE_FACTIOR * mdticks;
 	}
-
-	public double calcSolarRad(World world, Player player) {
-		return calcSolarRad(world, player, false);
-	}
 	
 	/**
 	 * A value between 0 and 1. 0 means no sun at all. 1 means sun directly from above.
 	 * http://en.wikipedia.org/wiki/Effect_of_sun_angle_on_climate
 	 */
-	public double calcSolarRad(World world, Player player, boolean verbose)
-	{
-		if (verbose)
-			plugin.log(Level.INFO, "Calculating radiation");
+	public double calcSolarRad(World world, Player player) {
 		if (world.getEnvironment() != Environment.NORMAL)
 			return 0d;
 		boolean storming = world.hasStorm();
 
-		if (verbose)
-			plugin.log(Level.INFO, "Storming: " + storming);
 		if (plugin.isWorldGuardEnabled()) {
 			WorldGuardCompat wg = plugin.getWorldGuardCompat();
 			storming = !wg.isSkyClear(player, player.getLocation());
 		}
-		if (verbose)
-			plugin.log(Level.INFO, "Storming (after wg): " + storming);
 
-		if (storming) return 0d;
+		if (storming)
+			return 0d;
 		double angle = calcSunAngle(world, player);
 		double absangle = Math.abs(angle);
-		if (absangle >= HALF_PI) return 0;
+		if (absangle >= HALF_PI)
+			return 0;
 		double a = HALF_PI - absangle;
-		if (verbose) {
-			plugin.log(Level.INFO, "Angle: " + angle);
-			plugin.log(Level.INFO, "a: " + a);
-			plugin.log(Level.INFO, "sina: " + Math.sin(a));
-		}
 		//P.p.log("calcSolarRadiation", Math.sin(a));
 		return Math.sin(a);
 	}
@@ -114,34 +102,26 @@ public class SunUtil
 	/**
 	 * The sum of the opacity above and including the block.
 	 */
-	public static double calcTerrainOpacity(Block block)
+	public static double calcTerrainOpacity(Block block, RayTraceResult result)
 	{
-		return block.getLightFromSky() / 15D;
-		/*
-		double ret = 0;
-		
-		int x = block.getX();
-		int z = block.getZ();
-		World world = block.getWorld();
-		int maxy = world.getMaxHeight() -1;
-		
-		for (int y = block.getY(); y <= maxy && ret < 1d; y++)
-		{
-			Material type = world.getBlockAt(x, y, z).getType();
-			Double opacity = VampireRevamp.getVampireConfig().radiation.opacity.get(type);
-			if (opacity == null)
-			{
-				opacity = 1d; // Blocks not in that map have opacity 1;
+		double intensity = block.getLightFromSky() / 15D;
+		double transparency = 1D;
+		if (result != null) {
+			Block hit = result.getHitBlock();
+			if (hit != null) {
+				Material hitMaterial = hit.getType();
+				if (hitMaterial != Material.GLASS && hitMaterial != Material.GLASS_PANE) {
+					transparency -= 0.1;
+					if (hitMaterial != Material.WATER && hitMaterial != Material.ICE && !hitMaterial.name().contains("GLASS")) {
+						transparency -= 0.15;
+						if (hitMaterial.isOccluding()) {
+							transparency -= 0.25;
+						}
+					}
+				}
 			}
-			ret += opacity;
 		}
-		
-		if (ret > 1.0D) ret = 1d;
-		
-		//P.p.log("calcTerrainOpacity",ret);
-		
-		return ret;
-		*/
+		return 1 - transparency * intensity;
 	}
 	
 	// -------------------------------------------- //
@@ -155,8 +135,7 @@ public class SunUtil
 	public double calcArmorOpacity(Player player)
 	{
 		double ret = 0;
-		for (ItemStack itemStack : player.getInventory().getArmorContents())
-		{
+		for (ItemStack itemStack : player.getInventory().getArmorContents()) {
 			if (itemStack == null) continue;
 			if (itemStack.getAmount() == 0) continue;
 			if (itemStack.getType() == Material.AIR) continue;
@@ -174,7 +153,7 @@ public class SunUtil
 	 * It is based on the irradiation from the sun but the 
 	 * opacity of the terrain and player armor is taken into acocunt.
 	 */
-	public double calcPlayerIrradiation(Player player)
+	public double calcPlayerIrradiation(VPlayer vPlayer, Player player)
 	{
 		// Player must exist.
 		if ( ! player.isOnline()) return 0;
@@ -187,7 +166,7 @@ public class SunUtil
 		
 		// Terrain
 		Block block = player.getLocation().getBlock().getRelative(0, 1, 0);
-		double terrainOpacity = calcTerrainOpacity(block);
+		double terrainOpacity = calcTerrainOpacity(block, vPlayer.getLastRayTrace());
 		ret *= (1-terrainOpacity);
 		if (ret == 0) return 0;
 		

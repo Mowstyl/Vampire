@@ -18,6 +18,7 @@ import com.clanjhoo.vampire.config.PluginConfig;
 import com.clanjhoo.vampire.entity.VPlayer;
 
 import com.clanjhoo.vampire.tasks.BatTask;
+import com.clanjhoo.vampire.tasks.RaytracingTask;
 import com.clanjhoo.vampire.tasks.TheTask;
 import com.clanjhoo.vampire.util.*;
 import net.kyori.adventure.platform.AudienceProvider;
@@ -43,6 +44,7 @@ import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import org.bukkit.scheduler.BukkitScheduler;
+import org.bukkit.scheduler.BukkitTask;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -67,9 +69,10 @@ public class VampireRevamp extends JavaPlugin {
 	// -------------------------------------------- //
 
 	private AudienceProvider adventure;
-	private int cleanTaskId = -1;
-	private int theTaskId = -1;
-	private int batTaskId = -1;
+	private BukkitTask cleanTask = null;
+	private BukkitTask theTask = null;
+	private BukkitTask batTask = null;
+	private BukkitTask rayTraceTask = null;
 	private PaperCommandManager manager;
 	public final Map<UUID, Boolean> batEnabled = new ConcurrentHashMap<>();
 	public final Set<LivingEntity> bats = new HashSet<>();
@@ -220,6 +223,36 @@ public class VampireRevamp extends JavaPlugin {
 			log(Level.WARNING, "Error found while creating default locale files.");
 			ex.printStackTrace();
 		}
+
+		try {
+			vc = new VersionCompat(this, serverVersion);
+			// Test versionCompat is working
+			vc.test();
+		}
+		catch (Exception ex) {
+			log(Level.SEVERE, "Error found while loading methods for minecraft version: " + serverVersion);
+			ex.printStackTrace();
+			setEnabled(false);
+			return;
+		}
+
+
+		try {
+			this.saveDefaultConfig();
+		}
+		catch (Exception ex) {
+			log(Level.WARNING, "Error found while saving default config.yml!");
+			ex.printStackTrace();
+		}
+
+		vPlayerManager = null;
+		loadConfig(true);
+
+		// WorldGuard compat
+		if (Bukkit.getPluginManager().getPlugin("WorldGuard") != null)
+			wg = new WorldGuardCompat(this);
+		else
+			log(Level.WARNING, "WorldGuard plugin not detected. Disabled WorldGuard compat.");
 	}
 
 	@Override
@@ -451,36 +484,6 @@ public class VampireRevamp extends JavaPlugin {
 		// Initialize an audiences instance for the plugin
 		this.adventure = BukkitAudiences.create(this);
 
-		try {
-			vc = new VersionCompat(this, serverVersion);
-			// Test versionCompat is working
-			vc.test();
-		}
-		catch (Exception ex) {
-			log(Level.SEVERE, "Error found while loading methods for minecraft version: " + serverVersion);
-			ex.printStackTrace();
-			setEnabled(false);
-			return;
-		}
-
-
-		try {
-			this.saveDefaultConfig();
-		}
-		catch (Exception ex) {
-			log(Level.WARNING, "Error found while saving default config.yml!");
-			ex.printStackTrace();
-		}
-
-		vPlayerManager = null;
-		loadConfig(true);
-
-		// WorldGuard compat
-		if (Bukkit.getPluginManager().getPlugin("WorldGuard") != null)
-			wg = new WorldGuardCompat(this);
-		else
-			log(Level.WARNING, "WorldGuard plugin not detected. Disabled WorldGuard compat.");
-
 		// ProtocolLib compat
 		if (Bukkit.getPluginManager().getPlugin("ProtocolLib") != null)
 			plc = new ProtocolLibCompat(this);
@@ -542,9 +545,10 @@ public class VampireRevamp extends JavaPlugin {
 
 		BukkitScheduler scheduler = getServer().getScheduler();
 
-		cleanTaskId = scheduler.scheduleSyncRepeatingTask(this, () -> vPlayerManager.saveAll(SaveOperation.SAVE_ALL_AND_REMOVE_INACTIVE), 0L, 5 * 60 * 20L);
-		theTaskId = scheduler.scheduleSyncRepeatingTask(this, new TheTask(this), 0L, (this.conf.general.taskDelayMillis * 20L) / 1000);
-		batTaskId = scheduler.scheduleSyncRepeatingTask(this, new BatTask(this), 0L, (this.conf.general.batTaskDelayMillis * 20L) / 1000);
+		cleanTask = scheduler.runTaskTimer(this, () -> vPlayerManager.saveAll(SaveOperation.SAVE_ALL_AND_REMOVE_INACTIVE), 0L, 5 * 60 * 20L);
+		theTask = scheduler.runTaskTimer(this, new TheTask(this), 0L, (this.conf.general.taskDelayMillis * 20L) / 1000);
+		batTask = scheduler.runTaskTimer(this, new BatTask(this), 0L, (this.conf.general.batTaskDelayMillis * 20L) / 1000);
+		rayTraceTask = scheduler.runTaskTimerAsynchronously(this, new RaytracingTask(this), 100L, 100L);
 	}
 
 	public static YamlConfiguration fileToYamlConfig (File file) throws IOException, InvalidConfigurationException {
@@ -632,10 +636,14 @@ public class VampireRevamp extends JavaPlugin {
 			this.adventure.close();
 			this.adventure = null;
 		}
-		BukkitScheduler scheduler = getServer().getScheduler();
-		scheduler.cancelTask(cleanTaskId);
-		scheduler.cancelTask(theTaskId);
-		scheduler.cancelTask(batTaskId);
+		if (cleanTask != null)
+			cleanTask.cancel();
+		if (theTask != null)
+			theTask.cancel();
+		if (batTask != null)
+			batTask.cancel();
+		if (rayTraceTask != null)
+			rayTraceTask.cancel();
 
 		if (vPlayerManager != null) {
 			log(Level.INFO, "Saving player data...");

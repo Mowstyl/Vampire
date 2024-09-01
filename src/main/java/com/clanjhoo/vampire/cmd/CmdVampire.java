@@ -212,7 +212,7 @@ public class CmdVampire extends BaseCommand {
 
 				int rad = (int) Math.round(100 * vPlayer.getRad());
 				int sun = (int) Math.round(100 * sunUtil.calcSolarRad(player.getWorld(), player));
-				double terrain = 1d - SunUtil.calcTerrainOpacity(player.getLocation().getBlock());
+				double terrain = 1d - SunUtil.calcTerrainOpacity(player.getLocation().getBlock(), vPlayer.getLastRayTrace());
 				double armor = 1d - sunUtil.calcArmorOpacity(player);
 				int base = (int) Math.round(100 * conf.radiation.baseRadiation);
 

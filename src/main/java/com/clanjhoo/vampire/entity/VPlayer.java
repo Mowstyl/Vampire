@@ -24,6 +24,7 @@ import org.bukkit.entity.Creature;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.potion.PotionEffect;
+import org.bukkit.util.RayTraceResult;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -150,6 +151,10 @@ public class VPlayer {
      */
     private transient boolean isDisguising = false;
     /**
+     * TRANSIENT: this is the result of the last raytrace
+     */
+    private transient RayTraceResult lastRayTrace = null;
+    /**
      * TRANSIENT:
      */
     private final transient VampireRevamp plugin;
@@ -187,6 +192,14 @@ public class VPlayer {
     // -------------------------------------------- //
     // Getters and setters
     // -------------------------------------------- //
+
+    public void setLastRayTrace(RayTraceResult result) {
+        lastRayTrace = result;
+    }
+
+    public RayTraceResult getLastRayTrace() {
+        return lastRayTrace;
+    }
 
     public boolean isVampire() {
         return this.vampire;
@@ -965,7 +978,7 @@ public class VPlayer {
                 }
 
                 if (irradiationEnabled) {
-                    irradiation = sunUtil.calcPlayerIrradiation(me);
+                    irradiation = sunUtil.calcPlayerIrradiation(this, me);
                 }
 
                 this.rad = conf.radiation.baseRadiation + irradiation;
