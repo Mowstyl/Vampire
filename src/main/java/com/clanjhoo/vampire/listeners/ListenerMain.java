@@ -328,10 +328,7 @@ public class ListenerMain implements Listener {
             Player player = (Player) event.getTarget();
 
             // ... by creature that cares about the truce with vampires ...
-            if (player != null && event.getEntity() instanceof Creature) {
-                Creature creat = (Creature) event.getEntity();
-                if (creat.getCategory() != EntityCategory.UNDEAD || creat.getType() == EntityType.WITHER)
-                    return;
+            if (player != null && plugin.getVampireConfig().truce.entityTypes.contains(event.getEntityType())) {
                 plugin.debugLog(Level.INFO, "Entity in truce list");
                 VPlayer vPlayer = plugin.getVPlayer(player);
                 if (vPlayer == null)

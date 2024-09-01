@@ -23,6 +23,7 @@ public class RadiationConfig {
     public final double smokesPerTempAndMilli;
     public final double flamesPerTempAndMilli;
     public final boolean radiationRingEnabled;
+    public final boolean useOldRadiationFormula;
     private final VampireRevamp plugin;
 
 
@@ -44,6 +45,7 @@ public class RadiationConfig {
         flamesPerTempAndMilli = 0.0004;
 
         radiationRingEnabled = false;
+        useOldRadiationFormula = false;
     }
 
     public RadiationConfig(VampireRevamp plugin, @NotNull ConfigurationSection cs) {
@@ -58,6 +60,7 @@ public class RadiationConfig {
         boolean remNosf = cs.getBoolean("removeBuffs.affectNosferatu", def.removeBuffs.affectNosferatu);
         removeBuffs = new RadiationEffectConfig(remEnabled, remTemp, remNosf);
         radiationRingEnabled = cs.getBoolean("radiationRingEnabled", def.radiationRingEnabled);
+        useOldRadiationFormula = cs.getBoolean("useOldRadiationFormula", def.useOldRadiationFormula);
 
         List<Map<?, ?>> auxLEff;
         List<RadiationEffectConfig> effs = null;
@@ -164,6 +167,8 @@ public class RadiationConfig {
         result = result && PluginConfig.writeLine(configWriter, "flamesPerTempAndMilli: " + this.flamesPerTempAndMilli, indent, level);
         result = result && PluginConfig.writeLine(configWriter, "# Whether or not to enable anti-radiation rings", indent, level);
         result = result && PluginConfig.writeLine(configWriter, "radiationRingEnabled: " + this.radiationRingEnabled, indent, level);
+        result = result && PluginConfig.writeLine(configWriter, "# Whether or not to use the old radiation formula", indent, level);
+        result = result && PluginConfig.writeLine(configWriter, "useOldRadiationFormula: " + this.useOldRadiationFormula, indent, level);
 
         return result;
     }
@@ -180,6 +185,7 @@ public class RadiationConfig {
                 ", smokesPerTempAndMilli=" + smokesPerTempAndMilli +
                 ", flamesPerTempAndMilli=" + flamesPerTempAndMilli +
                 ", radiationRingEnabled=" + radiationRingEnabled +
+                ", useOldRadiationFormula=" + useOldRadiationFormula +
                 '}';
     }
 }

@@ -2,7 +2,6 @@ package com.clanjhoo.vampire.tasks;
 
 import com.clanjhoo.vampire.VampireRevamp;
 import com.clanjhoo.vampire.entity.VPlayer;
-import com.clanjhoo.vampire.util.MathUtil;
 import com.clanjhoo.vampire.util.SunUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.FluidCollisionMode;
@@ -19,25 +18,20 @@ public class RaytracingTask implements Runnable {
     // -------------------------------------------- //
     // INSTANCE & CONSTRUCT
     // -------------------------------------------- //
-
     public RaytracingTask(VampireRevamp plugin) {
         this.plugin = plugin;
         sunUtil = new SunUtil(plugin);
     }
 
-
     // -------------------------------------------- //
     // OVERRIDE: MODULO REPEAT TASK
     // -------------------------------------------- //
-
-
-    // When did the last invocation occur?
-    private long previousMillis;
-
     @Override
     public void run() {
         // Raytrace for all vampire players
         for (Player player : Bukkit.getOnlinePlayers()) {
+            if (!player.isOnline())
+                continue;
             VPlayer vPlayer = plugin.getVPlayer(player);
             if (vPlayer == null || vPlayer.isHuman())
                 continue;
@@ -49,5 +43,6 @@ public class RaytracingTask implements Runnable {
             vPlayer.setLastRayTrace(
                     playerWorld.rayTraceBlocks(startLocation, direction, 64, FluidCollisionMode.ALWAYS, true));
         }
+        plugin.handleRayTraceTask(false);
     }
 }

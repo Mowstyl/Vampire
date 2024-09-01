@@ -275,6 +275,17 @@ public class VampireRevamp extends JavaPlugin {
 		}
 	}
 
+	public synchronized void handleRayTraceTask(boolean isStop) {
+		if (!isStop) {
+			rayTraceTask = Bukkit.getScheduler().runTaskLaterAsynchronously(this, new RaytracingTask(this), 100L);
+		}
+		else {
+			if (rayTraceTask != null)
+				rayTraceTask.cancel();
+			rayTraceTask = null;
+		}
+	}
+
 	public boolean reloadVampireConfig() {
 		this.reloadConfig();
 		ww.disable();
@@ -412,6 +423,9 @@ public class VampireRevamp extends JavaPlugin {
 				loadVPlayerFromDB(p.getUniqueId());
 			}
 		}
+		handleRayTraceTask(true);
+		if (!conf.radiation.useOldRadiationFormula)
+			handleRayTraceTask(false);
 
 		return result;
 	}
@@ -548,7 +562,6 @@ public class VampireRevamp extends JavaPlugin {
 		cleanTask = scheduler.runTaskTimer(this, () -> vPlayerManager.saveAll(SaveOperation.SAVE_ALL_AND_REMOVE_INACTIVE), 0L, 5 * 60 * 20L);
 		theTask = scheduler.runTaskTimer(this, new TheTask(this), 0L, (this.conf.general.taskDelayMillis * 20L) / 1000);
 		batTask = scheduler.runTaskTimer(this, new BatTask(this), 0L, (this.conf.general.batTaskDelayMillis * 20L) / 1000);
-		rayTraceTask = scheduler.runTaskTimerAsynchronously(this, new RaytracingTask(this), 100L, 100L);
 	}
 
 	public static YamlConfiguration fileToYamlConfig (File file) throws IOException, InvalidConfigurationException {
@@ -642,8 +655,7 @@ public class VampireRevamp extends JavaPlugin {
 			theTask.cancel();
 		if (batTask != null)
 			batTask.cancel();
-		if (rayTraceTask != null)
-			rayTraceTask.cancel();
+		handleRayTraceTask(true);
 
 		if (vPlayerManager != null) {
 			log(Level.INFO, "Saving player data...");

@@ -11,13 +11,21 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.RayTraceResult;
 
-import java.util.logging.Level;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class SunUtil
 {
 	// -------------------------------------------- //
 	// CONSTANTS
 	// -------------------------------------------- //
+	private final static Map<Material, Double> opacity;
+	static {
+		opacity = new ConcurrentHashMap<>();
+		for (Material type : Registry.MATERIAL) {
+			opacity.put(type, getMaterialOpacity(type));
+		}
+	}
 	
 	public final static int MID_DAY_TICKS = 6000;
 	public final static int DAY_TICKS = 24000;
@@ -26,7 +34,6 @@ public class SunUtil
 	public final static int HALF_DAYTIME_TICKS = DAYTIME_TICKS / 2;
 	public final static double HALF_PI = Math.PI / 2;
 	public final static double MDTICKS_TO_ANGLE_FACTIOR = HALF_PI / HALF_DAYTIME_TICKS;
-
 
 	public final VampireRevamp plugin;
 
@@ -98,32 +105,76 @@ public class SunUtil
 	// -------------------------------------------- //
 	// TERRAIN OPACITY CALCULATION
 	// -------------------------------------------- //
-	
-	/**
-	 * The sum of the opacity above and including the block.
-	 */
-	public static double calcTerrainOpacity(Block block, RayTraceResult result)
+
+	public double calcTerrainOpacity(Block block, RayTraceResult result)
+	{
+		if (plugin.getVampireConfig().radiation.useOldRadiationFormula) {
+			return oldTerrainOpacity(block);
+		}
+
+		return newTerrainOpacity(block, result);
+	}
+
+	private double newTerrainOpacity(Block block, RayTraceResult result)
 	{
 		double intensity = block.getLightFromSky() / 15D;
 		double transparency = 1D;
 		if (result != null) {
 			Block hit = result.getHitBlock();
 			if (hit != null) {
-				Material hitMaterial = hit.getType();
-				if (hitMaterial != Material.GLASS && hitMaterial != Material.GLASS_PANE) {
-					transparency -= 0.1;
-					if (hitMaterial != Material.WATER && hitMaterial != Material.ICE && !hitMaterial.name().contains("GLASS")) {
-						transparency -= 0.15;
-						if (hitMaterial.isOccluding()) {
-							transparency -= 0.25;
-						}
-					}
-				}
+				transparency -= SunUtil.opacity.get(hit.getType()) / 2;
 			}
 		}
 		return 1 - transparency * intensity;
 	}
-	
+
+	/**
+	 * The sum of the opacity above and including the block.
+	 */
+	private double oldTerrainOpacity(Block block) {
+		double ret = 0;
+
+		int x = block.getX();
+		int z = block.getZ();
+		World world = block.getWorld();
+		int maxy = world.getMaxHeight() -1;
+
+		for (int y = block.getY(); y <= maxy && ret < 1d; y++)
+		{
+			Material type = world.getBlockAt(x, y, z).getType();
+			ret += SunUtil.opacity.get(type);
+		}
+
+		if (ret > 1.0D) ret = 1d;
+
+		//P.p.log("calcTerrainOpacity",ret);
+
+		return ret;
+	}
+
+	private static double getMaterialOpacity(Material type) {
+		String name = type.name();
+		double opacity;
+		if (name.contains("AIR") || type == Material.BARRIER)
+			opacity = 0;
+		else if (type == Material.GLASS || type == Material.GLASS_PANE)
+			opacity = 0.05;
+		else if (type == Material.VINE || type == Material.IRON_BARS || type == Material.LADDER
+				|| type == Material.COCOA || name.contains("GLASS_PANE") || name.contains("SIGN")
+				|| name.contains("TORCH") || name.contains("CHAIN") || name.contains("TRIPWIRE"))
+			opacity = 0.1;
+		else if (type.isTransparent() || type == Material.WATER || type == Material.ICE
+				|| type == Material.COBWEB || name.contains("GLASS"))
+			opacity = 0.25;
+		else if (name.contains("LEAVES") || name.contains("PLANT") || name.contains("BANNER") || name.contains("FENCE"))
+			opacity = 0.5;
+		else if (!type.isOccluding())
+			opacity = 0.75;
+		else
+			opacity = 1;
+		return opacity;
+	}
+
 	// -------------------------------------------- //
 	// ARMOR OPACITY CALCULATION
 	// -------------------------------------------- //
