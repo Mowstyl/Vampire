@@ -20,22 +20,25 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 
 public class TextUtil {
+    private final static Map<String, TextUtil> instances = new ConcurrentHashMap<>(1);
     public static final Pattern PATTERN_NEWLINE = Pattern.compile("\\r?\\n");
 
     private final VampireRevamp plugin;
     private final ResourceUtil resUtil;
 
 
-    public TextUtil(VampireRevamp plugin) {
+    private TextUtil(VampireRevamp plugin) {
         this.plugin = plugin;
-        resUtil = new ResourceUtil(plugin);
+        resUtil = ResourceUtil.get(plugin);
+    }
+
+    public static TextUtil get(VampireRevamp plugin) {
+        return instances.computeIfAbsent(plugin.getName(), (k) -> new TextUtil(plugin));
     }
 
     public static Component capitalizeFirst(@NotNull Component text) {

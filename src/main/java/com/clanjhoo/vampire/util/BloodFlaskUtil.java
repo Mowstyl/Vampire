@@ -1,10 +1,8 @@
-package com.clanjhoo.vampire;
+package com.clanjhoo.vampire.util;
 
+import com.clanjhoo.vampire.VampireRevamp;
 import com.clanjhoo.vampire.entity.VPlayer;
 import com.clanjhoo.vampire.keyproviders.SkillMessageKeys;
-import com.clanjhoo.vampire.util.BooleanTagType;
-import com.clanjhoo.vampire.util.Tuple;
-import com.clanjhoo.vampire.util.UUIDTagType;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.bungeecord.BungeeComponentSerializer;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
@@ -19,14 +17,18 @@ import org.bukkit.inventory.meta.PotionMeta;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 
 public class BloodFlaskUtil {
+    private final static Map<String, BloodFlaskUtil> instances = new ConcurrentHashMap<>(1);
+
     private final VampireRevamp plugin;
     public final PotionEffect BLOOD_FLASK_CUSTOM_EFFECT;
     public final NamespacedKey BLOOD_FLASK_KEY;
@@ -35,13 +37,21 @@ public class BloodFlaskUtil {
     public final NamespacedKey BLOOD_FLASK_OWNER;
 
 
-    public BloodFlaskUtil(VampireRevamp plugin) {
+    private BloodFlaskUtil(VampireRevamp plugin) {
         this.plugin = plugin;
-        BLOOD_FLASK_CUSTOM_EFFECT = new PotionEffect(plugin.getVersionCompat().getPotionEffectByName("strength"), 20, 0);
+        PotionEffectType strength = plugin.getVersionCompat().getPotionEffectByName("strength");
+        if (strength == null) {
+            throw new UnsupportedOperationException("Could not get strength potion effect");
+        }
+        BLOOD_FLASK_CUSTOM_EFFECT = new PotionEffect(strength, 20, 0);
         BLOOD_FLASK_KEY = new NamespacedKey(plugin, "flask");
         BLOOD_FLASK_AMOUNT = new NamespacedKey(plugin, "amount");
         BLOOD_FLASK_VAMPIRIC = new NamespacedKey(plugin, "vampiric");
         BLOOD_FLASK_OWNER = new NamespacedKey(plugin, "owner");
+    }
+
+    public static BloodFlaskUtil get(VampireRevamp plugin) {
+        return instances.computeIfAbsent(plugin.getName(), (k) -> new BloodFlaskUtil(plugin));
     }
 
     public ItemStack createBloodFlask(Player creator, double amount, boolean isVampiric) {

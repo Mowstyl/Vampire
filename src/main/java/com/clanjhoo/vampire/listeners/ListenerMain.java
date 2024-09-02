@@ -46,9 +46,9 @@ public class ListenerMain implements Listener {
 
     public ListenerMain(VampireRevamp plugin) {
         this.plugin = plugin;
-        resUtil = new ResourceUtil(plugin);
-        bloodUtil = new BloodFlaskUtil(plugin);
-        holyUtil = new HolyWaterUtil(plugin);
+        resUtil = ResourceUtil.get(plugin);
+        bloodUtil = BloodFlaskUtil.get(plugin);
+        holyUtil = HolyWaterUtil.get(plugin);
     }
 
 

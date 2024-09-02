@@ -20,7 +20,7 @@ public class DisguiseListener implements Listener {
 
     public DisguiseListener(VampireRevamp plugin) {
         this.plugin = plugin;
-        resUtil = new ResourceUtil(plugin);
+        resUtil = ResourceUtil.get(plugin);
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)

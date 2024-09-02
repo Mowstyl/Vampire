@@ -43,12 +43,12 @@ public class CmdVampire extends BaseCommand {
 	public CmdVampire(VampireRevamp plugin) {
 		this.plugin = plugin;
 		commandMap = new HashMap<>();
-		textUtil = new TextUtil(plugin);
-		resUtil = new ResourceUtil(plugin);
-		bloodUtil = new BloodFlaskUtil(plugin);
-		holyUtil = new HolyWaterUtil(plugin);
-		sunUtil = new SunUtil(plugin);
-		ringUtil = new RingUtil(plugin);
+		textUtil = TextUtil.get(plugin);
+		resUtil = ResourceUtil.get(plugin);
+		bloodUtil = BloodFlaskUtil.get(plugin);
+		holyUtil = HolyWaterUtil.get(plugin);
+		sunUtil = SunUtil.get(plugin);
+		ringUtil = RingUtil.get(plugin);
 	}
 
 	public void initialize() {

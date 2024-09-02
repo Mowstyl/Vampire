@@ -14,8 +14,8 @@ import org.bukkit.util.RayTraceResult;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class SunUtil
-{
+public class SunUtil {
+	private final static Map<String, SunUtil> instances = new ConcurrentHashMap<>(1);
 	// -------------------------------------------- //
 	// CONSTANTS
 	// -------------------------------------------- //
@@ -37,8 +37,12 @@ public class SunUtil
 
 	public final VampireRevamp plugin;
 
-	public SunUtil(VampireRevamp plugin) {
+	private SunUtil(VampireRevamp plugin) {
 		this.plugin = plugin;
+	}
+
+	public static SunUtil get(VampireRevamp plugin) {
+		return instances.computeIfAbsent(plugin.getName(), (k) -> new SunUtil(plugin));
 	}
 	// -------------------------------------------- //
 	// SOLAR RADIATION CALCULATION

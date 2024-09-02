@@ -7,14 +7,23 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataContainer;
 
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
 public class RingUtil {
+    private final static Map<String, RingUtil> instances = new ConcurrentHashMap<>(1);
+
     private final VampireRevamp plugin;
     public final NamespacedKey SUN_RING_KEY;
 
 
-    public RingUtil(VampireRevamp plugin) {
+    private RingUtil(VampireRevamp plugin) {
         this.plugin = plugin;
         SUN_RING_KEY = new NamespacedKey(plugin, "IgnoreRadiation");
+    }
+
+    public static RingUtil get(VampireRevamp plugin) {
+        return instances.computeIfAbsent(plugin.getName(), (k) -> new RingUtil(plugin));
     }
 
     public ItemStack getSunRing() {

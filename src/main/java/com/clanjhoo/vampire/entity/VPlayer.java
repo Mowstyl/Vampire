@@ -176,9 +176,9 @@ public class VPlayer {
         this.intending = false;
         this.usingNightVision = false;
         plugin = VampireRevamp.getInstance();
-        entityUtil = new EntityUtil(plugin);
-        ringUtil = new RingUtil(plugin);
-        sunUtil = new SunUtil(plugin);
+        entityUtil = EntityUtil.get(plugin);
+        ringUtil = RingUtil.get(plugin);
+        sunUtil = SunUtil.get(plugin);
     }
 
     public void invite(String regionName) {

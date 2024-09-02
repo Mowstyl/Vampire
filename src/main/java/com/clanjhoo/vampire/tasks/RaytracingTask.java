@@ -8,26 +8,24 @@ import org.bukkit.FluidCollisionMode;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
+import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.Vector;
 
 
 public class RaytracingTask implements Runnable {
     private final VampireRevamp plugin;
     private final SunUtil sunUtil;
+    private BukkitTask currentTask;
 
     // -------------------------------------------- //
     // INSTANCE & CONSTRUCT
     // -------------------------------------------- //
     public RaytracingTask(VampireRevamp plugin) {
         this.plugin = plugin;
-        sunUtil = new SunUtil(plugin);
+        sunUtil = SunUtil.get(plugin);
     }
 
-    // -------------------------------------------- //
-    // OVERRIDE: MODULO REPEAT TASK
-    // -------------------------------------------- //
-    @Override
-    public void run() {
+    private void rayTraceEveryone() {
         // Raytrace for all vampire players
         for (Player player : Bukkit.getOnlinePlayers()) {
             if (!player.isOnline())
@@ -43,6 +41,20 @@ public class RaytracingTask implements Runnable {
             vPlayer.setLastRayTrace(
                     playerWorld.rayTraceBlocks(startLocation, direction, 64, FluidCollisionMode.ALWAYS, true));
         }
-        plugin.handleRayTraceTask(false);
+        currentTask = null;
+    }
+
+    public void stop() {
+        if (currentTask != null)
+            currentTask.cancel();
+    }
+
+    // -------------------------------------------- //
+    // OVERRIDE: MODULO REPEAT TASK
+    // -------------------------------------------- //
+    @Override
+    public void run() {
+        if (currentTask == null)
+            currentTask = Bukkit.getScheduler().runTaskAsynchronously(plugin, this::rayTraceEveryone);
     }
 }

@@ -18,15 +18,22 @@ import org.bukkit.potion.PotionType;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 
 public class ResourceUtil {
+	private final static Map<String, ResourceUtil> instances = new ConcurrentHashMap<>(1);
 
 	private final VampireRevamp plugin;
 
 
-	public ResourceUtil(VampireRevamp plugin) {
+	private ResourceUtil(VampireRevamp plugin) {
 		this.plugin = plugin;
+	}
+
+	public static ResourceUtil get(VampireRevamp plugin) {
+		return instances.computeIfAbsent(plugin.getName(), (k) -> new ResourceUtil(plugin));
 	}
 
 	public boolean hasPermission(@NotNull Permissible permissible, @NotNull Perm permission, boolean verbose)

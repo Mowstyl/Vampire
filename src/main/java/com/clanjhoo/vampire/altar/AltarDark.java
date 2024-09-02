@@ -23,7 +23,7 @@ public class AltarDark extends Altar {
         this.resources = darkAltar.activate;
         this.isDark = true;
         this.plugin = plugin;
-        resUtil = new ResourceUtil(plugin);
+        resUtil = ResourceUtil.get(plugin);
     }
 
     @Override

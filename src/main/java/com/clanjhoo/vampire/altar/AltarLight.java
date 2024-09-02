@@ -1,7 +1,7 @@
 package com.clanjhoo.vampire.altar;
 
 import co.aikar.commands.MessageType;
-import com.clanjhoo.vampire.HolyWaterUtil;
+import com.clanjhoo.vampire.util.HolyWaterUtil;
 import com.clanjhoo.vampire.keyproviders.AltarMessageKeys;
 import com.clanjhoo.vampire.keyproviders.HolyWaterMessageKeys;
 import com.clanjhoo.vampire.Perm;
@@ -28,8 +28,8 @@ public class AltarLight extends Altar {
 		this.resources = lightAltar.activate;
 		this.isDark = false;
 		this.plugin = plugin;
-		holyUtil = new HolyWaterUtil(plugin);
-		resUtil = new ResourceUtil(plugin);
+		holyUtil = HolyWaterUtil.get(plugin);
+		resUtil = ResourceUtil.get(plugin);
 	}
 	
 	@Override

@@ -11,16 +11,22 @@ import org.bukkit.util.Vector;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 
 public class EntityUtil {
+    private final static Map<String, EntityUtil> instances = new ConcurrentHashMap<>(1);
 
     private final VampireRevamp plugin;
 
-    public EntityUtil(VampireRevamp plugin) {
+    private EntityUtil(VampireRevamp plugin) {
         this.plugin = plugin;
     }
 
+    public static EntityUtil get(VampireRevamp plugin) {
+        return instances.computeIfAbsent(plugin.getName(), (k) -> new EntityUtil(plugin));
+    }
 
     public static Player getAsPlayer(Entity entity) {
         Player player = null;

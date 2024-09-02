@@ -1,7 +1,7 @@
-package com.clanjhoo.vampire;
+package com.clanjhoo.vampire.util;
 
+import com.clanjhoo.vampire.VampireRevamp;
 import com.clanjhoo.vampire.keyproviders.HolyWaterMessageKeys;
-import com.clanjhoo.vampire.util.BooleanTagType;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.bungeecord.BungeeComponentSerializer;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
@@ -17,19 +17,27 @@ import org.bukkit.potion.PotionEffectType;
 import org.bukkit.potion.PotionType;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 public class HolyWaterUtil {
+    private final static Map<String, HolyWaterUtil> instances = new ConcurrentHashMap<>(1);
+
     private final VampireRevamp plugin;
     public final NamespacedKey HOLY_WATER_KEY;
     public final PotionEffect HOLY_WATER_CUSTOM_EFFECT;
 
 
-    public HolyWaterUtil(VampireRevamp plugin) {
+    private HolyWaterUtil(VampireRevamp plugin) {
         this.plugin = plugin;
         HOLY_WATER_KEY = new NamespacedKey(plugin, "HolyWater");
         HOLY_WATER_CUSTOM_EFFECT = new PotionEffect(PotionEffectType.REGENERATION, 20, 0);
+    }
+
+    public static HolyWaterUtil get(VampireRevamp plugin) {
+        return instances.computeIfAbsent(plugin.getName(), (k) -> new HolyWaterUtil(plugin));
     }
 
     public ItemStack createHolyWater(Player creator) {

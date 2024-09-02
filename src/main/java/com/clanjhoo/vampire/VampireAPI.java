@@ -58,6 +58,6 @@ public class VampireAPI {
     }
 
     public static boolean isSunRing(@NotNull ItemStack item) {
-        return new RingUtil(VampireRevamp.getInstance()).isSunRing(item);
+        return RingUtil.get(VampireRevamp.getInstance()).isSunRing(item);
     }
 }
