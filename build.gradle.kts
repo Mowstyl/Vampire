@@ -1,24 +1,17 @@
-import java.io.ByteArrayOutputStream;
+// import com.github.spotbugs.snom.Confidence
+// import com.github.spotbugs.snom.Effort
 
 
 plugins {
     `java-library`
     alias(libs.plugins.shadowPlugin)
     alias(libs.plugins.generatePOMPlugin)
+    // alias(libs.plugins.spotBugsPlugin)
 }
 
-
-val getGitHash: String by lazy {
-    val stdout = ByteArrayOutputStream()
-    rootProject.exec {
-        commandLine("git", "rev-parse", "--short", "HEAD")
-        standardOutput = stdout
-    }
-    stdout.toString().trim()
-}
 
 group = "com.clanjhoo"
-version = "1.0.0-SNAPSHOT"//.replace("SNAPSHOT", getGitHash)
+version = "1.0.0-SNAPSHOT"
 description = "Anyone can become a vampire, but do you want to? During daytime vampires cower from sunlight. During the night the humans reach for their holy water and wooden stakes as the vampires roam the lands with inhuman strength, speed and levitation-powers. Driven by their endless bloodlust, they devour all living in their way."
 
 ext.set("projectName", gradle.extra["projectName"].toString())
@@ -103,7 +96,7 @@ repositories {
 }
 
 dependencies {
-    //compileOnly(libs.spigotmc.spigotapi)
+    // compileOnly(libs.spigotmc.spigotapi)
     compileOnly(libs.papermc.paperapi)
     compileOnly(libs.sk89q.worldedit.core) {
         isTransitive = false
@@ -156,17 +149,39 @@ tasks {
     }
 
     shadowJar {
-        //archiveFileName.set("${rootProject.name}-${version}.jar")
         relocate("co.aikar.commands", "co.aikar.${rootProject.name.lowercase()}.acf")
         relocate("co.aikar.locales", "co.aikar.${rootProject.name.lowercase()}.locales")
         relocate("com.clanjhoo.dbhandler", "com.clanjhoo.${rootProject.name.lowercase()}.dbhandler")
         relocate("net.kyori", "net.kyori.${rootProject.name.lowercase()}")
+        relocate("org.slf4j", "org.${rootProject.name.lowercase()}.sl4fj")
         exclude("com/google/gson/**")
         exclude("META-INF/services/**")
         exclude("META-INF/versions/**")
         exclude("META-INF/maven/co.aikar/**")
+        exclude("META-INF/maven/com.zaxxer/**")
         exclude("META-INF/maven/com.google.code.gson/**")
         exclude("META-INF/maven/net.jodah/**")
+        exclude("META-INF/maven/org.slf4j/**")
         exclude("META-INF/maven/com.clanjhoo/dbhandler/**")
     }
+
+    /*
+    spotbugsMain {
+        reports.create("html") {
+            required = true
+            outputLocation = file("${layout.buildDirectory.get()}/reports/spotbugs.html")
+            setStylesheet("fancy-hist.xsl")
+        }
+    }
+    */
 }
+
+/*
+spotbugs {
+    ignoreFailures = false
+    showStackTraces = true
+    showProgress = true
+    effort = Effort.DEFAULT
+    reportLevel = Confidence.DEFAULT
+}
+*/

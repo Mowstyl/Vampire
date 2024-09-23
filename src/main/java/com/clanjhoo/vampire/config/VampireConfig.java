@@ -29,8 +29,11 @@ public class VampireConfig {
     public final HolyItemConfig holyItem;
     public final boolean canEatCake;
     public final boolean canSleepDaytime;
+    private final VampireRevamp plugin;
 
-    public VampireConfig() {
+
+    public VampireConfig(VampireRevamp plugin) {
+        this.plugin = plugin;
         blockDamageFrom = CollectionUtil.set(
                 DamageCause.DROWNING,
                 DamageCause.FALL,
@@ -52,13 +55,14 @@ public class VampireConfig {
         damageFactor = 1;
         respawnFood = 20;
         respawnHealth = 20;
-        holyItem = new HolyItemConfig();
+        holyItem = new HolyItemConfig(plugin);
         canEatCake = false;
         canSleepDaytime = false;
     }
 
-    public VampireConfig(@NotNull ConfigurationSection cs) {
-        VampireConfig def = new VampireConfig();
+    public VampireConfig(VampireRevamp plugin, @NotNull ConfigurationSection cs) {
+        this.plugin = plugin;
+        VampireConfig def = new VampireConfig(plugin);
 
         List<String> auxLDC = null;
         Set<DamageCause> auxSDC = new HashSet<>();
@@ -70,7 +74,7 @@ public class VampireConfig {
                     auxSDC.add(aux);
                 }
                 catch (IllegalArgumentException ex) {
-                    VampireRevamp.log(Level.WARNING, "DamageCause " + dcName + " doesn't exist!");
+                    plugin.log(Level.WARNING, "DamageCause " + dcName + " doesn't exist!");
                 }
             }
         }
@@ -86,7 +90,7 @@ public class VampireConfig {
 
                     auxSRR.add(aux);
                 } catch (IllegalArgumentException ex) {
-                    VampireRevamp.log(Level.WARNING, "RegainReason " + rrName + " doesn't exist!");
+                    plugin.log(Level.WARNING, "RegainReason " + rrName + " doesn't exist!");
                 }
             }
         }
@@ -144,9 +148,9 @@ public class VampireConfig {
 
         aux = cs.getConfigurationSection("holyItem");
         if (aux != null)
-            holyItem = new HolyItemConfig(aux);
+            holyItem = new HolyItemConfig(plugin, aux);
         else
-            holyItem = new HolyItemConfig();
+            holyItem = new HolyItemConfig(plugin);
 
         canEatCake = cs.getBoolean("canEatCake", def.canEatCake);
         canSleepDaytime = cs.getBoolean("canSleepDaytime", def.canSleepDaytime);

@@ -11,9 +11,22 @@ import org.bukkit.util.Vector;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 
 public class EntityUtil {
+    private final static Map<String, EntityUtil> instances = new ConcurrentHashMap<>(1);
+
+    private final VampireRevamp plugin;
+
+    private EntityUtil(VampireRevamp plugin) {
+        this.plugin = plugin;
+    }
+
+    public static EntityUtil get(VampireRevamp plugin) {
+        return instances.computeIfAbsent(plugin.getName(), (k) -> new EntityUtil(plugin));
+    }
 
     public static Player getAsPlayer(Entity entity) {
         Player player = null;
@@ -32,9 +45,9 @@ public class EntityUtil {
     public static boolean isNpc(Object object) {
         boolean buliano = false;
 
-        if (object instanceof Metadatable metadatable) {
+        if (object instanceof Metadatable) {
             try {
-                buliano = metadatable.hasMetadata("NPC");
+                buliano = ((Metadatable) object).hasMetadata("NPC");
             } catch (UnsupportedOperationException ignore) {
                 // ProtocolLib
                 // UnsupportedOperationException: The method hasMetadata is not supported for temporary players.
@@ -110,9 +123,8 @@ public class EntityUtil {
         return weapon;
     }
 
-    public static boolean despawnBats(Player p) {
+    public boolean despawnBats(Player p) {
         boolean result = false;
-        VampireRevamp plugin = VampireRevamp.getInstance();
 
         try {
             if (plugin.batmap.containsKey(p.getUniqueId())) {
@@ -138,9 +150,8 @@ public class EntityUtil {
         return result;
     }
 
-    public static boolean spawnBats(Player p, int qty) {
+    public boolean spawnBats(Player p, int qty) {
         boolean result = false;
-        VampireRevamp plugin = VampireRevamp.getInstance();
 
         try {
             if (plugin.batmap.containsKey(p.getUniqueId())) {
@@ -160,7 +171,7 @@ public class EntityUtil {
             result = true;
         }
         catch (Exception ex) {
-            VampireRevamp.log(Level.WARNING, "Error spawning bats!: " + ex.getMessage());
+            plugin.log(Level.WARNING, "Error spawning bats!: " + ex.getMessage());
             ex.printStackTrace();
         }
 

@@ -2,6 +2,7 @@ package com.clanjhoo.vampire.config;
 
 import com.clanjhoo.vampire.VampireRevamp;
 import com.clanjhoo.vampire.entity.VPlayer;
+import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.event.EventPriority;
@@ -14,12 +15,16 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.logging.Level;
 
-public class StateEffectConfig implements Comparable<StateEffectConfig>{
-    public final EventPriority priority;
-    public final Map<PotionEffectType, Integer> effectToStrength;
-    public Function<VPlayer, Boolean> passesChecks;
 
-    public StateEffectConfig(EventPriority priority, Map<PotionEffectType, Integer> effectToStrength) {
+public class StateEffectConfig implements Comparable<StateEffectConfig> {
+    private final EventPriority priority;
+    private final Map<PotionEffectType, Integer> effectToStrength;
+    private Function<VPlayer, Boolean> passesChecks;
+    private final VampireRevamp plugin;
+
+
+    public StateEffectConfig(VampireRevamp plugin, EventPriority priority, Map<PotionEffectType, Integer> effectToStrength) {
+        this.plugin = plugin;
         this.priority = priority;
         this.effectToStrength = effectToStrength;
     }
@@ -42,7 +47,7 @@ public class StateEffectConfig implements Comparable<StateEffectConfig>{
                 try {
                     epri = EventPriority.valueOf(aux.toUpperCase());
                 } catch (IllegalArgumentException ex) {
-                    VampireRevamp.log(Level.WARNING, "EventPriority " + aux + " doesn't exist!");
+                    plugin.log(Level.WARNING, "EventPriority " + aux + " doesn't exist!");
                 }
             }
             epri = epri != null ? epri : this.priority;
@@ -52,20 +57,20 @@ public class StateEffectConfig implements Comparable<StateEffectConfig>{
                 mes = new HashMap<>();
                 for (Map<?, ?> minimap : auxLES) {
                     for (Map.Entry<?, ?> entry : minimap.entrySet()) {
-                        PotionEffectType pet = PotionEffectType.getByName((String) entry.getKey());
+                        PotionEffectType pet = plugin.getVersionCompat().getPotionEffectByName((String) entry.getKey());
                         int strength = (Integer) entry.getValue();
 
                         if (pet != null)
                             mes.put(pet, strength);
                         else
-                            VampireRevamp.log(Level.WARNING, "PotionEffectType " + entry.getKey() + " doesn't exist!");
+                            plugin.log(Level.WARNING, "PotionEffectType " + entry.getKey() + " doesn't exist!");
                     }
                 }
             }
             else {
                 mes = this.effectToStrength;
             }
-            result = new StateEffectConfig(epri, mes);
+            result = new StateEffectConfig(plugin, epri, mes);
 
             result.passesChecks = this.passesChecks;
         }
@@ -73,9 +78,32 @@ public class StateEffectConfig implements Comparable<StateEffectConfig>{
         return result;
     }
 
+    public void setPassesChecks(Function<VPlayer, Boolean> passesChecks) {
+        this.passesChecks = passesChecks;
+    }
+
+    public Function<VPlayer, Boolean> getPassesChecks() {
+        return passesChecks;
+    }
+
     @Override
     public int compareTo(StateEffectConfig o) {
-        return this.priority.compareTo(o.priority);
+        int val = this.priority.compareTo(o.priority);
+        if (val != 0)
+            return val;
+        return toString().compareTo(o.toString());
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof StateEffectConfig))
+            return false;
+        return toString().equals(o.toString());
+    }
+
+    @Override
+    public int hashCode() {
+        return toString().hashCode() + 6470;
     }
 
     // -------------------------------------------- //

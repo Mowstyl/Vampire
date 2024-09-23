@@ -13,32 +13,42 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.logging.Level;
 
 public class WerewolvesSilverHook implements Listener {
     private boolean initialized = false;
+    private final VampireRevamp plugin;
 
-    private boolean initialize() {
+
+    public WerewolvesSilverHook(VampireRevamp plugin) {
+        this.plugin = plugin;
+        plugin.log(Level.INFO, "Enabled Werewolves silver compatibility!");
+    }
+
+    private boolean checkWerewolf() {
+        if (initialized)
+            return true;
         boolean isWerewolfEnabled = Bukkit.getPluginManager().isPluginEnabled("Werewolf");
-        if (!isWerewolfEnabled)
+        if (!isWerewolfEnabled) {
+            plugin.log(Level.WARNING, "Werewolf plugin has been disabled. Disabled silver detection");
             HandlerList.unregisterAll(this);
+        }
         initialized = true;
         return isWerewolfEnabled;
     }
 
     @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
     public void onSilverSword(EntityDamageByEntityEvent event) {
+        if (!checkWerewolf())
+            return;
+
         if (!(event.getEntity() instanceof Player))
             return;
 
-        if (!initialized) {
-            if (!initialize())
-                return;
-            VampireRevamp.log(Level.INFO, "Enabled Werewolves silver compatibility!");
-        }
-        if (!VampireRevamp.getVampireConfig().compatibility.useWerewolfSilverSword)
+        if (!plugin.getVampireConfig().compatibility.useWerewolfSilverSword)
             return;
 
         if (!EntityUtil.isPlayer(event.getEntity()))
@@ -47,25 +57,27 @@ public class WerewolvesSilverHook implements Listener {
         if (!EventUtil.isCloseCombatEvent(event))
             return;
 
-        VPlayer vPlayer = VampireRevamp.getVPlayer((Player) event.getEntity());
+        VPlayer vPlayer = plugin.getVPlayer((Player) event.getEntity());
         if (vPlayer == null) {
-            VampireRevamp.log(Level.WARNING, "Couldn't get data of player " + event.getEntity().getName());
+            plugin.log(Level.WARNING, "Couldn't get data of player " + event.getEntity().getName());
             return;
         }
         if (!vPlayer.isVampire())
             return;
 
         Entity rawDamager = EventUtil.getLiableDamager(event);
-        if (!(rawDamager instanceof LivingEntity damager))
+        if (!(rawDamager instanceof LivingEntity))
             return;
-        if (damager.getEquipment() == null)
+        LivingEntity damager = (LivingEntity) rawDamager;
+        EntityEquipment damagerEquipment = damager.getEquipment();
+        if (damagerEquipment == null)
             return;
-        ItemStack weapon = damager.getEquipment().getItemInMainHand();
-        boolean isSilverSword = VampireRevamp.getWerewolvesCompat().isSilverSword(weapon);
+        ItemStack weapon = damagerEquipment.getItemInMainHand();
+        boolean isSilverSword = plugin.getWerewolvesCompat().isSilverSword(weapon);
         if (!isSilverSword)
             return;
 
-        VampireRevamp.debugLog(Level.INFO, "Silver sword used! Scaling damage...");
-        EventUtil.scaleDamage(event, VampireRevamp.getVampireConfig().compatibility.silverDamageFactor);
+        plugin.debugLog(Level.INFO, "Silver sword used! Scaling damage...");
+        EventUtil.scaleDamage(event, plugin.getVampireConfig().compatibility.silverDamageFactor);
     }
 }

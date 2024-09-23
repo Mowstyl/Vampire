@@ -7,10 +7,26 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataContainer;
 
-public class RingUtil {
-    public static final NamespacedKey SUN_RING_KEY = new NamespacedKey(VampireRevamp.getInstance(), "IgnoreRadiation");
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
-    public static ItemStack getSunRing() {
+public class RingUtil {
+    private final static Map<String, RingUtil> instances = new ConcurrentHashMap<>(1);
+
+    private final VampireRevamp plugin;
+    public final NamespacedKey SUN_RING_KEY;
+
+
+    private RingUtil(VampireRevamp plugin) {
+        this.plugin = plugin;
+        SUN_RING_KEY = new NamespacedKey(plugin, "IgnoreRadiation");
+    }
+
+    public static RingUtil get(VampireRevamp plugin) {
+        return instances.computeIfAbsent(plugin.getName(), (k) -> new RingUtil(plugin));
+    }
+
+    public ItemStack getSunRing() {
         ItemStack ring = new ItemStack(Material.IRON_NUGGET, 1);
         ItemMeta ringMeta = ring.getItemMeta();
         PersistentDataContainer ringDC =  ringMeta.getPersistentDataContainer();
@@ -19,7 +35,7 @@ public class RingUtil {
         return ring;
     }
 
-    public static boolean isSunRing(ItemStack item) {
+    public boolean isSunRing(ItemStack item) {
         if (!item.getType().equals(Material.IRON_NUGGET)) {
             return false;
         }

@@ -1,25 +1,32 @@
 package com.clanjhoo.vampire.config;
 
 import com.clanjhoo.vampire.VampireRevamp;
+import com.clanjhoo.vampire.compat.VersionCompat;
 import com.clanjhoo.vampire.util.CollectionUtil;
 import com.clanjhoo.vampire.util.SemVer;
+import org.bukkit.Keyed;
 import org.bukkit.Material;
+import org.bukkit.Registry;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.EntityType;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.Damageable;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.PotionMeta;
-import org.bukkit.potion.PotionData;
+import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.potion.PotionType;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.logging.Level;
+import java.util.stream.Collectors;
 
 public class PluginConfig {
-    private final int lastVersion = 1;
+    private static final int LAST_VERSION = 1;
     private final int version;
     public final GeneralConfig general;
     public final CompatConfig compatibility;
@@ -34,6 +41,8 @@ public class PluginConfig {
     public final AltarConfig altar;
     public final RadiationConfig radiation;
     public final StorageConfig storage;
+    private final VampireRevamp plugin;
+    private final VersionCompat vCompat;
 
     private static final double NO_BLOOD = 0;
     private static final double NON_HUMAN = 0.25;
@@ -41,33 +50,22 @@ public class PluginConfig {
     private static final double HUMAN = 0.5;
     private static final double PLAYER = 1;
 
-    public static final Set<EntityType> undeadTypes = CollectionUtil.set(
-            EntityType.SKELETON,
-            EntityType.STRAY,
-            EntityType.WITHER_SKELETON,
-            EntityType.ZOMBIE,
-            EntityType.HUSK,
-            EntityType.ZOMBIE_VILLAGER,
-            EntityType.WITHER,
-            EntityType.SKELETON_HORSE,
-            EntityType.ZOMBIE_HORSE
-    );
-
-    private static final Map<EntityType, Double> baseFoodQuotient = CollectionUtil.map(
+    // private final Map<EntityType, Double> baseFoodQuotient = null;
+        /* = CollectionUtil.map(
             EntityType.PLAYER, PLAYER,
             EntityType.BAT, NON_HUMAN,
             EntityType.CHICKEN, NON_HUMAN,
             EntityType.COW, NON_HUMAN,
             EntityType.DONKEY, NON_HUMAN,
             EntityType.HORSE, NON_HUMAN,
-            EntityType.MUSHROOM_COW, NON_HUMAN,
+            VampireRevamp.getInstance().getVersionCompat().getMooshroom(), NON_HUMAN,
             EntityType.MULE, NON_HUMAN,
             EntityType.OCELOT, NON_HUMAN,
             EntityType.PARROT, NON_HUMAN,
             EntityType.PIG, NON_HUMAN,
             EntityType.RABBIT, NON_HUMAN,
             EntityType.SHEEP, NON_HUMAN,
-            EntityType.SNOWMAN, NO_BLOOD,
+            VampireRevamp.getInstance().getVersionCompat().getSnowman(), NO_BLOOD,
             EntityType.SQUID, NON_HUMAN,
             EntityType.VILLAGER, HUMAN,
             EntityType.IRON_GOLEM, NO_BLOOD,
@@ -93,7 +91,7 @@ public class PluginConfig {
             EntityType.WITCH, HUMAN,
             EntityType.ENDER_DRAGON, BOSS,
             EntityType.ILLUSIONER, HUMAN
-    );
+    ); */
 
     public static boolean writeLine(BufferedWriter configWriter, String text, String indent, int level) {
         boolean res = false;
@@ -104,13 +102,14 @@ public class PluginConfig {
             configWriter.newLine();
             res = true;
         } catch (IOException ex) {
-            VampireRevamp.log(Level.WARNING, "Error while indenting!");
+            VampireRevamp.getInstance().log(Level.WARNING, "Error while indenting!");
         }
         return res;
     }
 
     protected static boolean writeMap(BufferedWriter configWriter, String header, Map<?, ?> itemMap, String indent, int level) {
         boolean res;
+        VampireRevamp plugin = VampireRevamp.getInstance();
         try {
             for (int i = 0; i < level; i++)
                 configWriter.write(indent);
@@ -125,21 +124,54 @@ public class PluginConfig {
                 configWriter.newLine();
                 res = true;
                 for (Map.Entry<?, ?> entry : itemMap.entrySet()) {
-                    String key = entry.getKey().toString();
-                    if (entry.getKey() instanceof PotionEffectType)
-                        key = ((PotionEffectType) entry.getKey()).getName();
-                    res = res && writeLine(configWriter, "- " + key + ": " + entry.getValue().toString(), indent, level + 1);
+                    Object key = entry.getKey();
+                    String strong;
+                    if (key instanceof Keyed)
+                        strong = ((Keyed) key).getKey().toString();
+                    else if (key instanceof PotionEffectType)
+                        strong = ((PotionEffectType) key).getName();
+                    else
+                        strong = key.toString();
+                    res = res && writeLine(configWriter, "- " + strong + ": " + entry.getValue().toString(), indent, level + 1);
                 }
             }
         } catch (IOException ex) {
             res = false;
-            VampireRevamp.log(Level.WARNING, "Error while indenting!");
+            plugin.log(Level.WARNING, "Error while indenting!");
+        }
+        return res;
+    }
+
+    protected static boolean writePotionEffectCollection(BufferedWriter configWriter, String header, Collection<PotionEffect> effects, String indent, int level) {
+        boolean res;
+        try {
+            for (int i = 0; i < level; i++)
+                configWriter.write(indent);
+            configWriter.write(header);
+
+            if (effects.isEmpty()) {
+                configWriter.write(" []");
+                configWriter.newLine();
+                res = true;
+            }
+            else {
+                configWriter.newLine();
+                res = true;
+                for (PotionEffect effect : effects) {
+                    res = res && writeLine(configWriter, "- data: \"" + effect.toString() + "\"", indent, level + 1);
+                }
+
+            }
+        } catch (IOException ex) {
+            res = false;
+            VampireRevamp.getInstance().log(Level.WARNING, "Error while indenting!");
         }
         return res;
     }
 
     protected static boolean writeItemCollection(BufferedWriter configWriter, String header, Collection<ItemStack> itemSet, String indent, int level) {
         boolean res;
+        VampireRevamp plugin = VampireRevamp.getInstance();
         try {
             for (int i = 0; i < level; i++)
                 configWriter.write(indent);
@@ -154,31 +186,39 @@ public class PluginConfig {
                 configWriter.newLine();
                 res = true;
                 for (ItemStack item : itemSet) {
-                    res = res && writeLine(configWriter, "- material: " + item.getType(), indent, level + 1);
+                    ItemMeta meta = item.getItemMeta();
+                    Material type = item.getType();
+                    String strType;
+                    if (type instanceof Keyed)
+                        strType = ((Keyed) type).getKey().toString();
+                    else
+                        strType = type.toString();
+                    res = res && writeLine(configWriter, "- material: " + strType, indent, level + 1);
                     res = res && writeLine(configWriter, "  amount: " + item.getAmount(), indent, level + 1);
-                    if (new SemVer(1, 14).compareTo(VampireRevamp.getServerVersion()) > 0 && item.getDurability() != 0)
-                        res = res && writeLine(configWriter, "  durability: " + item.getDurability(), indent, level + 1);
-                    if (item.getType() == Material.POTION || item.getType() == Material.SPLASH_POTION || item.getType() == Material.LINGERING_POTION) {
-                        PotionData pd = ((PotionMeta) item.getItemMeta()).getBasePotionData();
+                    if (meta instanceof Damageable) {
+                        Damageable dmg = (Damageable) meta;
+                        res = res && writeLine(configWriter, "  damage: " + dmg.getDamage(), indent, level + 1);
+                    }
+                    if (meta instanceof PotionMeta) {
+                        PotionMeta pd = ((PotionMeta) item.getItemMeta());
                         res = res && writeLine(configWriter, "  meta:", indent, level + 1);
-                        res = res && writeLine(configWriter, "type: " + pd.getType(), indent, level + 2);
-                        if (pd.isExtended())
-                            res = res && writeLine(configWriter, "extended: true", indent, level + 2);
-                        if (pd.isUpgraded())
-                            res = res && writeLine(configWriter, "upgraded: true", indent, level + 2);
+                        res = res && writeLine(configWriter, "type: " + plugin.getVersionCompat().getBasePotionType(pd), indent, level + 2);
+                        // I think no one will ever need this
+                        // res = res && writePotionEffectCollection(configWriter, "effects:", pd.getCustomEffects(), indent, level + 2);
                     }
                 }
 
             }
         } catch (IOException ex) {
             res = false;
-            VampireRevamp.log(Level.WARNING, "Error while indenting!");
+            plugin.log(Level.WARNING, "Error while indenting!");
         }
         return res;
     }
 
     protected static boolean writeCollection(BufferedWriter configWriter, String header, Collection<?> itemSet, String indent, int level) {
         boolean res;
+        VampireRevamp plugin = VampireRevamp.getInstance();
         try {
             for (int i = 0; i < level; i++)
                 configWriter.write(indent);
@@ -192,12 +232,20 @@ public class PluginConfig {
             else {
                 configWriter.newLine();
                 res = true;
-                for (Object o : itemSet)
-                    res = res && writeLine(configWriter, "- " + o.toString(), indent, level + 1);
+                for (Object o : itemSet) {
+                    String strong;
+                    if (o instanceof Keyed)
+                        strong = ((Keyed) o).getKey().toString();
+                    else if (o instanceof PotionEffectType)
+                        strong = ((PotionEffectType) o).getName();
+                    else
+                        strong = o.toString();
+                    res = res && writeLine(configWriter, "- " + strong, indent, level + 1);
+                }
             }
         } catch (IOException ex) {
             res = false;
-            VampireRevamp.log(Level.WARNING, "Error while indenting!");
+            VampireRevamp.getInstance().log(Level.WARNING, "Error while indenting!");
         }
         return res;
     }
@@ -206,7 +254,7 @@ public class PluginConfig {
         boolean result = writeLine(configWriter, "# Vampire Revamped configuration file", indent, level);
         result = result && PluginConfig.writeLine(configWriter, "# DO NOT EDIT THIS LINE", indent, level);
         result = result && PluginConfig.writeLine(configWriter, "version: " + version, indent, level);
-        result = result && PluginConfig.writeLine(configWriter, "# Autogenerated for MC " + VampireRevamp.getServerVersion(), indent, level);
+        result = result && PluginConfig.writeLine(configWriter, "# Autogenerated for MC " + plugin.getServerVersion(), indent, level);
         result = result && PluginConfig.writeLine(configWriter, "", indent, level);
         result = result && PluginConfig.writeLine(configWriter, "general:", indent, level);
         result = result && this.general.saveConfigToFile(configWriter, indent, level + 1);
@@ -250,58 +298,31 @@ public class PluginConfig {
         }
 
         if (!res) {
-            VampireRevamp.log(Level.WARNING, "Couldn't create default config file!");
+            plugin.log(Level.WARNING, "Couldn't create default config file!");
             return res;
         }
 
-        FileOutputStream confStream = null;
-        BufferedWriter confWriter = null;
         boolean open = false;
 
-        try {
-            confStream = new FileOutputStream(destination);
-            confWriter = new BufferedWriter(new OutputStreamWriter(confStream));
-            open = true;
-
+        try (OutputStream confStream = new FileOutputStream(destination);
+             Writer rawWriter = new OutputStreamWriter(confStream, StandardCharsets.UTF_8);
+             BufferedWriter confWriter = new BufferedWriter(rawWriter)) {
             res = saveConfigToFile(confWriter, indent, 0);
-        } catch (IOException ex) {
+        }
+        catch (IOException ex) {
             res = false;
             ex.printStackTrace();
         }
 
         if (!res)
-            VampireRevamp.log(Level.WARNING, "Couldn't save default config file!");
-
-        try {
-            if (open)
-                confWriter.close();
-        } catch (IOException ex) {
-            VampireRevamp.log(Level.WARNING, "Failed to close the file!");
-            ex.printStackTrace();
-        }
+            plugin.log(Level.WARNING, "Couldn't save default config file!");
 
         return res;
     }
 
-    public static void updateUndeadTypes() {
-        SemVer version = VampireRevamp.getServerVersion();
-
-        if (new SemVer(1, 16).compareTo(version) <= 0) {
-            undeadTypes.add(EntityType.ZOMBIFIED_PIGLIN);
-            undeadTypes.add(EntityType.ZOGLIN);
-        }
-        else {
-            undeadTypes.add(EntityType.valueOf("PIG_ZOMBIE"));
-        }
-
-        if (new SemVer(1, 13).compareTo(version) <= 0) {
-            undeadTypes.add(EntityType.DROWNED);
-            undeadTypes.add(EntityType.PHANTOM);
-        }
-    }
-
-    public static void updateFoodMap() {
-        SemVer version = VampireRevamp.getServerVersion();
+    /*
+    public void updateFoodMap() {
+        SemVer version = plugin.getServerVersion();
 
         if (new SemVer(1, 13).compareTo(version) <= 0) {
             baseFoodQuotient.put(EntityType.COD, NON_HUMAN);
@@ -322,50 +343,69 @@ public class PluginConfig {
         }
 
         if (new SemVer(1, 15).compareTo(version) <= 0) {
-            baseFoodQuotient.put(EntityType.BEE, NO_BLOOD);
+            baseFoodQuotient.put(EntityType.valueOf("BEE"), NO_BLOOD);
         }
 
         if (new SemVer(1, 16).compareTo(version) <= 0) {
-            baseFoodQuotient.put(EntityType.STRIDER, NON_HUMAN);
-            baseFoodQuotient.put(EntityType.PIGLIN, HUMAN);
-            baseFoodQuotient.put(EntityType.HOGLIN, NON_HUMAN);
+            baseFoodQuotient.put(EntityType.valueOf("STRIDER"), NON_HUMAN);
+            baseFoodQuotient.put(EntityType.valueOf("PIGLIN"), HUMAN);
+            baseFoodQuotient.put(EntityType.valueOf("HOGLIN"), NON_HUMAN);
         }
     }
+    */
 
-    public PluginConfig() {
-        updateUndeadTypes();
-        updateFoodMap();
+    public PluginConfig(VampireRevamp plugin) {
+        this.plugin = plugin;
+        vCompat = plugin.getVersionCompat();
 
-        version = lastVersion;
-        general = new GeneralConfig();
+        version = LAST_VERSION;
+        general = new GeneralConfig(plugin);
         compatibility = new CompatConfig();
         specialEffects = new FXConfig();
-        vampire = new VampireConfig();
-        potionEffects = new PotionEffectsConfig();
-        truce = new TruceConfig();
-        infection = new InfectionConfig();
+        vampire = new VampireConfig(plugin);
+        potionEffects = new PotionEffectsConfig(plugin);
+        truce = new TruceConfig(plugin);
+        infection = new InfectionConfig(plugin);
         trade = new TradeConfig();
-        fullFoodQuotient = baseFoodQuotient;
-
-        holyWater = new HolyWaterConfig();
-        altar = new AltarConfig();
-        radiation = new RadiationConfig();
-        storage = new StorageConfig();
+        fullFoodQuotient = Arrays.stream(EntityType.values())
+                .filter(EntityType::isAlive)
+                .collect(Collectors.toMap(
+                        et -> et,
+                        (entityType) -> {
+                            if (entityType == EntityType.PLAYER)
+                                return PLAYER;
+                            if (vCompat.isGolem(entityType)
+                                    || vCompat.isSkeleton(entityType)
+                                    || vCompat.isSlime(entityType)
+                                    || vCompat.isArthropod(entityType)
+                                    || vCompat.isElemental(entityType)
+                                    || vCompat.isSpirit(entityType))
+                                return NO_BLOOD;
+                            if (vCompat.isBoss(entityType))
+                                return BOSS;
+                            if (vCompat.isHumanoid(entityType))
+                                return HUMAN;
+                            return NON_HUMAN;
+                        }));
+        holyWater = new HolyWaterConfig(plugin);
+        altar = new AltarConfig(plugin);
+        radiation = new RadiationConfig(plugin);
+        storage = new StorageConfig(plugin);
     }
 
-    public PluginConfig(FileConfiguration config) {
-        updateUndeadTypes();
-
+    public PluginConfig(VampireRevamp plugin, FileConfiguration config) {
         ConfigurationSection aux;
+        this.plugin = plugin;
+        vCompat = plugin.getVersionCompat();
 
-        version = config.getInt("version", lastVersion);
+        version = config.getInt("version", LAST_VERSION);
 
         aux = config.getConfigurationSection("general");
         if (aux != null) {
-            general = new GeneralConfig(aux);
+            general = new GeneralConfig(plugin, aux);
         }
         else {
-            general = new GeneralConfig();
+            general = new GeneralConfig(plugin);
         }
 
         aux = config.getConfigurationSection("compatibility");
@@ -386,34 +426,34 @@ public class PluginConfig {
 
         aux = config.getConfigurationSection("vampire");
         if (aux != null) {
-            vampire = new VampireConfig(aux);
+            vampire = new VampireConfig(plugin, aux);
         }
         else {
-            vampire = new VampireConfig();
+            vampire = new VampireConfig(plugin);
         }
 
         aux = config.getConfigurationSection("potionEffects");
         if (aux != null) {
-            potionEffects = new PotionEffectsConfig(aux);
+            potionEffects = new PotionEffectsConfig(plugin, aux);
         }
         else {
-            potionEffects = new PotionEffectsConfig();
+            potionEffects = new PotionEffectsConfig(plugin);
         }
 
         aux = config.getConfigurationSection("truce");
         if (aux != null) {
-            truce = new TruceConfig(aux);
+            truce = new TruceConfig(plugin, aux);
         }
         else {
-            truce = new TruceConfig();
+            truce = new TruceConfig(plugin);
         }
 
         aux = config.getConfigurationSection("infection");
         if (aux != null) {
-            infection = new InfectionConfig(aux);
+            infection = new InfectionConfig(plugin, aux);
         }
         else {
-            infection = new InfectionConfig();
+            infection = new InfectionConfig(plugin);
         }
 
         aux = config.getConfigurationSection("trade");
@@ -424,7 +464,7 @@ public class PluginConfig {
             trade = new TradeConfig();
         }
 
-        PluginConfig def = new PluginConfig();
+        PluginConfig def = new PluginConfig(plugin);
         Map<?, ?> auxffq = getMap(config, "fullFoodQuotient");
         Map<EntityType, Double> ffq = null;
 
@@ -432,13 +472,13 @@ public class PluginConfig {
             ffq = new HashMap<>();
             for (Map.Entry<?, ?> entry : auxffq.entrySet()) {
                 try {
-                    EntityType ent = EntityType.valueOf(((String) entry.getKey()).toUpperCase());
+                    EntityType ent = plugin.getVersionCompat().getEntityTypeByName((String) entry.getKey());;
                     double quotient = (Double) entry.getValue();
 
                     ffq.put(ent, quotient);
                 }
                 catch (IllegalArgumentException ex) {
-                    VampireRevamp.log(Level.WARNING, "EntityType " + entry.getKey() + " doesn't exist!");
+                    plugin.log(Level.WARNING, "EntityType " + entry.getKey() + " doesn't exist!");
                     ffq = null;
                     break;
                 }
@@ -452,34 +492,34 @@ public class PluginConfig {
 
         aux = config.getConfigurationSection("holyWater");
         if (aux != null) {
-            holyWater = new HolyWaterConfig(aux);
+            holyWater = new HolyWaterConfig(plugin, aux);
         }
         else {
-            holyWater = new HolyWaterConfig();
+            holyWater = new HolyWaterConfig(plugin);
         }
 
         aux = config.getConfigurationSection("altar");
         if (aux != null) {
-            altar = new AltarConfig(aux);
+            altar = new AltarConfig(plugin, aux);
         }
         else {
-            altar = new AltarConfig();
+            altar = new AltarConfig(plugin);
         }
 
         aux = config.getConfigurationSection("radiation");
         if (aux != null) {
-            radiation = new RadiationConfig(aux);
+            radiation = new RadiationConfig(plugin, aux);
         }
         else {
-            radiation = new RadiationConfig();
+            radiation = new RadiationConfig(plugin);
         }
 
         aux = config.getConfigurationSection("storage");
         if (aux != null) {
-            storage = new StorageConfig(aux);
+            storage = new StorageConfig(plugin, aux);
         }
         else {
-            storage = new StorageConfig();
+            storage = new StorageConfig(plugin);
         }
     }
 
@@ -497,42 +537,48 @@ public class PluginConfig {
         return auxMap;
     }
 
-    public static ItemStack getIngredient(Material material, int amount) {
-        return getIngredient(material, amount, null, false, false, (short) 0);
+    public static ItemStack getIngredient(VampireRevamp plugin, Material material, int amount) {
+        return getIngredient(plugin, material, amount, null, (short) 0);
     }
 
-    public static ItemStack getIngredient(Material material, int amount, short durability) {
-        return getIngredient(material, amount, null, false, false, durability);
+    public static ItemStack getIngredient(VampireRevamp plugin, Material material, int amount, int damage) {
+        return getIngredient(plugin, material, amount, null, damage);
     }
 
-    public static ItemStack getIngredient(Material material, int amount, PotionType type) {
-        return getIngredient(material, amount, type, false, false, (short) 0);
+    public static ItemStack getIngredient(VampireRevamp plugin, Material material, int amount, PotionType type) {
+        return getIngredient(plugin, material, amount, type, (short) 0);
     }
 
-    public static ItemStack getIngredient(Material material, int amount, PotionType type, boolean extended, boolean upgraded, short durability) {
+    public static ItemStack getIngredient(VampireRevamp plugin, Material material, int amount, PotionType type, int damage) {
         ItemStack ingredient;
-        if (new SemVer(1, 14).compareTo(VampireRevamp.getServerVersion()) <= 0) {
+        if (new SemVer(1, 14).compareTo(plugin.getServerVersion()) <= 0) {
             ingredient = new ItemStack(material, amount);
         }
         else {
-            ingredient = new ItemStack(material, amount, durability);
+            ingredient = new ItemStack(material, amount, (short) damage);
         }
 
-        if (material == Material.POTION || material == Material.LINGERING_POTION || material == Material.SPLASH_POTION) {
-            PotionData pd = new PotionData(type, extended, upgraded);
-            PotionMeta pm = (PotionMeta) ingredient.getItemMeta();
-            pm.setBasePotionData(pd);
-            ingredient.setItemMeta(pm);
+        ItemMeta meta = ingredient.getItemMeta();
+        if (meta == null)
+            return ingredient;
+        if (meta instanceof Damageable) {
+            Damageable dmg = (Damageable) meta;
+            dmg.setDamage(damage);
         }
+        if (meta instanceof PotionMeta) {
+            PotionMeta meth = (PotionMeta) meta;
+            plugin.getVersionCompat().setBasePotionType(meth, type);
+        }
+        ingredient.setItemMeta(meta);
 
         return ingredient;
     }
 
-    public static Set<ItemStack> getResources(@NotNull List<Map<String, Object>> rawsources) {
-        return getResources(rawsources, false);
+    public static Set<ItemStack> getResources(VampireRevamp plugin, @NotNull List<Map<String, Object>> rawsources) {
+        return getResources(plugin, rawsources, false);
     }
 
-    public static Set<ItemStack> getResources(List<Map<String, Object>> rawsources, boolean forceBlock) {
+    public static Set<ItemStack> getResources(VampireRevamp plugin, List<Map<String, Object>> rawsources, boolean forceBlock) {
         Set<ItemStack> resources = new HashSet<>();
 
         for (Map<String, Object> source : rawsources) {
@@ -541,61 +587,51 @@ public class PluginConfig {
             int amount = (Integer) source.getOrDefault("amount", 1);
 
             if (matName != null && amount > 0) {
-                Material material = Material.matchMaterial(matName);
+                Material material = plugin.getVersionCompat().getMaterialByName(matName);
 
                 if (material != null && (!forceBlock || material.isBlock())) {
-                    item = new ItemStack(material, amount);
                     if (source.containsKey("durability")) {
-                        if (new SemVer(1, 14).compareTo(VampireRevamp.getServerVersion()) > 0) {
+                        if (new SemVer(1, 14).compareTo(plugin.getServerVersion()) > 0) {
                             short durability = ((Integer) source.get("durability")).shortValue();
                             item = new ItemStack(material, amount, durability);
                         } else {
                             item = new ItemStack(material, amount);
-                            VampireRevamp.log(Level.WARNING, "Ignoring durability (only supported for versions prior 1.14). If you believe this is an error, please contact us in the Spigot discussion.");
+                            plugin.log(Level.WARNING, "Ignoring durability (only supported for versions prior 1.14). If you believe this is an error, please contact us in the Spigot discussion.");
                         }
                     }
                     else {
                         item = new ItemStack(material, amount);
                     }
 
-                    if (source.containsKey("meta") &&
-                            (material == Material.POTION ||
-                             material == Material.LINGERING_POTION ||
-                             material == Material.SPLASH_POTION)) {
+                    if (source.containsKey("meta") && item.getItemMeta() instanceof PotionMeta) {
+                        PotionMeta meth = (PotionMeta) item.getItemMeta();
                         PotionType type;
-                        boolean extended,
-                                upgraded;
                         Map<String, Object> meta = (Map<String, Object>) source.get("meta");
                         String typeName = (String) meta.get("type");
 
                         try {
                             type = PotionType.valueOf(typeName);
-                            extended = (Boolean) meta.getOrDefault("extended", false);
-                            upgraded = (Boolean) meta.getOrDefault("upgraded", false);
-
-                            PotionData pd = new PotionData(type, extended, upgraded);
-                            PotionMeta pm = (PotionMeta) item.getItemMeta();
-                            pm.setBasePotionData(pd);
-                            item.setItemMeta(pm);
+                            plugin.getVersionCompat().setBasePotionType(meth, type);
+                            item.setItemMeta(meth);
                         }
                         catch (IllegalArgumentException ex) {
-                            VampireRevamp.log(Level.WARNING, "PotionType " + typeName + " doesn't exist!");
+                            plugin.log(Level.WARNING, "PotionType " + typeName + " doesn't exist!");
                             item = null;
                         }
                     }
                     else if (source.containsKey("meta")) {
-                        VampireRevamp.log(Level.WARNING, "Ignoring meta (only supported for potions). If you believe this is an error, please contact us in the Spigot discussion.");
+                        plugin.log(Level.WARNING, "Ignoring meta (only supported for potions). If you believe this is an error, please contact us in the Spigot discussion.");
                     }
                 }
                 else {
                     if (forceBlock)
-                        VampireRevamp.log(Level.WARNING, "Material " + matName + " doesn't exist or is not a block!");
+                        plugin.log(Level.WARNING, "Material " + matName + " doesn't exist or is not a block!");
                     else
-                        VampireRevamp.log(Level.WARNING, "Material " + matName + " doesn't exist!");
+                        plugin.log(Level.WARNING, "Material " + matName + " doesn't exist!");
                 }
             }
             else {
-                VampireRevamp.log(Level.WARNING, "Bad Material name or amount!");
+                plugin.log(Level.WARNING, "Bad Material name or amount!");
             }
 
             if (item == null) {

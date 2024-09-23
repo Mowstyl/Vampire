@@ -36,10 +36,10 @@ public class VampireTypeChangeEvent extends Event {
         this.vampire = vampire;
     }
 
-    private final VPlayer uplayer;
+    private final VPlayer vPlayer;
 
-    public VPlayer getUplayer() {
-        return this.uplayer;
+    public VPlayer getVPlayer() {
+        return this.vPlayer;
     }
 
     // -------------------------------------------- //
@@ -48,7 +48,7 @@ public class VampireTypeChangeEvent extends Event {
 
     public VampireTypeChangeEvent(boolean vampire, VPlayer uplayer) {
         this.vampire = vampire;
-        this.uplayer = uplayer;
+        this.vPlayer = uplayer;
         this.cancel = false;
     }
 

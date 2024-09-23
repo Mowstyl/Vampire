@@ -14,15 +14,19 @@ import java.util.logging.Level;
 public class HolyItemConfig {
     public final double damageFactor;
     public final Set<Material> materials;
+    private final VampireRevamp plugin;
 
-    public HolyItemConfig() {
+
+    public HolyItemConfig(VampireRevamp plugin) {
+        this.plugin = plugin;
         damageFactor = 1.2;
         materials = new HashSet<>();
         materials.add(Material.STICK);
     }
 
-    public HolyItemConfig(@NotNull ConfigurationSection cs) {
-        HolyItemConfig def = new HolyItemConfig();
+    public HolyItemConfig(VampireRevamp plugin, @NotNull ConfigurationSection cs) {
+        this.plugin = plugin;
+        HolyItemConfig def = new HolyItemConfig(plugin);
 
         damageFactor = cs.getDouble("damageFactor", def.damageFactor);
         Set<Material> auxSMats = null;
@@ -30,9 +34,9 @@ public class HolyItemConfig {
             List<String> auxLMats = cs.getStringList("materials");
             auxSMats = new HashSet<>();
             for (String matName : auxLMats) {
-                Material aux = Material.matchMaterial(matName);
+                Material aux = plugin.getVersionCompat().getMaterialByName(matName);
                 if (aux == null)
-                    VampireRevamp.log(Level.WARNING, "Material " + matName + " doesn't exist!");
+                    plugin.log(Level.WARNING, "Material " + matName + " doesn't exist!");
                 else
                     auxSMats.add(aux);
             }

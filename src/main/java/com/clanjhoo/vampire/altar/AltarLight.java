@@ -1,7 +1,7 @@
 package com.clanjhoo.vampire.altar;
 
 import co.aikar.commands.MessageType;
-import com.clanjhoo.vampire.HolyWaterUtil;
+import com.clanjhoo.vampire.util.HolyWaterUtil;
 import com.clanjhoo.vampire.keyproviders.AltarMessageKeys;
 import com.clanjhoo.vampire.keyproviders.HolyWaterMessageKeys;
 import com.clanjhoo.vampire.Perm;
@@ -16,18 +16,20 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.PotionMeta;
 import org.bukkit.potion.PotionType;
 
-public class AltarLight extends Altar
-{
-	public AltarLight()
+public class AltarLight extends Altar {
+	private final HolyWaterUtil holyUtil;
+
+
+	public AltarLight(VampireRevamp plugin)
 	{
-		SingleAltarConfig lightAltar = VampireRevamp.getVampireConfig().altar.lightAltar;
+		SingleAltarConfig lightAltar = plugin.getVampireConfig().altar.lightAltar;
 		this.coreMaterial = lightAltar.coreMaterial;
-
 		this.materialCounts = lightAltar.buildMaterials;
-
 		this.resources = lightAltar.activate;
-
 		this.isDark = false;
+		this.plugin = plugin;
+		holyUtil = HolyWaterUtil.get(plugin);
+		resUtil = ResourceUtil.get(plugin);
 	}
 	
 	@Override
@@ -36,15 +38,15 @@ public class AltarLight extends Altar
 		boolean success = false;
 		watch(vPlayer, player);
 		
-		if (Perm.ALTAR_LIGHT.has(player, true)) {
+		if (resUtil.hasPermission(player, Perm.ALTAR_LIGHT, true)) {
 			if (!vPlayer.isVampire() && playerHoldsWaterBottle(player)) {
-				if (ResourceUtil.playerRemoveAttempt(player,
-						VampireRevamp.getVampireConfig().holyWater.resources,
+				if (resUtil.playerRemoveAttempt(player,
+						plugin.getVampireConfig().holyWater.resources,
 						HolyWaterMessageKeys.CREATE_SUCCESS,
 						HolyWaterMessageKeys.CREATE_FAIL)) {
-					Bukkit.getScheduler().scheduleSyncDelayedTask(VampireRevamp.getInstance(), () -> {
-						ResourceUtil.playerAdd(player, HolyWaterUtil.createHolyWater(player));
-						VampireRevamp.sendMessage(player,
+					Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, () -> {
+						ResourceUtil.playerAdd(player, holyUtil.createHolyWater(player));
+						plugin.sendMessage(player,
 								MessageType.INFO,
 								HolyWaterMessageKeys.CREATE_RESULT);
 						vPlayer.runFxEnderBurst();
@@ -53,18 +55,18 @@ public class AltarLight extends Altar
 				}
 			}
 			else {
-				VampireRevamp.sendMessage(player,
+				plugin.sendMessage(player,
 						MessageType.INFO,
 						AltarMessageKeys.ALTAR_LIGHT_COMMON);
 				vPlayer.runFxEnder();
 
 				if (vPlayer.isVampire()) {
-					if (ResourceUtil.playerRemoveAttempt(player,
+					if (resUtil.playerRemoveAttempt(player,
 							this.resources,
 							AltarMessageKeys.ACTIVATE_SUCCESS,
 							AltarMessageKeys.ACTIVATE_FAIL)) {
-						Bukkit.getScheduler().scheduleSyncDelayedTask(VampireRevamp.getInstance(), () -> {
-							VampireRevamp.sendMessage(player,
+						Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, () -> {
+							plugin.sendMessage(player,
 									MessageType.INFO,
 									AltarMessageKeys.ALTAR_LIGHT_VAMPIRE);
 							player.getWorld().strikeLightningEffect(player.getLocation().add(0, 3, 0));
@@ -74,11 +76,11 @@ public class AltarLight extends Altar
 						success = true;
 					}
 				} else if (vPlayer.isHealthy()) {
-					VampireRevamp.sendMessage(player,
+					plugin.sendMessage(player,
 							MessageType.INFO,
 							AltarMessageKeys.ALTAR_LIGHT_HEALTHY);
 				} else if (vPlayer.isInfected()) {
-					VampireRevamp.sendMessage(player,
+					plugin.sendMessage(player,
 							MessageType.INFO,
 							AltarMessageKeys.ALTAR_LIGHT_INFECTED);
 					vPlayer.setInfection(0);
@@ -90,7 +92,7 @@ public class AltarLight extends Altar
 		return success;
 	}
 	
-	protected static boolean playerHoldsWaterBottle(Player player)
+	protected boolean playerHoldsWaterBottle(Player player)
 	{
 		boolean holdsWater = false;
 
@@ -98,7 +100,7 @@ public class AltarLight extends Altar
 			ItemStack item = player.getInventory().getItemInMainHand();
 			if (item != null && item.getType() == Material.POTION && item.hasItemMeta() && item.getItemMeta() instanceof PotionMeta) {
 				PotionMeta potionMeta = (PotionMeta) item.getItemMeta();
-				holdsWater = potionMeta.getBasePotionData().getType() == PotionType.WATER;
+				holdsWater = plugin.getVersionCompat().getBasePotionType(potionMeta) == PotionType.WATER;
 			}
 		}
 

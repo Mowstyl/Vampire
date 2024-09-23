@@ -13,36 +13,50 @@ import java.io.BufferedWriter;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Level;
 
 public class HolyWaterConfig {
     public final int splashRadius;
     public final double temperature;
     public final Set<ItemStack> resources;
+    private final VampireRevamp plugin;
 
-    public HolyWaterConfig() {
+
+    public HolyWaterConfig(VampireRevamp plugin) {
+        this.plugin = plugin;
         splashRadius = 6;
         temperature = 0.7;
         resources = CollectionUtil.set(
-                PluginConfig.getIngredient(Material.POTION, 1, PotionType.WATER)
+                PluginConfig.getIngredient(plugin, Material.POTION, 1, PotionType.WATER)
         );
 
-        if (new SemVer(1, 14).compareTo(VampireRevamp.getServerVersion()) <= 0) {
-            resources.add(PluginConfig.getIngredient(Material.LAPIS_LAZULI, 1));
+        String lapisMaterial = "LAPIS_LAZULI";
+        short lapisDamage = 0;
+        if (plugin.getServerVersion().compareTo(new SemVer(1, 14)) < 0) {
+            lapisMaterial = "INK_SACK";
+            lapisDamage = 4;
         }
-        else {
-            resources.add(PluginConfig.getIngredient(Material.getMaterial("INK_SACK"), 1, (short) 4));
-        }
+        resources.add(PluginConfig.getIngredient(plugin, Material.valueOf(lapisMaterial), 1, lapisDamage));
     }
 
-    public HolyWaterConfig(@NotNull ConfigurationSection cs) {
-        HolyWaterConfig def = new HolyWaterConfig();
+    public HolyWaterConfig(VampireRevamp plugin, @NotNull ConfigurationSection cs) {
+        this.plugin = plugin;
+        HolyWaterConfig def = new HolyWaterConfig(plugin);
 
         splashRadius = cs.getInt("splashRadius", def.splashRadius);
         temperature = cs.getDouble("temperature", def.temperature);
 
         Set<ItemStack> resset = null;
         if (cs.contains("resources")) {
-            resset = PluginConfig.getResources((List<Map<String, Object>>) cs.getList("resources"));
+            List<?> resources = cs.getList("resources");
+            try {
+                if (resources != null) {
+                    resset = PluginConfig.getResources(plugin, (List<Map<String, Object>>) resources);
+                }
+            }
+            catch (ClassCastException ex) {
+                plugin.log(Level.WARNING, "Wrong format for resources in holy water config");
+            }
         }
         resources = resset != null ? resset : def.resources;
     }

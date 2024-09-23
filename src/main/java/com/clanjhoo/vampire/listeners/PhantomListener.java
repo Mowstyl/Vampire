@@ -10,7 +10,17 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 
+import java.time.ZonedDateTime;
+import java.util.UUID;
+
 public class PhantomListener implements Listener {
+
+    private final VampireRevamp plugin;
+
+
+    public PhantomListener(VampireRevamp plugin) {
+        this.plugin = plugin;
+    }
     // -------------------------------------------- //
     // INSTANCE & CONSTRUCT
     // -------------------------------------------- //
@@ -21,11 +31,14 @@ public class PhantomListener implements Listener {
 
     @EventHandler(priority = EventPriority.NORMAL)
     public void onPhantomSpawn(CreatureSpawnEvent e) {
-        if ((e.getEntity() instanceof Phantom phan) && e.getSpawnReason() == CreatureSpawnEvent.SpawnReason.NATURAL) {
-            if (phan.getSpawningEntity() != null) {
-                Player player = Bukkit.getPlayer(phan.getSpawningEntity());
-                VPlayer vPlayer = VampireRevamp.getVPlayer(player);
-                if (vPlayer != null && vPlayer.isVampire() && !vPlayer.truceIsBroken(System.currentTimeMillis())) {
+        if ((e.getEntity() instanceof Phantom) && e.getSpawnReason() == CreatureSpawnEvent.SpawnReason.NATURAL) {
+            Phantom phan = (Phantom) e.getEntity();
+            UUID playerUUID = phan.getSpawningEntity();
+            if (playerUUID != null) {
+                Player player = Bukkit.getPlayer(playerUUID);
+                VPlayer vPlayer = plugin.getVPlayer(player);
+                long now = ZonedDateTime.now().toInstant().toEpochMilli();
+                if (vPlayer != null && vPlayer.isVampire() && !vPlayer.truceIsBroken(now)) {
                     e.setCancelled(true);
                 }
             }

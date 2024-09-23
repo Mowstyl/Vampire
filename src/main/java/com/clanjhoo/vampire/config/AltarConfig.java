@@ -1,8 +1,8 @@
 package com.clanjhoo.vampire.config;
 
 import com.clanjhoo.vampire.VampireRevamp;
+import com.clanjhoo.vampire.compat.VersionCompat;
 import com.clanjhoo.vampire.util.CollectionUtil;
-import com.clanjhoo.vampire.util.SemVer;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.inventory.ItemStack;
@@ -12,17 +12,23 @@ import java.io.BufferedWriter;
 import java.util.Map;
 import java.util.Set;
 
+
 public class AltarConfig {
     public final int searchRadius;
     public final int minRatioForInfo;
     public final boolean checkIfBlockInHand;
     public final SingleAltarConfig darkAltar;
     public final SingleAltarConfig lightAltar;
+    private final VampireRevamp plugin;
 
-    public AltarConfig() {
+
+    public AltarConfig(VampireRevamp plugin) {
+        this.plugin = plugin;
         searchRadius = 10;
         minRatioForInfo = 0;
         checkIfBlockInHand = true;
+
+        VersionCompat vCompat = plugin.getVersionCompat();
         Map<Material, Integer> buildDark = CollectionUtil.map(
                 Material.OBSIDIAN, 30,
                 Material.DEAD_BUSH, 5,
@@ -30,22 +36,16 @@ public class AltarConfig {
                 Material.GOLD_BLOCK, 1
         );
         Set<ItemStack> activateDark = CollectionUtil.set(
-                PluginConfig.getIngredient(Material.BONE, 10),
-                PluginConfig.getIngredient(Material.REDSTONE, 10)
+                PluginConfig.getIngredient(plugin, Material.BONE, 10),
+                PluginConfig.getIngredient(plugin, Material.REDSTONE, 10)
         );
 
-        if (new SemVer(1, 13).compareTo(VampireRevamp.getServerVersion()) <= 0) {
-            buildDark.put(Material.COBWEB, 5);
-            activateDark.add(PluginConfig.getIngredient(Material.MUSHROOM_STEW, 1));
-            activateDark.add(PluginConfig.getIngredient(Material.GUNPOWDER, 10));
-        }
-        else {
-            buildDark.put(Material.getMaterial("WEB"), 5);
-            activateDark.add(PluginConfig.getIngredient(Material.getMaterial("MUSHROOM_SOUP"), 1));
-            activateDark.add(PluginConfig.getIngredient(Material.getMaterial("SULPHUR"), 10));
-        }
+        buildDark.put(Material.COBWEB, 5);
+        activateDark.add(PluginConfig.getIngredient(plugin, vCompat.getMaterialByName("mushroom_stew"), 1));
+        activateDark.add(PluginConfig.getIngredient(plugin, vCompat.getMaterialByName("gunpowder"), 10));
 
         darkAltar = new SingleAltarConfig(
+                plugin,
                 Material.GOLD_BLOCK,
                 buildDark,
                 activateDark
@@ -58,35 +58,31 @@ public class AltarConfig {
                 Material.LAPIS_BLOCK, 1
         );
 
-        if (new SemVer(1, 13).compareTo(VampireRevamp.getServerVersion()) <= 0) {
-            buildLight.put(Material.POPPY, 5);
-            buildLight.put(Material.DANDELION, 5);
-        }
-        else {
-            buildLight.put(Material.getMaterial("RED_ROSE"), 5);
-            buildLight.put(Material.getMaterial("YELLOW_FLOWER"), 5);
-        }
+        buildLight.put(vCompat.getMaterialByName("poppy"), 5);
+        buildLight.put(vCompat.getMaterialByName("dandelion"), 5);
 
         lightAltar = new SingleAltarConfig(
+                plugin,
                 Material.LAPIS_BLOCK,
                 buildLight,
                 CollectionUtil.set(
-                        PluginConfig.getIngredient(Material.WATER_BUCKET, 1),
-                        PluginConfig.getIngredient(Material.DIAMOND, 1),
-                        PluginConfig.getIngredient(Material.SUGAR, 20),
-                        PluginConfig.getIngredient(Material.WHEAT, 20)
+                        PluginConfig.getIngredient(plugin, Material.WATER_BUCKET, 1),
+                        PluginConfig.getIngredient(plugin, Material.DIAMOND, 1),
+                        PluginConfig.getIngredient(plugin, Material.SUGAR, 20),
+                        PluginConfig.getIngredient(plugin, Material.WHEAT, 20)
                 )
         );
     }
 
-    public AltarConfig(@NotNull ConfigurationSection cs) {
-        AltarConfig def = new AltarConfig();
+    public AltarConfig(VampireRevamp plugin, @NotNull ConfigurationSection cs) {
+        this.plugin = plugin;
+        AltarConfig def = new AltarConfig(plugin);
 
         searchRadius = cs.getInt("searchRadius", def.searchRadius);
         minRatioForInfo = cs.getInt("minRatioForInfo", def.minRatioForInfo);
         checkIfBlockInHand = cs.getBoolean("checkIfBlockInHand", def.checkIfBlockInHand);
-        darkAltar = def.darkAltar.getSingleAltarConfig(cs.getConfigurationSection("darkAltar"));
-        lightAltar = def.lightAltar.getSingleAltarConfig(cs.getConfigurationSection("lightAltar"));
+        darkAltar = def.darkAltar.getSingleAltarConfig(plugin, cs.getConfigurationSection("darkAltar"));
+        lightAltar = def.lightAltar.getSingleAltarConfig(plugin, cs.getConfigurationSection("lightAltar"));
     }
 
     protected boolean saveConfigToFile(BufferedWriter configWriter, String indent, int level) {

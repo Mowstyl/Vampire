@@ -16,15 +16,14 @@ import org.bukkit.potion.PotionEffectType;
 import java.util.UUID;
 
 public class AltarDark extends Altar {
-    public AltarDark() {
-        SingleAltarConfig darkAltar = VampireRevamp.getVampireConfig().altar.darkAltar;
+    public AltarDark(VampireRevamp plugin) {
+        SingleAltarConfig darkAltar = plugin.getVampireConfig().altar.darkAltar;
         this.coreMaterial = darkAltar.coreMaterial;
-
         this.materialCounts = darkAltar.buildMaterials;
-
         this.resources = darkAltar.activate;
-
         this.isDark = true;
+        this.plugin = plugin;
+        resUtil = ResourceUtil.get(plugin);
     }
 
     @Override
@@ -32,17 +31,17 @@ public class AltarDark extends Altar {
         boolean success = false;
         watch(vPlayer, player);
 
-        if (Perm.ALTAR_DARK.has(player, true)) {
-            VampireRevamp.sendMessage(player,
+        if (resUtil.hasPermission(player, Perm.ALTAR_DARK, true)) {
+            plugin.sendMessage(player,
                     MessageType.INFO,
                     AltarMessageKeys.ALTAR_DARK_COMMON);
             FxUtil.ensure(PotionEffectType.BLINDNESS, player, 12 * 20);
             vPlayer.runFxSmoke();
 
             if (vPlayer.isHealthy()) {
-                if (ResourceUtil.playerRemoveAttempt(player, this.resources, AltarMessageKeys.ACTIVATE_SUCCESS, AltarMessageKeys.ACTIVATE_FAIL)) {
-                    Bukkit.getScheduler().scheduleSyncDelayedTask(VampireRevamp.getInstance(), () -> {
-                        VampireRevamp.sendMessage(player,
+                if (resUtil.playerRemoveAttempt(player, this.resources, AltarMessageKeys.ACTIVATE_SUCCESS, AltarMessageKeys.ACTIVATE_FAIL)) {
+                    Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, () -> {
+                        plugin.sendMessage(player,
                                 MessageType.INFO,
                                 AltarMessageKeys.ALTAR_DARK_HEALTHY);
                         player.getWorld().strikeLightningEffect(player.getLocation().add(0, 3, 0));
@@ -52,11 +51,11 @@ public class AltarDark extends Altar {
                     success = true;
                 }
             } else if (vPlayer.isVampire()) {
-                VampireRevamp.sendMessage(player,
+                plugin.sendMessage(player,
                         MessageType.INFO,
                         AltarMessageKeys.ALTAR_DARK_VAMPIRE);
             } else if (vPlayer.isInfected()) {
-                VampireRevamp.sendMessage(player,
+                plugin.sendMessage(player,
                         MessageType.INFO,
                         AltarMessageKeys.ALTAR_DARK_INFECTED);
             }

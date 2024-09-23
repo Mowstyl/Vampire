@@ -1,15 +1,17 @@
 [plugins]
 shadowPlugin = { id = "com.gradleup.shadow", version.ref = "shadowGradlePlugin" }
 generatePOMPlugin = { id = "ru.vyarus.java-lib", version.ref = "generatePOMGradlePlugin" }
+spotBugsPlugin = { id = "com.github.spotbugs", version.ref = "spotBugsGradlePlugin" }
 
 [versions]
 shadowGradlePlugin = "8.3.0"
 generatePOMGradlePlugin = "3.0.0"
+spotBugsGradlePlugin = "6.0.20"
 bukkitAPI = "1.20.4-R0.1-SNAPSHOT"
-dbHandler = "4.0.2"
+dbHandler = "4.0.3"
 acfPaper = "0.5.1-SNAPSHOT"
 worldEdit = "7.2.0-SNAPSHOT"
-worldGuard = "7.1.0-SNAPSHOT"
+worldGuard = "7.0.0"
 libsDisguises = "10.0.42"
 placeholderAPI = "2.11.6"
 vaultAPI = "1.7.1"

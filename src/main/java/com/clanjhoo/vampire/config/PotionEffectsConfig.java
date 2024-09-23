@@ -1,5 +1,6 @@
 package com.clanjhoo.vampire.config;
 
+import com.clanjhoo.vampire.VampireRevamp;
 import com.clanjhoo.vampire.entity.VPlayer;
 import com.clanjhoo.vampire.util.CollectionUtil;
 import org.bukkit.configuration.ConfigurationSection;
@@ -10,6 +11,7 @@ import org.jetbrains.annotations.NotNull;
 import java.io.BufferedWriter;
 import java.util.HashMap;
 
+
 public class PotionEffectsConfig {
     public final int seconds;
     public final StateEffectConfig bloodlust;
@@ -18,25 +20,29 @@ public class PotionEffectsConfig {
     public final StateEffectConfig vampire;
     public final StateEffectConfig infected;
     public final StateEffectConfig human;
+    private final VampireRevamp plugin;
 
-    public PotionEffectsConfig() {
+
+    public PotionEffectsConfig(VampireRevamp plugin) {
+        this.plugin = plugin;
         seconds = 15;
         bloodlust = getBloodlust();
-        bloodlust.passesChecks = VPlayer::isBloodlusting;
+        bloodlust.setPassesChecks(VPlayer::isBloodlusting);
         nightvision = getNightvision();
-        nightvision.passesChecks = VPlayer::isUsingNightVision;
+        nightvision.setPassesChecks(VPlayer::isUsingNightVision);
         nosferatu = getNosferatu();
-        nosferatu.passesChecks = VPlayer::canHaveNosferatuEffects;
+        nosferatu.setPassesChecks(VPlayer::canHaveNosferatuEffects);
         vampire = getVampire();
-        vampire.passesChecks = VPlayer::canHaveVampireEffects;
+        vampire.setPassesChecks(VPlayer::canHaveVampireEffects);
         infected = getInfected();
-        infected.passesChecks = VPlayer::isInfected;
+        infected.setPassesChecks(VPlayer::isInfected);
         human = getHuman();
-        human.passesChecks = VPlayer::isHuman;
+        human.setPassesChecks(VPlayer::isHuman);
     }
 
-    public PotionEffectsConfig(@NotNull ConfigurationSection cs) {
-        PotionEffectsConfig def = new PotionEffectsConfig();
+    public PotionEffectsConfig(VampireRevamp plugin, @NotNull ConfigurationSection cs) {
+        this.plugin = plugin;
+        PotionEffectsConfig def = new PotionEffectsConfig(plugin);
 
         seconds = cs.getInt("seconds", def.seconds);
         bloodlust = def.bloodlust.getStateEffectConfig(cs.getConfigurationSection("bloodlust"));
@@ -68,16 +74,18 @@ public class PotionEffectsConfig {
 
     private StateEffectConfig getBloodlust() {
         return new StateEffectConfig(
+                plugin,
                 EventPriority.HIGHEST,
                 CollectionUtil.map(
                         PotionEffectType.SPEED, 3,
-                        PotionEffectType.JUMP, 4
+                        plugin.getVersionCompat().getPotionEffectByName("jump_boost"), 4
                 )
         );
     }
 
     private StateEffectConfig getNightvision() {
         return new StateEffectConfig(
+                plugin,
                 EventPriority.HIGH,
                 CollectionUtil.map(
                         PotionEffectType.NIGHT_VISION, 1
@@ -87,27 +95,30 @@ public class PotionEffectsConfig {
 
     private StateEffectConfig getNosferatu() {
         return new StateEffectConfig(
+                plugin,
                 EventPriority.NORMAL,
                 CollectionUtil.map(
                         PotionEffectType.REGENERATION, 3,
                         PotionEffectType.SPEED, 1,
-                        PotionEffectType.JUMP, 2
+                        plugin.getVersionCompat().getPotionEffectByName("jump_boost"), 2
                 )
         );
     }
 
     private StateEffectConfig getVampire() {
         return new StateEffectConfig(
+                plugin,
                 EventPriority.NORMAL,
                 CollectionUtil.map(
                         PotionEffectType.SPEED, 1,
-                        PotionEffectType.JUMP, 1
+                        plugin.getVersionCompat().getPotionEffectByName("jump_boost"), 1
                 )
         );
     }
 
     private StateEffectConfig getInfected() {
         return new StateEffectConfig(
+                plugin,
                 EventPriority.NORMAL,
                 new HashMap<>()
         );
@@ -115,6 +126,7 @@ public class PotionEffectsConfig {
 
     private StateEffectConfig getHuman() {
         return new StateEffectConfig(
+                plugin,
                 EventPriority.NORMAL,
                 new HashMap<>()
         );

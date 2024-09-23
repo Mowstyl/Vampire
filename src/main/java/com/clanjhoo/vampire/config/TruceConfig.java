@@ -1,30 +1,40 @@
 package com.clanjhoo.vampire.config;
 
 import com.clanjhoo.vampire.VampireRevamp;
+import com.clanjhoo.vampire.compat.VersionCompat;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.EntityType;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.BufferedWriter;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
+import java.util.stream.Collectors;
+
 
 public class TruceConfig {
     public final int breakMillis;
     public final boolean checkGamemode;
     public final Set<EntityType> entityTypes;
+    private final VampireRevamp plugin;
 
-    public TruceConfig() {
+
+    public TruceConfig(VampireRevamp plugin) {
+        this.plugin = plugin;
         breakMillis = 60000;
         checkGamemode = false;
-        entityTypes = new HashSet<>(PluginConfig.undeadTypes);
-        entityTypes.remove(EntityType.WITHER);
+        VersionCompat vc = plugin.getVersionCompat();
+        entityTypes = Arrays.stream(EntityType.values())
+                .filter(et -> !vc.isBoss(et) && (vc.isUndead(et) || vc.isSpirit(et)))
+                .collect(Collectors.toSet());
     }
 
-    public TruceConfig(@NotNull ConfigurationSection cs) {
-        TruceConfig def = new TruceConfig();
+    public TruceConfig(VampireRevamp plugin, @NotNull ConfigurationSection cs) {
+        this.plugin = plugin;
+        TruceConfig def = new TruceConfig(plugin);
 
         breakMillis = cs.getInt("breakMillis", def.breakMillis);
 
@@ -36,11 +46,11 @@ public class TruceConfig {
             auxSEnts = new HashSet<>();
             for (String entName : auxLEnts) {
                 try {
-                    EntityType aux = EntityType.valueOf(entName);
+                    EntityType aux = plugin.getVersionCompat().getEntityTypeByName(entName);
                     auxSEnts.add(aux);
                 }
                 catch (IllegalArgumentException ex) {
-                    VampireRevamp.log(Level.WARNING, "EntityType " + entName + " doesn't exist!");
+                    plugin.log(Level.WARNING, "EntityType " + entName + " doesn't exist!");
                 }
             }
         }

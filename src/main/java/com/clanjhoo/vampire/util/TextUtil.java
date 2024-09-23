@@ -18,22 +18,34 @@ import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
-import org.checkerframework.checker.nullness.qual.NonNull;
+import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 
 public class TextUtil {
+    private final static Map<String, TextUtil> instances = new ConcurrentHashMap<>(1);
     public static final Pattern PATTERN_NEWLINE = Pattern.compile("\\r?\\n");
 
+    private final VampireRevamp plugin;
+    private final ResourceUtil resUtil;
 
-    public static Component capitalizeFirst(@NonNull Component text) {
+
+    private TextUtil(VampireRevamp plugin) {
+        this.plugin = plugin;
+        resUtil = ResourceUtil.get(plugin);
+    }
+
+    public static TextUtil get(VampireRevamp plugin) {
+        return instances.computeIfAbsent(plugin.getName(), (k) -> new TextUtil(plugin));
+    }
+
+    public static Component capitalizeFirst(@NotNull Component text) {
         GsonComponentSerializer serializer = GsonComponentSerializer.gson();
         String rawText = serializer.serialize(text);
-        JsonElement jsonText = JsonParser.parseString(rawText);
+        JsonParser jsonParser = new JsonParser();
+        JsonElement jsonText = jsonParser.parse(rawText);
         return serializer.deserialize(capitalizeFirst(jsonText).toString());
     }
 
@@ -42,7 +54,8 @@ public class TextUtil {
             String aux = capitalizeFirst(jsonText.getAsString());
             if (aux.contains(" "))
                 aux = "\"" + aux + "\"";
-            return JsonParser.parseString(aux);
+            JsonParser jsonParser = new JsonParser();
+            return jsonParser.parse(aux);
         }
         JsonObject root = jsonText.getAsJsonObject();
         if (root.has("text")) {
@@ -60,7 +73,7 @@ public class TextUtil {
         throw new IllegalArgumentException("Unknown JSON structure, please contact the dev");
     }
 
-    public static String capitalizeFirst(@NonNull String text) {
+    public static String capitalizeFirst(@NotNull String text) {
         return text.substring(0, 1).toUpperCase() + text.substring(1);
     }
 
@@ -77,10 +90,10 @@ public class TextUtil {
         return ret;
     }
 
-    public static Component getPlayerInfoHeader(boolean isVampire, boolean isNosferatu, Component playerName, CommandSender sender) {
+    public Component getPlayerInfoHeader(boolean isVampire, boolean isNosferatu, Component playerName, CommandSender sender) {
         Component start = Component.text("_______.[ ", NamedTextColor.GOLD);
 
-        Component playerStr = VampireRevamp.getMessage(sender, GrammarMessageKeys.PLAYER);
+        Component playerStr = plugin.getMessage(sender, GrammarMessageKeys.PLAYER);
         playerStr = capitalizeFirst(playerStr)
                 .append(Component.text(" "))
                 .color(isVampire
@@ -104,29 +117,38 @@ public class TextUtil {
     }
 
     public static List<Component> getPluginDescription(Plugin plugin) {
-        Component header = getPluginDescriptionHeader();
-        Component name = Component.text("Name: ", NamedTextColor.LIGHT_PURPLE)
-                .append(Component.text(plugin.getDescription().getName(), NamedTextColor.AQUA));
+        List<Component> description = new ArrayList<>(6);
 
-        Component version = Component.text("Version: ", NamedTextColor.LIGHT_PURPLE)
-                .append(Component.text(plugin.getDescription().getVersion(), NamedTextColor.AQUA));
+        description.add(getPluginDescriptionHeader());
 
-        Component website = Component.text("Website: ", NamedTextColor.LIGHT_PURPLE)
-                .append(Component.text(plugin.getDescription().getWebsite(), NamedTextColor.AQUA)
-                        .clickEvent(ClickEvent.openUrl(plugin.getDescription().getWebsite())));
+        description.add(Component.text("Name: ", NamedTextColor.LIGHT_PURPLE)
+                .append(Component.text(plugin.getDescription().getName(), NamedTextColor.AQUA)));
 
-        Component authors = Component.text("Authors: ", NamedTextColor.LIGHT_PURPLE)
+        description.add(Component.text("Version: ", NamedTextColor.LIGHT_PURPLE)
+                .append(Component.text(plugin.getDescription().getVersion(), NamedTextColor.AQUA)));
+
+        String rawWebsite = plugin.getDescription().getDescription();
+        if (rawWebsite != null) {
+            description.add(Component.text("Website: ", NamedTextColor.LIGHT_PURPLE)
+                    .append(Component.text(rawWebsite, NamedTextColor.AQUA)
+                            .clickEvent(ClickEvent.openUrl(rawWebsite))));
+        }
+
+        description.add(Component.text("Authors: ", NamedTextColor.LIGHT_PURPLE)
                 .append(Component.text(
                         String.join(", ", plugin.getDescription().getAuthors()),
-                        NamedTextColor.AQUA));
+                        NamedTextColor.AQUA)));
 
-        Component description = Component.text("Description: ", NamedTextColor.LIGHT_PURPLE)
-                .append(Component.text(plugin.getDescription().getDescription(), NamedTextColor.YELLOW));
+        String rawDescription = plugin.getDescription().getDescription();
+        if (rawDescription != null) {
+            description.add(Component.text("Description: ", NamedTextColor.LIGHT_PURPLE)
+                    .append(Component.text(rawDescription, NamedTextColor.YELLOW)));
+        }
 
-        return List.of(header, name, version, website, authors, description);
+        return description;
     }
 
-    public static Component getCommandHelp(String command, RegisteredCommand<?> regCommand, CommandSender sender, int requireVampire) {
+    public Component getCommandHelp(String command, RegisteredCommand<?> regCommand, CommandSender sender, int requireVampire) {
         String commandStr = "/v";
         boolean isSuggestion = true;
 
@@ -148,16 +170,16 @@ public class TextUtil {
 
         Component params = Component.text(" " + command);
         if (sender instanceof Player) {
-            VPlayer vPlayer = VampireRevamp.getVPlayer(((Player) sender));
+            VPlayer vPlayer = plugin.getVPlayer(((Player) sender));
             int vampireLevel = (vPlayer == null || vPlayer.isHuman()) ? 0 : (vPlayer.isNosferatu() ? 2 : 1);
             boolean hasRequiredVLevel = requireVampire <= vampireLevel;
             if (!command.equals("vampire") && !command.equals("nosferatu")) {
                 Perm permission = Perm.getPermFromString(command);
                 if (permission == null) {
                     params = params.color(NamedTextColor.DARK_RED);
-                } else if (permission.has(sender) && hasRequiredVLevel) {
+                } else if (resUtil.hasPermission(sender, permission) && hasRequiredVLevel) {
                     params = params.color(NamedTextColor.AQUA);
-                } else if (permission.has(sender)) {
+                } else if (resUtil.hasPermission(sender, permission)) {
                     params = params.color(NamedTextColor.YELLOW);
                 } else {
                     params = params.color(NamedTextColor.RED);
@@ -167,9 +189,9 @@ public class TextUtil {
                 Perm permission2 = Perm.getPermFromString(command + " off");
                 if (permission1 == null || permission2 == null) {
                     params = params.color(NamedTextColor.DARK_RED);
-                } else if (permission1.has(sender) && permission2.has(sender)) {
+                } else if (resUtil.hasPermission(sender, permission1) && resUtil.hasPermission(sender, permission2)) {
                     params = params.color(NamedTextColor.AQUA);
-                } else if (permission1.has(sender) || permission2.has(sender)) {
+                } else if (resUtil.hasPermission(sender, permission1) || resUtil.hasPermission(sender, permission2)) {
                     params = params.color(NamedTextColor.YELLOW);
                 } else {
                     params = params.color(NamedTextColor.RED);
@@ -181,7 +203,7 @@ public class TextUtil {
         if (!command.equals("set")) {
             extra = Component.text(" " + regCommand.getSyntaxText(), NamedTextColor.DARK_AQUA)
                     .append(Component.text(" "))
-                    .append(VampireRevamp.getMessage(sender,
+                    .append(plugin.getMessage(sender,
                                     CommandMessageKeys.getProviderFromCommand(fullCowl.substring(3)))
                                     .color(NamedTextColor.YELLOW));
         }
@@ -206,10 +228,10 @@ public class TextUtil {
         return hovers;
     }
 
-    public static Component getHelpHeader(CommandHelp help, int maxPages, String command, CommandSender sender) {
+    public Component getHelpHeader(CommandHelp help, int maxPages, String command, CommandSender sender) {
         Component start = Component.text("_______.[ ", NamedTextColor.GOLD);
 
-        Component helpHeader = VampireRevamp.getMessage(sender,
+        Component helpHeader = plugin.getMessage(sender,
                         CommandMessageKeys.COMMAND_HELP_HEADER,
                         "{command}", command)
                 .color(NamedTextColor.DARK_GREEN);

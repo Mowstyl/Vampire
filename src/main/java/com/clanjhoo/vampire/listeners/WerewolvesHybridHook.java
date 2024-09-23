@@ -15,28 +15,38 @@ import us.rfsmassacre.Werewolf.WerewolfAPI;
 
 import java.util.logging.Level;
 
+
 public class WerewolvesHybridHook implements Listener {
     private boolean initialized = false;
+    private final VampireRevamp plugin;
 
-    private boolean initialize() {
+
+    public WerewolvesHybridHook(VampireRevamp plugin) {
+        this.plugin = plugin;
+        plugin.log(Level.INFO, "Enabled Werewolves hybrid compatibility!");
+    }
+
+    private boolean checkWerewolf() {
+        if (initialized)
+            return true;
         boolean isWerewolfEnabled = Bukkit.getPluginManager().isPluginEnabled("Werewolf");
-        if (!isWerewolfEnabled)
+        if (!isWerewolfEnabled) {
+            plugin.log(Level.WARNING, "Werewolf plugin has been disabled. Disabled hybrid prevention");
             HandlerList.unregisterAll(this);
+        }
         initialized = true;
         return isWerewolfEnabled;
     }
 
     @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
     public void onInfectionChange(InfectionChangeEvent event) {
-        if (!initialized) {
-            if (!initialize())
-                return;
-            VampireRevamp.log(Level.INFO, "Enabled Werewolves hybrid compatibility!");
-        }
-        if (!VampireRevamp.getVampireConfig().compatibility.preventWerewolfHybrids)
+        if (!checkWerewolf())
             return;
 
-        VPlayer uplayer = event.getUplayer();
+        if (!plugin.getVampireConfig().compatibility.preventWerewolfHybrids)
+            return;
+
+        VPlayer uplayer = event.getVPlayer();
         if (uplayer == null) {
             event.setCancelled(true);
             return;
@@ -48,25 +58,23 @@ public class WerewolvesHybridHook implements Listener {
             return;
         }
 
-        VampireRevamp.debugLog(Level.INFO, "Infection: " + event.getInfection());
+        plugin.debugLog(Level.INFO, "Infection: " + event.getInfection());
 
         if (WerewolfAPI.isWerewolf(player) && event.getInfection() != 0) {
-            VampireRevamp.debugLog(Level.INFO, "Cancelled!");
+            plugin.debugLog(Level.INFO, "Cancelled!");
             event.setCancelled(true);
         }
     }
 
     @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
     public void onTypeChange(VampireTypeChangeEvent event) {
-        if (!initialized) {
-            if (!initialize())
-                return;
-            VampireRevamp.log(Level.INFO, "Enabled Werewolves hybrid compatibility!");
-        }
-        if (!VampireRevamp.getVampireConfig().compatibility.preventWerewolfHybrids)
+        if (!checkWerewolf())
             return;
 
-        VPlayer uplayer = event.getUplayer();
+        if (!plugin.getVampireConfig().compatibility.preventWerewolfHybrids)
+            return;
+
+        VPlayer uplayer = event.getVPlayer();
         if (uplayer == null) {
             event.setCancelled(true);
             return;
@@ -78,22 +86,20 @@ public class WerewolvesHybridHook implements Listener {
             return;
         }
 
-        VampireRevamp.debugLog(Level.INFO, "Vampire: " + event.isVampire());
+        plugin.debugLog(Level.INFO, "Vampire: " + event.isVampire());
 
         if (WerewolfAPI.isWerewolf(player) && event.isVampire()) {
-            VampireRevamp.debugLog(Level.INFO, "Cancelled!");
+            plugin.debugLog(Level.INFO, "Cancelled!");
             event.setCancelled(true);
         }
     }
 
     @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
     public void onWerewolfInfection(WerewolfInfectionEvent event) {
-        if (!initialized) {
-            if (!initialize())
-                return;
-            VampireRevamp.log(Level.INFO, "Enabled Werewolves hybrid compatibility!");
-        }
-        if (!VampireRevamp.getVampireConfig().compatibility.preventWerewolfHybrids)
+        if (!checkWerewolf())
+            return;
+
+        if (!plugin.getVampireConfig().compatibility.preventWerewolfHybrids)
             return;
 
         Player player = event.getPlayer();
@@ -102,10 +108,10 @@ public class WerewolvesHybridHook implements Listener {
             return;
         }
 
-        VPlayer vPlayer = VampireRevamp.getVPlayer(player);
+        VPlayer vPlayer = plugin.getVPlayer(player);
         if (vPlayer == null) {
             player.sendMessage("You seem resistant to werewolf infection somehow... Please contact an admin if this error persists.");
-            VampireRevamp.log(Level.WARNING, "Couldn't get data of player " + player.getName());
+            plugin.log(Level.WARNING, "Couldn't get data of player " + player.getName());
             event.setCancelled(true);
         } else if (vPlayer.isUnhealthy()) {
             event.setCancelled(true);

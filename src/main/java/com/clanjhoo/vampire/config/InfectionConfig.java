@@ -15,8 +15,11 @@ public class InfectionConfig {
     public final int progressNauseaTicks;
     public final int progressDamage;
     public final double chance;
+    private final VampireRevamp plugin;
 
-    public InfectionConfig() {
+
+    public InfectionConfig(VampireRevamp plugin) {
+        this.plugin = plugin;
         canInfectHorses = true;
         zombieHorseChance = 0.5;
         amountInOneHour = 0.25;
@@ -26,15 +29,16 @@ public class InfectionConfig {
         chance = 0.003;
     }
 
-    public InfectionConfig(@NotNull ConfigurationSection cs) {
-        InfectionConfig def = new InfectionConfig();
+    public InfectionConfig(VampireRevamp plugin, @NotNull ConfigurationSection cs) {
+        this.plugin = plugin;
+        InfectionConfig def = new InfectionConfig(plugin);
 
         canInfectHorses = cs.getBoolean("canInfectHorses", def.canInfectHorses);
         zombieHorseChance = cs.getDouble("zombieHorseChance", def.zombieHorseChance);
 
         double percent = cs.getDouble("amountInOneHour", def.amountInOneHour);
         if (percent <= 0) {
-            VampireRevamp.log(Level.WARNING, "amountInOneHour can't be less or equals 0!");
+            plugin.log(Level.WARNING, "amountInOneHour can't be less or equals 0!");
             percent = def.amountInOneHour;
         }
         amountInOneHour = percent;

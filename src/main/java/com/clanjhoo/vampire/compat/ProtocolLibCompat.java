@@ -8,12 +8,14 @@ import com.comphenix.protocol.events.PacketListener;
 import java.util.logging.Level;
 
 public class ProtocolLibCompat {
-    private ProtocolManager protocolManager = null;
+    private final ProtocolManager protocolManager;
+    private final VampireRevamp plugin;
 
-    public ProtocolLibCompat() {
+    public ProtocolLibCompat(VampireRevamp plugin) {
+        this.plugin = plugin;
         protocolManager = ProtocolLibrary.getProtocolManager();
 
-        VampireRevamp.log(Level.INFO, "ProtocolLib hooks enabled.");
+        plugin.log(Level.INFO, "ProtocolLib hooks enabled.");
     }
 
     public void addPacketListener(PacketListener listener) {

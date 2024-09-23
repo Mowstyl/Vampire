@@ -2,7 +2,9 @@ package com.clanjhoo.vampire;
 
 import com.clanjhoo.vampire.util.ResourceUtil;
 import org.bukkit.permissions.Permissible;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public enum Perm {
 	// -------------------------------------------- //
@@ -43,19 +45,9 @@ public enum Perm {
 	
 	// END OF LIST
 	;
-	
-	// -------------------------------------------- //
-	// HAS
-	// -------------------------------------------- //
-	
-	public boolean has(@NotNull Permissible permissible, boolean verboose) {
-		return ResourceUtil.hasPermission(permissible, this, verboose);
-	}
-	
-	public boolean has(@NotNull Permissible permissible) {
-		return ResourceUtil.hasPermission(permissible, this);
-	}
 
+	@Nullable
+	@Contract(value = "null -> null", pure = true)
 	public static Perm getPermFromString(String command) {
 		Perm perm = null;
 
@@ -123,7 +115,9 @@ public enum Perm {
 					break;
 				case "help":
 					perm = Perm.BASECOMMAND;
-			}
+					break;
+				default:
+            }
 		}
 
 		return perm;

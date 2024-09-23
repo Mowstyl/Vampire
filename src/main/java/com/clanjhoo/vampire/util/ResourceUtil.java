@@ -14,17 +14,29 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.PotionMeta;
 import org.bukkit.permissions.Permissible;
 import org.bukkit.plugin.Plugin;
-import org.bukkit.potion.PotionData;
 import org.bukkit.potion.PotionType;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
-import java.util.logging.Level;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
 
 public class ResourceUtil {
-	public static VampireRevamp plugin;
+	private final static Map<String, ResourceUtil> instances = new ConcurrentHashMap<>(1);
 
-	public static boolean hasPermission(@NotNull Permissible permissible, @NotNull Perm permission, boolean verbose)
+	private final VampireRevamp plugin;
+
+
+	private ResourceUtil(VampireRevamp plugin) {
+		this.plugin = plugin;
+	}
+
+	public static ResourceUtil get(VampireRevamp plugin) {
+		return instances.computeIfAbsent(plugin.getName(), (k) -> new ResourceUtil(plugin));
+	}
+
+	public boolean hasPermission(@NotNull Permissible permissible, @NotNull Perm permission, boolean verbose)
 	{
 		String permissionId = createPermissionId(plugin, permission.name());
 		boolean hasPerm = false;
@@ -34,7 +46,7 @@ public class ResourceUtil {
 		}
 		else if (verbose && permissible instanceof CommandSender)
 		{
-			VampireRevamp.sendMessage((CommandSender) permissible,
+			plugin.sendMessage((CommandSender) permissible,
 					MessageType.ERROR,
 					CommandMessageKeys.NOT_ENOUGH_PERMS,
 					"{action}", permission.name(),
@@ -44,7 +56,7 @@ public class ResourceUtil {
 		return hasPerm;
 	}
 
-	public static boolean hasPermission(@NotNull Permissible permissible, Perm permission)
+	public boolean hasPermission(@NotNull Permissible permissible, Perm permission)
 	{
 		return hasPermission(permissible, permission, false);
 	}
@@ -53,19 +65,19 @@ public class ResourceUtil {
 		return "vampire." + enumName.toLowerCase().replace('_', '.');
 	}
 
-	public static boolean playerHas(Player player, ItemStack stack) {
+	public boolean playerHas(Player player, ItemStack stack) {
 		Material requiredType = stack.getType();
 		int requiredAmount = stack.getAmount();
 		PotionType requiredPotion = null;
 		if (requiredType == Material.POTION) {
-			requiredPotion = ((PotionMeta) stack.getItemMeta()).getBasePotionData().getType();
+			requiredPotion = plugin.getVersionCompat().getBasePotionType((PotionMeta) stack.getItemMeta());
 		}
 		
 		int actualAmount = 0;
-		for (ItemStack pstack : player.getInventory().getContents()) {
-			if (pstack != null && pstack.getType() == requiredType) {
+		for (ItemStack pstack : player.getInventory().getStorageContents()) {
+			if (pstack.getType() == requiredType) {
 				if (requiredPotion == null
-						|| ((PotionMeta) pstack.getItemMeta()).getBasePotionData().getType() == requiredPotion) {
+						|| plugin.getVersionCompat().getBasePotionType((PotionMeta) pstack.getItemMeta()) == requiredPotion) {
 					actualAmount += pstack.getAmount();
 				}
 			}
@@ -74,7 +86,7 @@ public class ResourceUtil {
 		return actualAmount >= requiredAmount;
 	}
 	
-	public static boolean playerHas(Player player, Collection<? extends ItemStack> stacks) {
+	public boolean playerHas(Player player, Collection<? extends ItemStack> stacks) {
 		boolean hasAll = true;
 		for (ItemStack stack : stacks) {
 			if (!playerHas(player, stack)) {
@@ -90,7 +102,6 @@ public class ResourceUtil {
 	}
 	
 	public static void playerRemove(Player player, ItemStack... stacks) {
-		VampireRevamp.debugLog(Level.INFO, "Removing stacks!");
 		player.getInventory().removeItem(stacks);
 		player.updateInventory();
 	}
@@ -107,9 +118,9 @@ public class ResourceUtil {
 		player.updateInventory();
 	}
 	
-	public static void describe(Collection<? extends ItemStack> stacks, Player player) {
+	public void describe(Collection<? extends ItemStack> stacks, Player player) {
 		for (ItemStack stack : stacks) {
-			VampireRevamp.sendMessage(player,
+			plugin.sendMessage(player,
 					MessageType.INFO,
 					AltarMessageKeys.RESOURCE,
 					"{amount}", String.format("%d", stack.getAmount()),
@@ -117,13 +128,13 @@ public class ResourceUtil {
 		}
 	}
 	
-	public static boolean playerRemoveAttempt(Player player, Collection<? extends ItemStack> stacks, MessageKeyProvider success, MessageKeyProvider fail) {
+	public boolean playerRemoveAttempt(Player player, Collection<? extends ItemStack> stacks, MessageKeyProvider success, MessageKeyProvider fail) {
 		boolean result = false;
 		if (playerHas(player, stacks)) {
 			playerRemove(player, stacks);
 			result = true;
 		}
-		VampireRevamp.sendMessage(player,
+		plugin.sendMessage(player,
 				MessageType.INFO,
 				result ? success : fail);
 		describe(stacks, player);
@@ -131,14 +142,13 @@ public class ResourceUtil {
 		return result;
 	}
 
-	public static ItemStack getWaterBottles(int qty) {
+	public ItemStack getWaterBottles(int qty) {
 		ItemStack bottles = null;
 
 		if (qty > 0 && qty <= 64) {
 			bottles = new ItemStack(Material.POTION, qty);
 			PotionMeta meta = (PotionMeta) bottles.getItemMeta();
-			PotionData data = new PotionData(PotionType.WATER);
-			meta.setBasePotionData(data);
+			plugin.getVersionCompat().setBasePotionType(meta, PotionType.WATER);
 			bottles.setItemMeta(meta);
 		}
 

@@ -17,6 +17,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.attribute.Attribute;
+import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -28,10 +29,26 @@ import java.util.logging.Level;
 @CommandAlias("v|vampire")
 @CommandPermission("vampire.basecommand")
 public class CmdVampire extends BaseCommand {
-	private final Map<String, RegisteredCommand> commandMap;
 
-	public CmdVampire() {
+	private final VampireRevamp plugin;
+	private final Map<String, RegisteredCommand> commandMap;
+	private final TextUtil textUtil;
+	private final ResourceUtil resUtil;
+	private final BloodFlaskUtil bloodUtil;
+	private final HolyWaterUtil holyUtil;
+	private final SunUtil sunUtil;
+	private final RingUtil ringUtil;
+	
+
+	public CmdVampire(VampireRevamp plugin) {
+		this.plugin = plugin;
 		commandMap = new HashMap<>();
+		textUtil = TextUtil.get(plugin);
+		resUtil = ResourceUtil.get(plugin);
+		bloodUtil = BloodFlaskUtil.get(plugin);
+		holyUtil = HolyWaterUtil.get(plugin);
+		sunUtil = SunUtil.get(plugin);
+		ringUtil = RingUtil.get(plugin);
 	}
 
 	public void initialize() {
@@ -39,7 +56,7 @@ public class CmdVampire extends BaseCommand {
 	}
 
 	private void initializeMap() {
-		RootCommand vampireCommand = VampireRevamp.getCommandManager().getRegisteredRootCommands().iterator().next();
+		RootCommand vampireCommand = plugin.getCommandManager().getRegisteredRootCommands().iterator().next();
 
 		for (Entry<String, RegisteredCommand> entry : vampireCommand.getSubCommands().entries()) {
 			RegisteredCommand command = entry.getValue();
@@ -48,7 +65,7 @@ public class CmdVampire extends BaseCommand {
 				commandName = commandName.substring(2);
 				if (!commandMap.containsKey(commandName)) {
 					commandMap.put(commandName, command);
-					VampireRevamp.debugLog(Level.INFO, "Key: " + commandName);
+					plugin.debugLog(Level.INFO, "Key: " + commandName);
 				}
 			}
 		}
@@ -63,24 +80,24 @@ public class CmdVampire extends BaseCommand {
 		if (help.getSearch() == null || help.getSearch().isEmpty() || !help.getSearch().get(0).equalsIgnoreCase("set")) {
 			int maxPages = 2;
 
-			VampireRevamp.sendMessage(sender, TextUtil.getHelpHeader(help, maxPages, help.getCommandName(), sender));
+			plugin.sendMessage(sender, textUtil.getHelpHeader(help, maxPages, help.getCommandName(), sender));
 
 			if (help.getPage() == 1) {
-				VampireRevamp.sendMessage(sender, TextUtil.getCommandHelp("help", commandMap.get("help"), sender,  0));
-				VampireRevamp.sendMessage(sender, TextUtil.getCommandHelp("show", commandMap.get("show"), sender, 0));
-				VampireRevamp.sendMessage(sender, TextUtil.getCommandHelp("bloodlust", commandMap.get("bloodlust"), sender, 1));
-				VampireRevamp.sendMessage(sender, TextUtil.getCommandHelp("intend", commandMap.get("intend"), sender, 1));
-				VampireRevamp.sendMessage(sender, TextUtil.getCommandHelp("nightvision", commandMap.get("nightvision"), sender, 1));
-				VampireRevamp.sendMessage(sender, TextUtil.getCommandHelp("offer", commandMap.get("offer"), sender, 0));
-				VampireRevamp.sendMessage(sender, TextUtil.getCommandHelp("accept", commandMap.get("accept"), sender, 0));
-				VampireRevamp.sendMessage(sender, TextUtil.getCommandHelp("flask", commandMap.get("flask"), sender, 0));
-				VampireRevamp.sendMessage(sender, TextUtil.getCommandHelp("shriek", commandMap.get("shriek"), sender, 0));
+				plugin.sendMessage(sender, textUtil.getCommandHelp("help", commandMap.get("help"), sender,  0));
+				plugin.sendMessage(sender, textUtil.getCommandHelp("show", commandMap.get("show"), sender, 0));
+				plugin.sendMessage(sender, textUtil.getCommandHelp("bloodlust", commandMap.get("bloodlust"), sender, 1));
+				plugin.sendMessage(sender, textUtil.getCommandHelp("intend", commandMap.get("intend"), sender, 1));
+				plugin.sendMessage(sender, textUtil.getCommandHelp("nightvision", commandMap.get("nightvision"), sender, 1));
+				plugin.sendMessage(sender, textUtil.getCommandHelp("offer", commandMap.get("offer"), sender, 0));
+				plugin.sendMessage(sender, textUtil.getCommandHelp("accept", commandMap.get("accept"), sender, 0));
+				plugin.sendMessage(sender, textUtil.getCommandHelp("flask", commandMap.get("flask"), sender, 0));
+				plugin.sendMessage(sender, textUtil.getCommandHelp("shriek", commandMap.get("shriek"), sender, 0));
 			} else {
-				VampireRevamp.sendMessage(sender, TextUtil.getCommandHelp("batusi", commandMap.get("batusi"), sender, 2));
-				VampireRevamp.sendMessage(sender, TextUtil.getCommandHelp("list", commandMap.get("list"), sender, 0));
-				VampireRevamp.sendMessage(sender, TextUtil.getCommandHelp("set", commandMap.get("set"), sender, 0));
-				VampireRevamp.sendMessage(sender, TextUtil.getCommandHelp("version", commandMap.get("version"), sender, 0));
-				VampireRevamp.sendMessage(sender, TextUtil.getCommandHelp("reload", commandMap.get("reload"), sender, 0));
+				plugin.sendMessage(sender, textUtil.getCommandHelp("batusi", commandMap.get("batusi"), sender, 2));
+				plugin.sendMessage(sender, textUtil.getCommandHelp("list", commandMap.get("list"), sender, 0));
+				plugin.sendMessage(sender, textUtil.getCommandHelp("set", commandMap.get("set"), sender, 0));
+				plugin.sendMessage(sender, textUtil.getCommandHelp("version", commandMap.get("version"), sender, 0));
+				plugin.sendMessage(sender, textUtil.getCommandHelp("reload", commandMap.get("reload"), sender, 0));
 			}
 		}
 		else {
@@ -97,13 +114,13 @@ public class CmdVampire extends BaseCommand {
 		boolean result = false;
 		boolean printResult = true;
 		if (reloadType == null || reloadType.equalsIgnoreCase("all"))
-			result = VampireRevamp.getInstance().reloadAll();
+			result = plugin.reloadAll();
 		else if (reloadType.equalsIgnoreCase("locales"))
-			result = VampireRevamp.getInstance().reloadLocales();
+			result = plugin.reloadLocales();
 		else if (reloadType.equalsIgnoreCase("config"))
-			result = VampireRevamp.getInstance().reloadVampireConfig();
+			result = plugin.reloadVampireConfig();
 		else {
-			VampireRevamp.sendMessage(sender,
+			plugin.sendMessage(sender,
 					MessageType.ERROR,
 					CommandMessageKeys.NOT_VALID_VALUE,
 					"{value}", reloadType);
@@ -113,11 +130,11 @@ public class CmdVampire extends BaseCommand {
 
 		if (printResult) {
 			if (result)
-				VampireRevamp.sendMessage(sender,
+				plugin.sendMessage(sender,
 						MessageType.ERROR,
 						CommandMessageKeys.RELOAD_SUCCESS);
 			else
-				VampireRevamp.sendMessage(sender,
+				plugin.sendMessage(sender,
 						MessageType.ERROR,
 						CommandMessageKeys.RELOAD_FAIL);
 		}
@@ -125,25 +142,26 @@ public class CmdVampire extends BaseCommand {
 
 
 	private void showVampireData(CommandSender sender, OfflinePlayer offlinePlayer, VPlayer vPlayer, boolean self) {
-		PluginConfig conf = VampireRevamp.getVampireConfig();
-		Component[] youAreWere = VampireRevamp.getYouAreWere(sender, offlinePlayer, self);
+		PluginConfig conf = plugin.getVampireConfig();
+		Component[] youAreWere = plugin.getYouAreWere(sender, offlinePlayer, self);
 		Component you = youAreWere[0];
 		Component are = youAreWere[1];
 		Component were = youAreWere[2];
-		Component vampireType = VampireRevamp.getMessage(sender, GrammarMessageKeys.VAMPIRE_TYPE);
-		Component on = VampireRevamp.getMessage(sender, GrammarMessageKeys.ON);
-		Component off = VampireRevamp.getMessage(sender, GrammarMessageKeys.OFF);
+		Component vampireType = plugin.getMessage(sender, GrammarMessageKeys.VAMPIRE_TYPE);
+		Component on = plugin.getMessage(sender, GrammarMessageKeys.ON);
+		Component off = plugin.getMessage(sender, GrammarMessageKeys.OFF);
 
-		Component playerName = Component.text(offlinePlayer.getName());
+		String name = offlinePlayer.getName();
+		Component playerName = Component.text(name != null ? name : "UNKNOWN");
 
-		VampireRevamp.sendMessage(sender, TextUtil.getPlayerInfoHeader(vPlayer.isVampire(),
+		plugin.sendMessage(sender, textUtil.getPlayerInfoHeader(vPlayer.isVampire(),
 				vPlayer.isNosferatu(),
 				playerName,
 				sender));
 		if (vPlayer.isVampire()) {
 			if (vPlayer.isNosferatu())
-				vampireType = VampireRevamp.getMessage(sender, GrammarMessageKeys.NOSFERATU_TYPE);
-			VampireRevamp.sendMessage(sender,
+				vampireType = plugin.getMessage(sender, GrammarMessageKeys.NOSFERATU_TYPE);
+			plugin.sendMessage(sender,
 					MessageType.INFO,
 					CommandMessageKeys.SHOW_TYPE,
 					new Tuple<>("{player}", you),
@@ -158,50 +176,51 @@ public class CmdVampire extends BaseCommand {
 			if (parent == null || parent.isEmpty()) {
 				parent = "someone";
 			}
-			VampireRevamp.sendMessage(sender,
+			plugin.sendMessage(sender,
 					MessageType.INFO,
 					reason.getDescKey(),
 					new Tuple<>("{player}", you),
 					new Tuple<>("{to_be_past}", were),
 					new Tuple<>("{parent}", Component.text(parent)));
 
-			Component bloodlustName = VampireRevamp.getMessage(sender, GrammarMessageKeys.BLOODLUST);
+			Component bloodlustName = plugin.getMessage(sender, GrammarMessageKeys.BLOODLUST);
 			bloodlustName = TextUtil.capitalizeFirst(bloodlustName);
-			VampireRevamp.sendMessage(sender,
+			plugin.sendMessage(sender,
 					MessageType.INFO,
 					CommandMessageKeys.SHOW_BLOODLUST,
 					new Tuple<>("{bloodlust}", bloodlustName),
 					new Tuple<>("{enabled}", vPlayer.isBloodlusting() ? on : off),
 					new Tuple<>("{percent}", Component.text(String.format("%.1f%%", vPlayer.combatDamageFactor() * 100))));
 
-			VampireRevamp.sendMessage(sender,
+			plugin.sendMessage(sender,
 					MessageType.INFO,
 					CommandMessageKeys.SHOW_INTENT,
 					new Tuple<>("{enabled}", vPlayer.isIntending() ? on : off),
 					new Tuple<>("{percent}", Component.text(String.format("%.1f%%", vPlayer.combatInfectRisk() * 100))));
 
-			VampireRevamp.sendMessage(sender,
+			plugin.sendMessage(sender,
 					MessageType.INFO,
 					CommandMessageKeys.SHOW_NIGHTVISION,
 					new Tuple<>("{enabled}", vPlayer.isUsingNightVision() ? on : off));
 
-			if (offlinePlayer instanceof Player player) {
-				VampireRevamp.sendMessage(sender,
+			if (offlinePlayer instanceof Player) {
+				Player player = (Player) offlinePlayer;
+				plugin.sendMessage(sender,
 						MessageType.INFO,
 						CommandMessageKeys.SHOW_TEMPERATURE,
 						"{percent}", String.format("%d%%", (int) Math.round(vPlayer.getTemp() * 100)));
 
 				int rad = (int) Math.round(100 * vPlayer.getRad());
-				int sun = (int) Math.round(100 * SunUtil.calcSolarRad(player.getWorld(), player));
-				double terrain = 1d - SunUtil.calcTerrainOpacity(player.getLocation().getBlock());
-				double armor = 1d - SunUtil.calcArmorOpacity(player);
+				int sun = (int) Math.round(100 * sunUtil.calcSolarRad(player.getWorld(), player));
+				double terrain = 1d - sunUtil.calcTerrainOpacity(player.getLocation().getBlock(), vPlayer.getLastRayTrace());
+				double armor = 1d - sunUtil.calcArmorOpacity(player);
 				int base = (int) Math.round(100 * conf.radiation.baseRadiation);
 
-				VampireRevamp.sendMessage(sender,
+				plugin.sendMessage(sender,
 						MessageType.INFO,
 						CommandMessageKeys.SHOW_RADIATION_KEYS);
 
-				VampireRevamp.sendMessage(sender,
+				plugin.sendMessage(sender,
 						MessageType.INFO,
 						CommandMessageKeys.SHOW_RADIATION_VALUES,
 						"{rads}", String.format("%+d%%", rad),
@@ -211,7 +230,7 @@ public class CmdVampire extends BaseCommand {
 						"{base}", String.format("%+d", base));
 			}
 		} else if (vPlayer.isInfected()) {
-			VampireRevamp.sendMessage(sender,
+			plugin.sendMessage(sender,
 					MessageType.INFO,
 					CommandMessageKeys.SHOW_INFECTED,
 					new Tuple<>("{player}", you),
@@ -226,14 +245,14 @@ public class CmdVampire extends BaseCommand {
 			if (parent == null || parent.isEmpty()) {
 				parent = "someone";
 			}
-			VampireRevamp.sendMessage(sender,
+			plugin.sendMessage(sender,
 					MessageType.INFO,
 					reason.getDescKey(),
 					new Tuple<>("{player}", you),
 					new Tuple<>("{to_be_past}", were),
 					new Tuple<>("{parent}", Component.text(parent)));
 		} else {
-			VampireRevamp.sendMessage(sender,
+			plugin.sendMessage(sender,
 					MessageType.INFO,
 					CommandMessageKeys.SHOW_CURED,
 					new Tuple<>("{player}", you),
@@ -243,8 +262,8 @@ public class CmdVampire extends BaseCommand {
 	}
 
 	private void showCommandLambda(CommandSender sender, OfflinePlayer player, boolean self, int attempt) {
-		Bukkit.getScheduler().runTaskLater(VampireRevamp.getInstance(), () -> {
-			VPlayer data = VampireRevamp.getVPlayer(player);
+		Bukkit.getScheduler().runTaskLater(plugin, () -> {
+			VPlayer data = plugin.getVPlayer(player);
 			if (data != null) {
 				showVampireData(sender, player, data, self);
 			}
@@ -252,7 +271,7 @@ public class CmdVampire extends BaseCommand {
 				if (attempt < 50)
 					showCommandLambda(sender, player, self, attempt + 1);
 				else
-					VampireRevamp.sendMessage(sender,
+					plugin.sendMessage(sender,
 							MessageType.ERROR,
 							CommandMessageKeys.DATA_NOT_FOUND);
 			}
@@ -285,8 +304,8 @@ public class CmdVampire extends BaseCommand {
 				boolean self = sender instanceof Player && ((Player) sender).getUniqueId().equals(player.getUniqueId());
 
 				// Test permissions
-				if (self || Perm.SHOW_OTHER.has(sender, true)) {
-					VPlayer vPlayer = VampireRevamp.getVPlayer(player);
+				if (self || resUtil.hasPermission(sender, Perm.SHOW_OTHER, true)) {
+					VPlayer vPlayer = plugin.getVPlayer(player);
 					if (vPlayer == null) {
 						showCommandLambda(sender, player, self, 0);
 					}
@@ -296,14 +315,14 @@ public class CmdVampire extends BaseCommand {
 				}
 			}
 			else {
-				VampireRevamp.sendMessage(sender,
+				plugin.sendMessage(sender,
 						MessageType.INFO,
 						CommandMessageKeys.NO_PLAYER_FOUND,
 						"{player}", targetName);
 			}
 		}
 		else {
-			VampireRevamp.sendMessage(sender,
+			plugin.sendMessage(sender,
 					MessageType.INFO,
 					CommandMessageKeys.NOT_ENOUGH_INPUTS);
 			sender.sendMessage(getCommandSyntax("show"));
@@ -316,26 +335,26 @@ public class CmdVampire extends BaseCommand {
 	@Description("{@@commands.bloodlust_description}")
 	@Syntax("[yes/no=toggle]")
 	public void onModeBloodlust(Player sender, @Optional String yesno) {
-		VampireRevamp.debugLog(Level.INFO, "Executed command!");
-		if (VampireRevamp.getVampireConfig().general.isBlacklisted(sender.getWorld())) {
-			VampireRevamp.debugLog(Level.INFO, "Blacklisted world!");
-			VampireRevamp.sendMessage(sender,
+		plugin.debugLog(Level.INFO, "Executed command!");
+		if (plugin.getVampireConfig().general.isBlacklisted(sender.getWorld())) {
+			plugin.debugLog(Level.INFO, "Blacklisted world!");
+			plugin.sendMessage(sender,
 					MessageType.ERROR,
 					CommandMessageKeys.BLACKLISTED_WORLD);
 			return;
 		}
 
 		if (yesno == null || yesno.equalsIgnoreCase("yes") || yesno.equalsIgnoreCase("no")) {
-			VPlayer vPlayer = VampireRevamp.getVPlayer(sender);
+			VPlayer vPlayer = plugin.getVPlayer(sender);
 			if (vPlayer == null) {
-				VampireRevamp.sendMessage(sender,
+				plugin.sendMessage(sender,
 						MessageType.ERROR,
 						CommandMessageKeys.DATA_NOT_FOUND);
 				return;
 			}
-			VampireRevamp.debugLog(Level.INFO, "Acceptance");
+			plugin.debugLog(Level.INFO, "Acceptance");
 			if (vPlayer.isVampire()) {
-				VampireRevamp.debugLog(Level.INFO, "Le vampire");
+				plugin.debugLog(Level.INFO, "Le vampire");
 				boolean isActive = vPlayer.isBloodlusting();
 
 				if (yesno != null) {
@@ -344,10 +363,10 @@ public class CmdVampire extends BaseCommand {
 
 				vPlayer.setBloodlusting(!isActive);
 			} else {
-				VampireRevamp.debugLog(Level.INFO, "Non non non!");
-				Component vampireType = VampireRevamp.getMessage(sender, GrammarMessageKeys.VAMPIRE_TYPE);
-				Component bloodlustAction = VampireRevamp.getMessage(sender, GrammarMessageKeys.BLOODLUST);
-				VampireRevamp.sendMessage(sender,
+				plugin.debugLog(Level.INFO, "Non non non!");
+				Component vampireType = plugin.getMessage(sender, GrammarMessageKeys.VAMPIRE_TYPE);
+				Component bloodlustAction = plugin.getMessage(sender, GrammarMessageKeys.BLOODLUST);
+				plugin.sendMessage(sender,
 						MessageType.ERROR,
 						GrammarMessageKeys.ONLY_TYPE_CAN_ACTION,
 						new Tuple<>("{vampire_type}", vampireType),
@@ -355,14 +374,14 @@ public class CmdVampire extends BaseCommand {
 			}
 		}
 		else {
-			VampireRevamp.debugLog(Level.INFO, "Bad Syntax!");
-			VampireRevamp.sendMessage(sender,
+			plugin.debugLog(Level.INFO, "Bad Syntax!");
+			plugin.sendMessage(sender,
 					MessageType.ERROR,
 					CommandMessageKeys.NOT_VALID_VALUE,
 					"{value}", yesno);
 			sender.sendMessage(getCommandSyntax("bloodlust"));
 		}
-		VampireRevamp.debugLog(Level.INFO, "End of ZA WARUDO");
+		plugin.debugLog(Level.INFO, "End of ZA WARUDO");
 	}
 
 	@Subcommand("intend|modeintend|i")
@@ -371,17 +390,17 @@ public class CmdVampire extends BaseCommand {
 	@Description("{@@commands.intent_description}")
 	@Syntax("[yes/no=toggle]")
 	public void onModeIntend(Player sender, @Optional String yesno) {
-		if (VampireRevamp.getVampireConfig().general.isBlacklisted(sender.getWorld())) {
-			VampireRevamp.sendMessage(sender,
+		if (plugin.getVampireConfig().general.isBlacklisted(sender.getWorld())) {
+			plugin.sendMessage(sender,
 					MessageType.ERROR,
 					CommandMessageKeys.BLACKLISTED_WORLD);
 			return;
 		}
 
 		if (yesno == null || yesno.equalsIgnoreCase("yes") || yesno.equalsIgnoreCase("no")) {
-			VPlayer vPlayer = VampireRevamp.getVPlayer(sender);
+			VPlayer vPlayer = plugin.getVPlayer(sender);
 			if (vPlayer == null) {
-				VampireRevamp.sendMessage(sender,
+				plugin.sendMessage(sender,
 						MessageType.ERROR,
 						CommandMessageKeys.DATA_NOT_FOUND);
 				return;
@@ -395,9 +414,9 @@ public class CmdVampire extends BaseCommand {
 
 				vPlayer.setIntending(!isActive);
 			} else {
-				Component vampireType = VampireRevamp.getMessage(sender, GrammarMessageKeys.VAMPIRE_TYPE);
-				Component intentAction = VampireRevamp.getMessage(sender, GrammarMessageKeys.INTEND);
-				VampireRevamp.sendMessage(sender,
+				Component vampireType = plugin.getMessage(sender, GrammarMessageKeys.VAMPIRE_TYPE);
+				Component intentAction = plugin.getMessage(sender, GrammarMessageKeys.INTEND);
+				plugin.sendMessage(sender,
 						MessageType.ERROR,
 						GrammarMessageKeys.ONLY_TYPE_CAN_ACTION,
 						new Tuple<>("{vampire_type}", vampireType),
@@ -405,7 +424,7 @@ public class CmdVampire extends BaseCommand {
 			}
 		}
 		else {
-			VampireRevamp.sendMessage(sender,
+			plugin.sendMessage(sender,
 					MessageType.ERROR,
 					CommandMessageKeys.NOT_VALID_VALUE,
 					"{value}", yesno);
@@ -419,17 +438,17 @@ public class CmdVampire extends BaseCommand {
 	@Description("{@@commands.nightvision_description}")
 	@Syntax("[yes/no=toggle]")
 	public void onModeNightvision(Player sender, @Optional String yesno) {
-		if (VampireRevamp.getVampireConfig().general.isBlacklisted(sender.getWorld())) {
-			VampireRevamp.sendMessage(sender,
+		if (plugin.getVampireConfig().general.isBlacklisted(sender.getWorld())) {
+			plugin.sendMessage(sender,
 					MessageType.ERROR,
 					CommandMessageKeys.BLACKLISTED_WORLD);
 			return;
 		}
 
 		if (yesno == null || yesno.equalsIgnoreCase("yes") || yesno.equalsIgnoreCase("no")) {
-			VPlayer vPlayer = VampireRevamp.getVPlayer(sender);
+			VPlayer vPlayer = plugin.getVPlayer(sender);
 			if (vPlayer == null) {
-				VampireRevamp.sendMessage(sender,
+				plugin.sendMessage(sender,
 						MessageType.ERROR,
 						CommandMessageKeys.DATA_NOT_FOUND);
 				return;
@@ -443,9 +462,9 @@ public class CmdVampire extends BaseCommand {
 
 				vPlayer.setUsingNightVision(!isActive);
 			} else {
-				Component vampireType = VampireRevamp.getMessage(sender, GrammarMessageKeys.VAMPIRE_TYPE);
-				Component nvAction = VampireRevamp.getMessage(sender, GrammarMessageKeys.NIGHTVISION);
-				VampireRevamp.sendMessage(sender,
+				Component vampireType = plugin.getMessage(sender, GrammarMessageKeys.VAMPIRE_TYPE);
+				Component nvAction = plugin.getMessage(sender, GrammarMessageKeys.NIGHTVISION);
+				plugin.sendMessage(sender,
 						MessageType.ERROR,
 						GrammarMessageKeys.ONLY_TYPE_CAN_ACTION,
 						new Tuple<>("{vampire_type}", vampireType),
@@ -453,7 +472,7 @@ public class CmdVampire extends BaseCommand {
 			}
 		}
 		else {
-			VampireRevamp.sendMessage(sender,
+			plugin.sendMessage(sender,
 					MessageType.ERROR,
 					CommandMessageKeys.NOT_VALID_VALUE,
 					"{value}", yesno);
@@ -467,8 +486,8 @@ public class CmdVampire extends BaseCommand {
 	@Description("{@@commands.offer_description}")
 	@Syntax("<player> [amount=4.0]")
 	public void onOffer(Player sender, String targetName, @Default("4") double rawamount) {
-		if (VampireRevamp.getVampireConfig().general.isBlacklisted(sender.getWorld())) {
-			VampireRevamp.sendMessage(sender,
+		if (plugin.getVampireConfig().general.isBlacklisted(sender.getWorld())) {
+			plugin.sendMessage(sender,
 					MessageType.ERROR,
 					CommandMessageKeys.BLACKLISTED_WORLD);
 			return;
@@ -479,21 +498,21 @@ public class CmdVampire extends BaseCommand {
 		if (pyou != null) {
 			double amount = MathUtil.limitNumber(rawamount, 0D, 20D);
 			if (amount != rawamount) {
-				VampireRevamp.sendMessage(sender,
+				plugin.sendMessage(sender,
 						MessageType.ERROR,
 						CommandMessageKeys.OFFER_INVALID_VALUE);
 				return;
 			}
-			VPlayer vMe = VampireRevamp.getVPlayer(sender);
+			VPlayer vMe = plugin.getVPlayer(sender);
 			if (vMe == null) {
-				VampireRevamp.sendMessage(sender,
+				plugin.sendMessage(sender,
 						MessageType.ERROR,
 						CommandMessageKeys.DATA_NOT_FOUND);
 				return;
 			}
-			VPlayer vYou = VampireRevamp.getVPlayer(sender);
+			VPlayer vYou = plugin.getVPlayer(sender);
 			if (vYou == null) {
-				VampireRevamp.sendMessage(sender,
+				plugin.sendMessage(sender,
 						MessageType.ERROR,
 						CommandMessageKeys.DATA_NOT_FOUND);
 				return;
@@ -501,7 +520,7 @@ public class CmdVampire extends BaseCommand {
 			vMe.tradeOffer(sender, vYou, amount);
 		}
 		else {
-			VampireRevamp.sendMessage(sender,
+			plugin.sendMessage(sender,
 					MessageType.ERROR,
 					CommandMessageKeys.NO_PLAYER_FOUND);
 		}
@@ -511,15 +530,15 @@ public class CmdVampire extends BaseCommand {
 	@CommandPermission("vampire.trade.accept")
 	@Description("{@@commands.nightvision_description}")
 	public void onAccept(Player sender) {
-		if (VampireRevamp.getVampireConfig().general.isBlacklisted(sender.getWorld())) {
-			VampireRevamp.sendMessage(sender,
+		if (plugin.getVampireConfig().general.isBlacklisted(sender.getWorld())) {
+			plugin.sendMessage(sender,
 					MessageType.ERROR,
 					CommandMessageKeys.BLACKLISTED_WORLD);
 			return;
 		}
-		VPlayer vPlayer = VampireRevamp.getVPlayer(sender);
+		VPlayer vPlayer = plugin.getVPlayer(sender);
 		if (vPlayer == null) {
-			VampireRevamp.sendMessage(sender,
+			plugin.sendMessage(sender,
 					MessageType.ERROR,
 					CommandMessageKeys.DATA_NOT_FOUND);
 			return;
@@ -534,46 +553,46 @@ public class CmdVampire extends BaseCommand {
 	@Syntax("[amount=4.0]")
 	public void onFlask(Player sender, @Default("4") Integer amount) {
 		if (amount <= 0) {
-			VampireRevamp.sendMessage(sender,
+			plugin.sendMessage(sender,
 					MessageType.ERROR,
 					CommandMessageKeys.NOT_VALID_VALUE,
 					"{value}", amount.toString());
 			return;
 		}
-		if (VampireRevamp.getVampireConfig().general.isBlacklisted(sender.getWorld())) {
-			VampireRevamp.sendMessage(sender,
+		if (plugin.getVampireConfig().general.isBlacklisted(sender.getWorld())) {
+			plugin.sendMessage(sender,
 					MessageType.ERROR,
 					CommandMessageKeys.BLACKLISTED_WORLD);
 			return;
 		}
-		VPlayer vPlayer = VampireRevamp.getVPlayer(sender);
+		VPlayer vPlayer = plugin.getVPlayer(sender);
 		if (vPlayer == null) {
-			VampireRevamp.sendMessage(sender,
+			plugin.sendMessage(sender,
 					MessageType.ERROR,
 					CommandMessageKeys.DATA_NOT_FOUND);
 			return;
 		}
 		// Does the player have the required amount?
-		boolean consumeFood = VampireRevamp.getVampireConfig().general.vampiresUseFoodAsBlood && vPlayer.isVampire();
+		boolean consumeFood = plugin.getVampireConfig().general.vampiresUseFoodAsBlood && vPlayer.isVampire();
 		if ((consumeFood && amount > vPlayer.getFood()) || (!consumeFood && amount > sender.getHealth())) {
-			VampireRevamp.sendMessage(sender,
+			plugin.sendMessage(sender,
 					MessageType.ERROR,
 					SkillMessageKeys.FLASK_INSUFFICIENT);
 		} else {
 			// ... create a blood flask!
-			if (BloodFlaskUtil.fillBottle(vPlayer, amount)) {
+			if (bloodUtil.fillBottle(vPlayer, amount)) {
 				if (consumeFood) {
 					vPlayer.addFood(-amount);
 				} else {
 					sender.setHealth(sender.getHealth() - amount);
 				}
 				// Inform
-				VampireRevamp.sendMessage(sender,
+				plugin.sendMessage(sender,
 						MessageType.INFO,
 						SkillMessageKeys.FLASK_SUCCESS);
 			}
 			else {
-				VampireRevamp.sendMessage(sender,
+				plugin.sendMessage(sender,
 						MessageType.ERROR,
 						SkillMessageKeys.FLASK_NO_BOTTLE);
 			}
@@ -584,15 +603,15 @@ public class CmdVampire extends BaseCommand {
 	@CommandPermission("vampire.shriek")
 	@Description("{@@commands.shriek_description}")
 	public void onShriek(Player sender) {
-		if (VampireRevamp.getVampireConfig().general.isBlacklisted(sender.getWorld())) {
-			VampireRevamp.sendMessage(sender,
+		if (plugin.getVampireConfig().general.isBlacklisted(sender.getWorld())) {
+			plugin.sendMessage(sender,
 					MessageType.ERROR,
 					CommandMessageKeys.BLACKLISTED_WORLD);
 			return;
 		}
-		VPlayer vPlayer = VampireRevamp.getVPlayer(sender);
+		VPlayer vPlayer = plugin.getVPlayer(sender);
 		if (vPlayer == null) {
-			VampireRevamp.sendMessage(sender,
+			plugin.sendMessage(sender,
 					MessageType.ERROR,
 					CommandMessageKeys.DATA_NOT_FOUND);
 			return;
@@ -600,9 +619,9 @@ public class CmdVampire extends BaseCommand {
 		if (vPlayer.isVampire()) {
 			vPlayer.shriek();
 		} else {
-			Component vampireType = VampireRevamp.getMessage(sender, GrammarMessageKeys.VAMPIRE_TYPE);
-			Component shriekAction = VampireRevamp.getMessage(sender, GrammarMessageKeys.SHRIEK);
-			VampireRevamp.sendMessage(sender,
+			Component vampireType = plugin.getMessage(sender, GrammarMessageKeys.VAMPIRE_TYPE);
+			Component shriekAction = plugin.getMessage(sender, GrammarMessageKeys.SHRIEK);
+			plugin.sendMessage(sender,
 					MessageType.ERROR,
 					GrammarMessageKeys.ONLY_TYPE_CAN_ACTION,
 					new Tuple<>("{vampire_type}", vampireType),
@@ -620,7 +639,7 @@ public class CmdVampire extends BaseCommand {
 		List<Component> infectedOnline = new ArrayList<>();
 
 		for (Player player : Bukkit.getOnlinePlayers()) {
-			VPlayer vPlayer = VampireRevamp.getVPlayer(player);
+			VPlayer vPlayer = plugin.getVPlayer(player);
 			if (vPlayer == null)
 				continue;
 			Player auxPlayer = vPlayer.getPlayer();
@@ -637,12 +656,12 @@ public class CmdVampire extends BaseCommand {
 		// Create Messages
 		List<Component> lines = new ArrayList<>();
 
-		Component vampireType = VampireRevamp.getMessage(sender, GrammarMessageKeys.VAMPIRE_TYPE);
+		Component vampireType = plugin.getMessage(sender, GrammarMessageKeys.VAMPIRE_TYPE);
 		vampireType = TextUtil.capitalizeFirst(vampireType);
-		Component infectedType = VampireRevamp.getMessage(sender, GrammarMessageKeys.INFECTED_TYPE);
+		Component infectedType = plugin.getMessage(sender, GrammarMessageKeys.INFECTED_TYPE);
 		infectedType = TextUtil.capitalizeFirst(infectedType);
-		Component onlineStr = VampireRevamp.getMessage(sender, GrammarMessageKeys.ONLINE);
-		//String offlineStr = VampireRevamp.getMessage(sender, GrammarMessageKeys.OFFLINE);
+		Component onlineStr = plugin.getMessage(sender, GrammarMessageKeys.ONLINE);
+		//String offlineStr = plugin.getMessage(sender, GrammarMessageKeys.OFFLINE);
 
 		if (!vampiresOnline.isEmpty())
 		{
@@ -677,7 +696,7 @@ public class CmdVampire extends BaseCommand {
 		// Send them
 		// lines = TextUtil.wrap(lines);
 		for (Component line : lines) {
-			VampireRevamp.sendMessage(sender, line);
+			plugin.sendMessage(sender, line);
 		}
 	}
 
@@ -685,9 +704,9 @@ public class CmdVampire extends BaseCommand {
 	@CommandPermission("vampire.version")
 	@Description("{@@commands.version_description}")
 	public void onVersion(CommandSender sender) {
-		List<Component> pd = TextUtil.getPluginDescription(VampireRevamp.getInstance());
+		List<Component> pd = TextUtil.getPluginDescription(plugin);
 		for (Component mess : pd) {
-			VampireRevamp.sendMessage(sender, mess);
+			plugin.sendMessage(sender, mess);
 		}
 	}
 
@@ -697,23 +716,22 @@ public class CmdVampire extends BaseCommand {
 	@Description("{@@commands.batusi_description}")
 	@Syntax("[yes/no=toggle] [numberOfBats=config_default]")
 	public void onModeBatusi(Player sender, @Optional String yesno, @Optional Integer numberOfBats) {
-		if (VampireRevamp.getVampireConfig().general.isBlacklisted(sender.getWorld())) {
-			VampireRevamp.sendMessage(sender,
+		if (plugin.getVampireConfig().general.isBlacklisted(sender.getWorld())) {
+			plugin.sendMessage(sender,
 					MessageType.ERROR,
 					CommandMessageKeys.BLACKLISTED_WORLD);
 			return;
 		}
 
 		if (yesno == null || yesno.equalsIgnoreCase("yes") || yesno.equalsIgnoreCase("no")) {
-			VampireRevamp plugin = VampireRevamp.getInstance();
-			VPlayer vPlayer = VampireRevamp.getVPlayer(sender);
+			VPlayer vPlayer = plugin.getVPlayer(sender);
 			if (vPlayer == null) {
-				VampireRevamp.sendMessage(sender,
+				plugin.sendMessage(sender,
 						MessageType.ERROR,
 						CommandMessageKeys.DATA_NOT_FOUND);
 				return;
 			}
-			if (!VampireRevamp.getVampireConfig().vampire.batusi.nosferatuOnly || vPlayer.isNosferatu()) {
+			if (!plugin.getVampireConfig().vampire.batusi.nosferatuOnly || vPlayer.isNosferatu()) {
 				boolean activate = !plugin.batEnabled.getOrDefault(sender.getUniqueId(), false);
 				int numBats = 0;
 
@@ -722,16 +740,16 @@ public class CmdVampire extends BaseCommand {
 				}
 
 				if (activate) {
-					int defNumBats = VampireRevamp.getVampireConfig().vampire.batusi.numberOfBats;
-					int maxNumBats = VampireRevamp.getVampireConfig().vampire.batusi.maxBats;
+					int defNumBats = plugin.getVampireConfig().vampire.batusi.numberOfBats;
+					int maxNumBats = plugin.getVampireConfig().vampire.batusi.maxBats;
 					if (defNumBats < 0) {
-						VampireRevamp.sendMessage(sender,
+						plugin.sendMessage(sender,
 								MessageType.ERROR,
 								CommandMessageKeys.BATUSI_DEFVALUE_ERROR);
 						defNumBats = 0;
 					}
 					if (maxNumBats < 0) {
-						VampireRevamp.sendMessage(sender,
+						plugin.sendMessage(sender,
 								MessageType.ERROR,
 								CommandMessageKeys.BATUSI_DEFVALUE_ERROR);
 						maxNumBats = defNumBats;
@@ -742,13 +760,13 @@ public class CmdVampire extends BaseCommand {
 					else {
 						numBats = numberOfBats;
 						if (numBats < 0) {
-							VampireRevamp.sendMessage(sender,
+							plugin.sendMessage(sender,
 									MessageType.ERROR,
 									CommandMessageKeys.BATUSI_NEGATIVE_BATS);
 							return;
 						}
 						if (numBats > maxNumBats) {
-							VampireRevamp.sendMessage(sender,
+							plugin.sendMessage(sender,
 									MessageType.ERROR,
 									CommandMessageKeys.BATUSI_TOO_MANY,
 									"{default_bats}", Integer.toString(maxNumBats));
@@ -757,16 +775,16 @@ public class CmdVampire extends BaseCommand {
 					}
 				}
 				else if (numberOfBats != null) {
-					VampireRevamp.sendMessage(sender,
+					plugin.sendMessage(sender,
 							MessageType.INFO,
 							CommandMessageKeys.BATUSI_IGNORED_BATS);
 				}
 
 				vPlayer.setBatusi(activate, numBats);
 			} else {
-				Component nosferatuType = VampireRevamp.getMessage(sender, GrammarMessageKeys.NOSFERATU_TYPE);
-				Component batusiAction = VampireRevamp.getMessage(sender, GrammarMessageKeys.BATUSI);
-				VampireRevamp.sendMessage(sender,
+				Component nosferatuType = plugin.getMessage(sender, GrammarMessageKeys.NOSFERATU_TYPE);
+				Component batusiAction = plugin.getMessage(sender, GrammarMessageKeys.BATUSI);
+				plugin.sendMessage(sender,
 						MessageType.ERROR,
 						GrammarMessageKeys.ONLY_TYPE_CAN_ACTION,
 						new Tuple<>("{vampire_type}", nosferatuType),
@@ -774,7 +792,7 @@ public class CmdVampire extends BaseCommand {
 			}
 		}
 		else {
-			VampireRevamp.sendMessage(sender,
+			plugin.sendMessage(sender,
 					MessageType.ERROR,
 					CommandMessageKeys.NOT_VALID_VALUE,
 					"{value}", yesno);
@@ -787,17 +805,17 @@ public class CmdVampire extends BaseCommand {
 	@Description("{@@commands.holywater_description}")
 	public void onHolyWater(Player sender, @Default("1") Integer quantity) {
 		if (quantity < 1 || quantity > 64) {
-			VampireRevamp.sendMessage(sender,
+			plugin.sendMessage(sender,
 					MessageType.ERROR,
 					CommandMessageKeys.NOT_VALID_VALUE,
 					"{value}", quantity.toString());
 			return;
 		}
-		ItemStack water = HolyWaterUtil.createHolyWater(sender);
+		ItemStack water = holyUtil.createHolyWater(sender);
 		water.setAmount(quantity);
 		Map<Integer, ItemStack> result = sender.getInventory().addItem(water);
 		if (!result.isEmpty()) {
-			VampireRevamp.sendMessage(sender,
+			plugin.sendMessage(sender,
 					MessageType.ERROR,
 					CommandMessageKeys.FULL_INVENTORY);
 		}
@@ -807,10 +825,10 @@ public class CmdVampire extends BaseCommand {
 	@CommandPermission("vampire.give.ring")
 	@Description("{@@commands.ring_description}")
 	public void onRing(Player sender) {
-		ItemStack ring = RingUtil.getSunRing();
+		ItemStack ring = ringUtil.getSunRing();
 		Map<Integer, ItemStack> result = sender.getInventory().addItem(ring);
 		if (!result.isEmpty()) {
-			VampireRevamp.sendMessage(sender,
+			plugin.sendMessage(sender,
 					MessageType.ERROR,
 					CommandMessageKeys.FULL_INVENTORY);
 		}
@@ -824,14 +842,14 @@ public class CmdVampire extends BaseCommand {
 		public void onHelp(CommandSender sender, CommandHelp help) {
 			int maxPages = 1;
 
-			VampireRevamp.sendMessage(sender, TextUtil.getHelpHeader(help, maxPages, "set", sender));
+			plugin.sendMessage(sender, textUtil.getHelpHeader(help, maxPages, "set", sender));
 
 			if (help.getPage() == 1) {
-				VampireRevamp.sendMessage(sender, TextUtil.getCommandHelp("vampire", commandMap.get("set vampire"), sender, 0));
-				VampireRevamp.sendMessage(sender, TextUtil.getCommandHelp("nosferatu", commandMap.get("set nosferatu"), sender, 0));
-				VampireRevamp.sendMessage(sender, TextUtil.getCommandHelp("infection", commandMap.get("set infection"), sender, 0));
-				VampireRevamp.sendMessage(sender, TextUtil.getCommandHelp("food", commandMap.get("set food"), sender, 0));
-				VampireRevamp.sendMessage(sender, TextUtil.getCommandHelp("health", commandMap.get("set health"), sender, 0));
+				plugin.sendMessage(sender, textUtil.getCommandHelp("vampire", commandMap.get("set vampire"), sender, 0));
+				plugin.sendMessage(sender, textUtil.getCommandHelp("nosferatu", commandMap.get("set nosferatu"), sender, 0));
+				plugin.sendMessage(sender, textUtil.getCommandHelp("infection", commandMap.get("set infection"), sender, 0));
+				plugin.sendMessage(sender, textUtil.getCommandHelp("food", commandMap.get("set food"), sender, 0));
+				plugin.sendMessage(sender, textUtil.getCommandHelp("health", commandMap.get("set health"), sender, 0));
 			}
 		}
 
@@ -843,46 +861,46 @@ public class CmdVampire extends BaseCommand {
 			if (yesno.equalsIgnoreCase("yes") || yesno.equalsIgnoreCase("no")) {
 				boolean val = yesno.equalsIgnoreCase("yes");
 				Perm perm = val ? Perm.SET_VAMPIRE_TRUE : Perm.SET_VAMPIRE_FALSE;
-				if (perm.has(sender, true)) {
+				if (resUtil.hasPermission(sender, perm, true)) {
 					Player player = null;
 					if (targetName != null) {
 						player = Bukkit.getPlayer(targetName);
 					} else if (sender instanceof Player) {
 						player = (Player) sender;
 					} else {
-						VampireRevamp.sendMessage(sender,
+						plugin.sendMessage(sender,
 								MessageType.ERROR,
 								CommandMessageKeys.NOT_ENOUGH_INPUTS);
 						sender.sendMessage(getCommandSyntax("set vampire"));
 					}
 
 					if (player != null) {
-						VPlayer vPlayer = VampireRevamp.getVPlayer(player);
+						VPlayer vPlayer = plugin.getVPlayer(player);
 						if (vPlayer == null) {
-							VampireRevamp.sendMessage(sender,
+							plugin.sendMessage(sender,
 									MessageType.ERROR,
 									CommandMessageKeys.DATA_NOT_FOUND);
 							return;
 						}
 						if (vPlayer.isVampire() != val) {
 							Component displayName = Component.text(player.getDisplayName());
-							if (!val || !VampireRevamp.getWerewolvesCompat().isWerewolf(player)) {
+							if (!val || !plugin.getWerewolvesCompat().isWerewolf(player)) {
 								vPlayer.setReason(InfectionReason.OPERATOR);
 								vPlayer.setMaker(null);
 								vPlayer.setVampire(val);
 
 								vPlayer.update();
 
-								Component onOff = val ? VampireRevamp.getMessage(sender, GrammarMessageKeys.ON) : VampireRevamp.getMessage(sender, GrammarMessageKeys.OFF);
-								Component attributeName = VampireRevamp.getMessage(sender, CommandMessageKeys.SET_VAMPIRE_ATTRIBUTE);
-								VampireRevamp.sendMessage(sender,
+								Component onOff = val ? plugin.getMessage(sender, GrammarMessageKeys.ON) : plugin.getMessage(sender, GrammarMessageKeys.OFF);
+								Component attributeName = plugin.getMessage(sender, CommandMessageKeys.SET_VAMPIRE_ATTRIBUTE);
+								plugin.sendMessage(sender,
 										MessageType.INFO,
 										CommandMessageKeys.SET_CHANGED_VALUE,
 										new Tuple<>("{player}", displayName),
 										new Tuple<>("{attribute}", attributeName),
 										new Tuple<>("{value}", onOff));
 							} else {
-								VampireRevamp.sendMessage(sender,
+								plugin.sendMessage(sender,
 										MessageType.ERROR,
 										CommandMessageKeys.SET_ERROR_HYBRID,
 										new Tuple<>("{player}", displayName));
@@ -890,7 +908,7 @@ public class CmdVampire extends BaseCommand {
 						}
 					}
 					else {
-						VampireRevamp.sendMessage(sender,
+						plugin.sendMessage(sender,
 								MessageType.ERROR,
 								CommandMessageKeys.NO_PLAYER_FOUND,
 								"{player}", targetName);
@@ -898,7 +916,7 @@ public class CmdVampire extends BaseCommand {
 				}
 			}
 			else {
-				VampireRevamp.sendMessage(sender,
+				plugin.sendMessage(sender,
 						MessageType.ERROR,
 						CommandMessageKeys.NOT_VALID_VALUE,
 						"{value}", yesno);
@@ -914,29 +932,29 @@ public class CmdVampire extends BaseCommand {
 			if (yesno.equalsIgnoreCase("yes") || yesno.equalsIgnoreCase("no")) {
 				boolean val = yesno.equalsIgnoreCase("yes");
 				Perm perm = val ? Perm.SET_NOSFERATU_TRUE : Perm.SET_NOSFERATU_FALSE;
-				if (perm.has(sender, true)) {
+				if (resUtil.hasPermission(sender, perm, true)) {
 					Player player = null;
 					if (targetName != null) {
 						player = Bukkit.getPlayer(targetName);
 					} else if (sender instanceof Player) {
 						player = (Player) sender;
 					} else {
-						VampireRevamp.sendMessage(sender,
+						plugin.sendMessage(sender,
 								MessageType.ERROR,
 								CommandMessageKeys.NOT_ENOUGH_INPUTS);
 						sender.sendMessage(getCommandSyntax("set nosferatu"));
 					}
 
 					if (player != null) {
-						VPlayer vPlayer = VampireRevamp.getVPlayer(player);
+						VPlayer vPlayer = plugin.getVPlayer(player);
 						if (vPlayer == null) {
-							VampireRevamp.sendMessage(sender,
+							plugin.sendMessage(sender,
 									MessageType.ERROR,
 									CommandMessageKeys.DATA_NOT_FOUND);
 							return;
 						}
 						Component displayName = Component.text(player.getDisplayName());
-						if (!val || !VampireRevamp.getWerewolvesCompat().isWerewolf(player)) {
+						if (!val || !plugin.getWerewolvesCompat().isWerewolf(player)) {
 							if (val && vPlayer.isVampire() != val) {
 								vPlayer.setReason(InfectionReason.OPERATOR);
 								vPlayer.setMaker(null);
@@ -950,9 +968,9 @@ public class CmdVampire extends BaseCommand {
 								vPlayer.update();
 							}
 
-							Component onOff = val ? VampireRevamp.getMessage(sender, GrammarMessageKeys.ON) : VampireRevamp.getMessage(sender, GrammarMessageKeys.OFF);
-							Component attributeName = VampireRevamp.getMessage(sender, CommandMessageKeys.SET_NOSFERATU_ATTRIBUTE);
-							VampireRevamp.sendMessage(sender,
+							Component onOff = val ? plugin.getMessage(sender, GrammarMessageKeys.ON) : plugin.getMessage(sender, GrammarMessageKeys.OFF);
+							Component attributeName = plugin.getMessage(sender, CommandMessageKeys.SET_NOSFERATU_ATTRIBUTE);
+							plugin.sendMessage(sender,
 									MessageType.INFO,
 									CommandMessageKeys.SET_CHANGED_VALUE,
 									new Tuple<>("{player}", displayName),
@@ -960,14 +978,14 @@ public class CmdVampire extends BaseCommand {
 									new Tuple<>("{value}", onOff));
 						}
 						else {
-							VampireRevamp.sendMessage(sender,
+							plugin.sendMessage(sender,
 									MessageType.ERROR,
 									CommandMessageKeys.SET_ERROR_HYBRID,
 									new Tuple<>("{player}", displayName));
 						}
 					}
 					else {
-						VampireRevamp.sendMessage(sender,
+						plugin.sendMessage(sender,
 								MessageType.ERROR,
 								CommandMessageKeys.NO_PLAYER_FOUND,
 								"{player}", targetName);
@@ -975,7 +993,7 @@ public class CmdVampire extends BaseCommand {
 				}
 			}
 			else {
-				VampireRevamp.sendMessage(sender,
+				plugin.sendMessage(sender,
 						MessageType.ERROR,
 						CommandMessageKeys.NOT_VALID_VALUE,
 						"{value}", yesno);
@@ -997,7 +1015,7 @@ public class CmdVampire extends BaseCommand {
 			} else if (sender instanceof Player) {
 				player = (Player) sender;
 			} else {
-				VampireRevamp.sendMessage(sender,
+				plugin.sendMessage(sender,
 						MessageType.ERROR,
 						CommandMessageKeys.NOT_ENOUGH_INPUTS);
 				sender.sendMessage(getCommandSyntax("set infection"));
@@ -1005,21 +1023,21 @@ public class CmdVampire extends BaseCommand {
 			}
 
 			if (player != null) {
-				VPlayer vPlayer = VampireRevamp.getVPlayer(player);
+				VPlayer vPlayer = plugin.getVPlayer(player);
 				if (vPlayer == null) {
-					VampireRevamp.sendMessage(sender,
+					plugin.sendMessage(sender,
 							MessageType.ERROR,
 							CommandMessageKeys.DATA_NOT_FOUND);
 					return;
 				}
 				Component displayName = Component.text(player.getDisplayName());
 				if (vPlayer.isVampire()) {
-					VampireRevamp.sendMessage(sender,
+					plugin.sendMessage(sender,
 							MessageType.ERROR,
 							VampirismMessageKeys.ALREADY_VAMPIRE,
 							new Tuple<>("{player}", displayName));
 				} else {
-					if (!VampireRevamp.getWerewolvesCompat().isWerewolf(player)) {
+					if (!plugin.getWerewolvesCompat().isWerewolf(player)) {
 						InfectionReason reason = vPlayer.getReason();
 						UUID makerUUID = vPlayer.getMakerUUID();
 						if (reason == null) {
@@ -1030,16 +1048,16 @@ public class CmdVampire extends BaseCommand {
 						vPlayer.addInfection(res, reason, makerUUID);
 						vPlayer.update();
 
-						Component attributeName = VampireRevamp.getMessage(sender, CommandMessageKeys.SET_INFECTION_ATTRIBUTE);
+						Component attributeName = plugin.getMessage(sender, CommandMessageKeys.SET_INFECTION_ATTRIBUTE);
 						Component valComp = Component.text(String.format("%.2f%%", value * 100));
-						VampireRevamp.sendMessage(sender,
+						plugin.sendMessage(sender,
 								MessageType.INFO,
 								CommandMessageKeys.SET_CHANGED_VALUE,
 								new Tuple<>("{player}", displayName),
 								new Tuple<>("{attribute}", attributeName),
 								new Tuple<>("{value}", valComp));
 					} else {
-						VampireRevamp.sendMessage(sender,
+						plugin.sendMessage(sender,
 								MessageType.ERROR,
 								CommandMessageKeys.SET_ERROR_HYBRID,
 								new Tuple<>("{player}", displayName));
@@ -1047,7 +1065,7 @@ public class CmdVampire extends BaseCommand {
 				}
 			}
 			else {
-				VampireRevamp.sendMessage(sender,
+				plugin.sendMessage(sender,
 						MessageType.ERROR,
 						CommandMessageKeys.NO_PLAYER_FOUND,
 						"{player}", targetName);
@@ -1065,7 +1083,7 @@ public class CmdVampire extends BaseCommand {
 				player = Bukkit.getPlayer(targetName);
 
 				if (player == null) {
-					VampireRevamp.sendMessage(sender,
+					plugin.sendMessage(sender,
 							MessageType.ERROR,
 							CommandMessageKeys.NO_PLAYER_FOUND,
 							"{player}", targetName);
@@ -1076,7 +1094,7 @@ public class CmdVampire extends BaseCommand {
 				player = (Player) sender;
 			}
 			else {
-				VampireRevamp.sendMessage(sender,
+				plugin.sendMessage(sender,
 						MessageType.ERROR,
 						CommandMessageKeys.NOT_ENOUGH_INPUTS);
 				sender.sendMessage(getCommandSyntax("set food"));
@@ -1086,9 +1104,9 @@ public class CmdVampire extends BaseCommand {
 			Integer res = MathUtil.limitNumber(value, 0, 20);
 			player.setFoodLevel(res);
 
-			Component attributeName = VampireRevamp.getMessage(sender, CommandMessageKeys.SET_FOOD_ATTRIBUTE);
+			Component attributeName = plugin.getMessage(sender, CommandMessageKeys.SET_FOOD_ATTRIBUTE);
 			Component displayName = Component.text(player.getDisplayName());
-			VampireRevamp.sendMessage(sender,
+			plugin.sendMessage(sender,
 					MessageType.INFO,
 					CommandMessageKeys.SET_CHANGED_VALUE,
 					new Tuple<>("{player}", displayName),
@@ -1101,13 +1119,13 @@ public class CmdVampire extends BaseCommand {
 		@CommandCompletion("@range:0-20 @players")
 		@Description("{@@commands.set_health_description}")
 		@Syntax("<val> [player=you]")
-		public void onSetHealth(CommandSender sender, int value, @Optional String targetName) {
+		public void onSetHealth(CommandSender sender, double value, @Optional String targetName) {
 			Player player = null;
 			if (targetName != null) {
 				player = Bukkit.getPlayer(targetName);
 
 				if (player == null) {
-					VampireRevamp.sendMessage(sender,
+					plugin.sendMessage(sender,
 							MessageType.ERROR,
 							CommandMessageKeys.NO_PLAYER_FOUND,
 							"{player}", targetName);
@@ -1118,24 +1136,28 @@ public class CmdVampire extends BaseCommand {
 				player = (Player) sender;
 			}
 			else {
-				VampireRevamp.sendMessage(sender,
+				plugin.sendMessage(sender,
 						MessageType.ERROR,
 						CommandMessageKeys.NOT_ENOUGH_INPUTS);
 				sender.sendMessage(getCommandSyntax("set health"));
 				return;
 			}
 
-			Integer res = MathUtil.limitNumber(value, 0, (int) player.getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue());
-			player.setHealth(res);
+			AttributeInstance maxHealthAttr = player.getAttribute(Attribute.GENERIC_MAX_HEALTH);
+			double maxHealth = 20;
+			if (maxHealthAttr != null)
+				maxHealth = maxHealthAttr.getValue();
+			double newHealth = MathUtil.limitNumber(value, 0D, maxHealth);
+			player.setHealth(newHealth);
 
-			Component attributeName = VampireRevamp.getMessage(sender, CommandMessageKeys.SET_HEALTH_ATTRIBUTE);
+			Component attributeName = plugin.getMessage(sender, CommandMessageKeys.SET_HEALTH_ATTRIBUTE);
 			Component displayName = Component.text(player.getDisplayName());
-			VampireRevamp.sendMessage(sender,
+			plugin.sendMessage(sender,
 					MessageType.INFO,
 					CommandMessageKeys.SET_CHANGED_VALUE,
 					new Tuple<>("{player}", displayName),
 					new Tuple<>("{attribute}", attributeName),
-					new Tuple<>("{value}", Component.text(String.format("%d", res))));
+					new Tuple<>("{value}", Component.text(String.format("%f", newHealth))));
 		}
 	}
 

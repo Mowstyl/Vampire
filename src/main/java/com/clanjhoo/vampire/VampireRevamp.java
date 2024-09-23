@@ -6,8 +6,7 @@ import co.aikar.locales.MessageKeyProvider;
 import com.clanjhoo.dbhandler.data.DBObjectManager;
 import com.clanjhoo.dbhandler.data.SaveOperation;
 import com.clanjhoo.dbhandler.data.StorageType;
-import com.clanjhoo.vampire.compat.ProtocolLibCompat;
-import com.clanjhoo.vampire.compat.WerewolfCompat;
+import com.clanjhoo.vampire.compat.*;
 import com.clanjhoo.vampire.config.StorageConfig;
 import com.clanjhoo.vampire.event.VampireLoadedEvent;
 import com.clanjhoo.vampire.listeners.*;
@@ -15,12 +14,11 @@ import com.clanjhoo.vampire.keyproviders.GrammarMessageKeys;
 import com.clanjhoo.vampire.altar.AltarDark;
 import com.clanjhoo.vampire.altar.AltarLight;
 import com.clanjhoo.vampire.cmd.CmdVampire;
-import com.clanjhoo.vampire.compat.VampireExpansion;
-import com.clanjhoo.vampire.compat.WorldGuardCompat;
 import com.clanjhoo.vampire.config.PluginConfig;
 import com.clanjhoo.vampire.entity.VPlayer;
 
 import com.clanjhoo.vampire.tasks.BatTask;
+import com.clanjhoo.vampire.tasks.RaytracingTask;
 import com.clanjhoo.vampire.tasks.TheTask;
 import com.clanjhoo.vampire.util.*;
 import net.kyori.adventure.platform.AudienceProvider;
@@ -39,7 +37,6 @@ import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.HandlerList;
@@ -47,7 +44,7 @@ import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import org.bukkit.scheduler.BukkitScheduler;
-import org.checkerframework.checker.nullness.qual.NonNull;
+import org.bukkit.scheduler.BukkitTask;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -59,33 +56,34 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public class VampireRevamp extends JavaPlugin {
 
-	private static ConcurrentHashMap<UUID, VPlayer> playerCollection = new ConcurrentHashMap<>();
-	private static VampireRevamp plugin;
-	private static boolean isPapermc = false;
-	private static Permission perms = null;
+	private final ConcurrentHashMap<UUID, VPlayer> playerCollection = new ConcurrentHashMap<>();
+	private boolean isPapermc = false;
+	private Permission perms = null;
 
 	// -------------------------------------------- //
 	// INSTANCE & CONSTRUCT
 	// -------------------------------------------- //
 
 	private AudienceProvider adventure;
-	private int cleanTaskId = -1;
-	private int theTaskId = -1;
-	private int batTaskId = -1;
-	public PaperCommandManager manager;
+	private BukkitTask cleanTask = null;
+	private BukkitTask theTask = null;
+	private BukkitTask batTask = null;
+	private BukkitTask rayTraceTask = null;
+	private RaytracingTask rayTraceTaskInstance = null;
+	private PaperCommandManager manager;
 	public final Map<UUID, Boolean> batEnabled = new ConcurrentHashMap<>();
 	public final Set<LivingEntity> bats = new HashSet<>();
 	public final Map<UUID, List<LivingEntity>> batmap = new ConcurrentHashMap<>();
-	public boolean isDisguiseEnabled = false;
-	public boolean hasVault = false;
+	private boolean isDisguiseEnabled = false;
+	private boolean hasVault = false;
 	private PluginConfig conf = null;
 	private AltarDark altarDark;
 	private AltarLight altarLight;
 	private SemVer serverVersion;
-	private boolean disabled = false;
 	private WorldGuardCompat wg = null;
 	private ProtocolLibCompat plc = null;
 	private WerewolfCompat ww;
@@ -94,12 +92,23 @@ public class VampireRevamp extends JavaPlugin {
 	private PhantomListener pl;
 	private EntryVampiresListener dvl;
 	private BedListener bl;
+	private VersionCompat vc;
 
 	private DBObjectManager<VPlayer> vPlayerManager;
-	
+
+
 	// -------------------------------------------- //
 	// FIELDS
 	// -------------------------------------------- //
+
+
+	public boolean isDisguiseEnabled() {
+		return isDisguiseEnabled;
+	}
+
+	public VersionCompat getVersionCompat() {
+		return vc;
+	}
 
 	public boolean setVampireGroup(Player player, boolean isVampire) {
 		if (perms != null) {
@@ -115,7 +124,7 @@ public class VampireRevamp extends JavaPlugin {
 		return perms != null;
 	}
 
-	public static boolean isPaperMc() {
+	public boolean isPaperMc() {
 		return isPapermc;
 	}
 
@@ -127,20 +136,20 @@ public class VampireRevamp extends JavaPlugin {
 		return altarDark;
 	}
 
-	public static SemVer getServerVersion() {
-		return getInstance().serverVersion;
+	public SemVer getServerVersion() {
+		return serverVersion;
 	}
 
-	public static boolean isWorldGuardEnabled() {
-		return getInstance().wg != null && VampireRevamp.getVampireConfig().compatibility.useWorldGuardRegions;
+	public boolean isWorldGuardEnabled() {
+		return wg != null && getVampireConfig().compatibility.useWorldGuardRegions;
 	}
 
-	public static WorldGuardCompat getWorldGuardCompat() {
-		return getInstance().wg;
+	public WorldGuardCompat getWorldGuardCompat() {
+		return wg;
 	}
 
-	public static WerewolfCompat getWerewolvesCompat() {
-		return getInstance().ww;
+	public WerewolfCompat getWerewolvesCompat() {
+		return ww;
 	}
 
 	// -------------------------------------------- //
@@ -148,8 +157,6 @@ public class VampireRevamp extends JavaPlugin {
 	// -------------------------------------------- //
 	@Override
 	public void onLoad() {
-		plugin = this;
-
 		isPapermc = false;
 		try {
 			Class.forName("com.destroystokyo.paper.VersionHistoryManager$VersionData");
@@ -184,41 +191,23 @@ public class VampireRevamp extends JavaPlugin {
 			else {
 				throw new IllegalStateException("No match found after find");
 			}
-		} catch (Exception ex) {
+		}
+		catch (Exception ex) {
 			log(Level.SEVERE, "Error found while detecting server version. Version: " + versionString);
 			ex.printStackTrace();
-			getServer().getPluginManager().disablePlugin(this);
-			disabled = true;
+			setEnabled(false);
 			return;
 		}
 
 		try {
-			this.saveDefaultConfig();
-		}
-		catch (Exception ex) {
-			log(Level.WARNING, "Error found while saving default config.yml!");
-			ex.printStackTrace();
-		}
-
-		vPlayerManager = null;
-		loadConfig(true);
-
-		// WorldGuard compat
-		if (Bukkit.getPluginManager().getPlugin("WorldGuard") != null)
-			wg = new WorldGuardCompat();
-		else
-			log(Level.WARNING, "WorldGuard plugin not detected. Disabled WorldGuard compat.");
-
-		// ProtocolLib compat
-		if (Bukkit.getPluginManager().getPlugin("ProtocolLib") != null)
-			plc = new ProtocolLibCompat();
-		else
-			log(Level.WARNING, "ProtocolLib plugin not detected. Disabled ProtocolLib compat.");
-
-		try {
 			File localesFolder = new File(this.getDataFolder() + "/locales");
-			if (!localesFolder.exists())
-				localesFolder.mkdir();
+			if (!localesFolder.exists()) {
+				if (!localesFolder.mkdirs()) {
+					log(Level.SEVERE, "The locales folder could not be created! Disabling plugin!");
+					setEnabled(false);
+					return;
+				}
+			}
 			String[] providedLocales = new String[]{"lang_en.yml", "lang_es.yml"};
 			for (String locale : providedLocales) {
 				File localeFile = new File(localesFolder, locale);
@@ -235,6 +224,36 @@ public class VampireRevamp extends JavaPlugin {
 			log(Level.WARNING, "Error found while creating default locale files.");
 			ex.printStackTrace();
 		}
+
+		try {
+			vc = new VersionCompat(this, serverVersion);
+			// Test versionCompat is working
+			vc.test();
+		}
+		catch (Exception ex) {
+			log(Level.SEVERE, "Error found while loading methods for minecraft version: " + serverVersion);
+			ex.printStackTrace();
+			setEnabled(false);
+			return;
+		}
+
+
+		try {
+			this.saveDefaultConfig();
+		}
+		catch (Exception ex) {
+			log(Level.WARNING, "Error found while saving default config.yml!");
+			ex.printStackTrace();
+		}
+
+		vPlayerManager = null;
+		loadConfig(true);
+
+		// WorldGuard compat
+		if (Bukkit.getPluginManager().getPlugin("WorldGuard") != null)
+			wg = new WorldGuardCompat(this);
+		else
+			log(Level.WARNING, "WorldGuard plugin not detected. Disabled WorldGuard compat.");
 	}
 
 	@Override
@@ -242,12 +261,18 @@ public class VampireRevamp extends JavaPlugin {
 		File dataFolder = this.getDataFolder();
 		File configFile = new File(dataFolder, "config.yml");
 		if (!dataFolder.exists()) {
-			dataFolder.mkdir();
+			if (!dataFolder.mkdirs()) {
+				log(Level.SEVERE, "The plugin folder could not be created! Disabling plugin!");
+				setEnabled(false);
+				return;
+			}
 		}
 
 		if (!configFile.exists()) {
-			PluginConfig conf = new PluginConfig();
+			log(Level.INFO, "Generating default config.yml...");
+			PluginConfig conf = new PluginConfig(this);
 			conf.saveConfigToFile(configFile);
+			log(Level.INFO, "Done!");
 		}
 	}
 
@@ -264,7 +289,7 @@ public class VampireRevamp extends JavaPlugin {
 
 	public void loadCompat() {
 		// Werewolves compat
-		ww = new WerewolfCompat();
+		ww = new WerewolfCompat(this);
 		if (pl != null) {
 			HandlerList.unregisterAll(pl);
 			pl = null;
@@ -284,25 +309,25 @@ public class VampireRevamp extends JavaPlugin {
 		}
 
 		// Paper compat
-		if (isPapermc && new SemVer(1, 13).compareTo(serverVersion) < 0 && this.conf.truce.entityTypes.contains(EntityType.PHANTOM)) {
-			pl = new PhantomListener();
+		if (isPapermc && new SemVer(1, 13).compareTo(serverVersion) < 0) {
+			pl = new PhantomListener(this);
 			Bukkit.getPluginManager().registerEvents(pl, this);
 		}
 
-		if (wg != null && wg.useWG) {
-			dvl = new EntryVampiresListener();
+		if (wg != null && wg.usingWG()) {
+			dvl = new EntryVampiresListener(this);
 			Bukkit.getPluginManager().registerEvents(dvl, this);
 		}
 
 		if (isDisguiseEnabled) {
-			dl = new DisguiseListener();
+			dl = new DisguiseListener(this);
 			Bukkit.getPluginManager().registerEvents(dl, this);
 		}
 
 		if (conf.vampire.canSleepDaytime) {
 			if (plc != null) {
 				if (isPapermc) {
-					bl = new BedListener();
+					bl = new BedListener(this);
 					Bukkit.getPluginManager().registerEvents(bl, this);
 					plc.addPacketListener(bl.leaveButtonListener);
 				}
@@ -327,7 +352,7 @@ public class VampireRevamp extends JavaPlugin {
 	private boolean loadConfig(boolean loadDefaults) {
 		boolean result = false;
 		try {
-			this.conf = new PluginConfig(this.getConfig());
+			this.conf = new PluginConfig(this, this.getConfig());
 			log(Level.INFO, "Loaded configuration!");
 			debugLog(Level.INFO, this.conf.toString());
 			result = true;
@@ -337,7 +362,7 @@ public class VampireRevamp extends JavaPlugin {
 			ex.printStackTrace();
 			if (loadDefaults) {
 				log(Level.INFO, "Loading default config...");
-				this.conf = new PluginConfig();
+				this.conf = new PluginConfig(this);
 			}
 		}
 		boolean reloadPlayers = false;
@@ -375,18 +400,28 @@ public class VampireRevamp extends JavaPlugin {
 						5 * 60 * 1000,
 						data);
 				vPlayerManager.initialize();
-			} catch (IOException ex) {
-				log(Level.SEVERE, "Couldn't create storage! Disabling plugin!");
+			}
+			catch (IOException ex) {
+				log(Level.SEVERE, "Could not instantiate VPlayer manager! Disabling plugin!");
 				ex.printStackTrace();
-				getServer().getPluginManager().disablePlugin(this);
-				disabled = true;
+				setEnabled(false);
 				return false;
 			}
 		}
 		if (reloadPlayers) {
 			for (Player p : Bukkit.getOnlinePlayers()) {
-				VampireRevamp.loadVPlayerFromDB(p.getUniqueId());
+				loadVPlayerFromDB(p.getUniqueId());
 			}
+		}
+		if (rayTraceTaskInstance != null)
+			rayTraceTaskInstance.stop();
+		rayTraceTaskInstance = null;
+		if (rayTraceTask != null)
+			rayTraceTask.cancel();
+		rayTraceTask = null;
+		if (this.isEnabled() && !conf.radiation.useOldRadiationFormula) {
+			rayTraceTaskInstance = new RaytracingTask(this);
+			rayTraceTask = Bukkit.getScheduler().runTaskTimerAsynchronously(this, rayTraceTaskInstance, 50L, 50L);
 		}
 
 		return result;
@@ -428,14 +463,15 @@ public class VampireRevamp extends JavaPlugin {
 				finalResult = true;
 			}
 		}
-		catch (Exception ex) {
+		catch (IOException | InvalidConfigurationException ex) {
 			ex.printStackTrace();
-		}
+        }
 		finally {
 			if (!hasDefaultLocale) {
 				Level msgLevel = disableOnFail ? Level.SEVERE : Level.WARNING;
-				log(msgLevel, "Couldn't load the default locale file!");
+				log(msgLevel, "Could not load the default locale file!");
 				if (disableOnFail) {
+					setEnabled(false);
 					getServer().getPluginManager().disablePlugin(this);
 				}
 				finalResult = false;
@@ -455,18 +491,17 @@ public class VampireRevamp extends JavaPlugin {
 	}
 
 	@Override
-	public void onEnable()
-	{
-		if (disabled) {
-			return;
-		}
-
+	public void onEnable() {
 		// Initialize an audiences instance for the plugin
 		this.adventure = BukkitAudiences.create(this);
 
+		// ProtocolLib compat
+		if (Bukkit.getPluginManager().getPlugin("ProtocolLib") != null)
+			plc = new ProtocolLibCompat(this);
+		else
+			log(Level.WARNING, "ProtocolLib plugin not detected. Disabled ProtocolLib compat.");
+
 		isDisguiseEnabled = Bukkit.getPluginManager().isPluginEnabled("LibsDisguises");
-		if (isDisguiseEnabled)
-			DisguiseUtil.plugin = this;
 
 		if (conf.compatibility.useVampirePermGroup) {
 			hasVault = getServer().getPluginManager().getPlugin("Vault") != null;
@@ -500,30 +535,34 @@ public class VampireRevamp extends JavaPlugin {
 		if (!loadLocales(true))
 			return;
 
-		CmdVampire baseCommand = new CmdVampire();
+		CmdVampire baseCommand = new CmdVampire(this);
 		manager.registerCommand(baseCommand);
 		baseCommand.initialize();
 		manager.getCommandCompletions().registerAsyncCompletion("yesno", c -> List.of("yes", "no"));
 		manager.getCommandCompletions().registerAsyncCompletion("reloads", c -> List.of("locales", "config", "all"));
 
-		altarDark = new AltarDark();
-		altarLight = new AltarLight();
+		altarDark = new AltarDark(this);
+		altarLight = new AltarLight(this);
 
 		// PlaceholderAPI
 		if(Bukkit.getPluginManager().getPlugin("PlaceholderAPI") != null) {
-			expansionPAPI = new VampireExpansion();
+			expansionPAPI = new VampireExpansion(this);
 			expansionPAPI.register();
 		}
 
 		// Listener
-		Bukkit.getPluginManager().registerEvents(new ListenerMain(), this);
+		Bukkit.getPluginManager().registerEvents(new ListenerMain(this), this);
 
 
 		BukkitScheduler scheduler = getServer().getScheduler();
 
-		cleanTaskId = scheduler.scheduleSyncRepeatingTask(this, () -> vPlayerManager.saveAll(SaveOperation.SAVE_ALL_AND_REMOVE_INACTIVE), 0L, 5 * 60 * 20L);
-		theTaskId = scheduler.scheduleSyncRepeatingTask(this, new TheTask(), 0L, (this.conf.general.taskDelayMillis * 20L) / 1000);
-		batTaskId = scheduler.scheduleSyncRepeatingTask(this, new BatTask(), 0L, (this.conf.general.batTaskDelayMillis * 20L) / 1000);
+		cleanTask = scheduler.runTaskTimer(this, () -> vPlayerManager.saveAll(SaveOperation.SAVE_ALL_AND_REMOVE_INACTIVE), 0L, 5 * 60 * 20L);
+		theTask = scheduler.runTaskTimer(this, new TheTask(this), 0L, (this.conf.general.taskDelayMillis * 20L) / 1000);
+		batTask = scheduler.runTaskTimer(this, new BatTask(this), 0L, (this.conf.general.batTaskDelayMillis * 20L) / 1000);
+		if (!conf.radiation.useOldRadiationFormula) {
+			rayTraceTaskInstance = new RaytracingTask(this);
+			rayTraceTask = Bukkit.getScheduler().runTaskTimerAsynchronously(this, rayTraceTaskInstance, 50L, 50L);
+		}
 	}
 
 	public static YamlConfiguration fileToYamlConfig (File file) throws IOException, InvalidConfigurationException {
@@ -533,7 +572,7 @@ public class VampireRevamp extends JavaPlugin {
 		return yamlConfiguration;
 	}
 
-	public static boolean localeLoader(File file, Locale locale) {
+	public boolean localeLoader(File file, Locale locale) {
 		boolean loaded = false;
 		try {
 			YamlConfiguration config = fileToYamlConfig(file);
@@ -563,7 +602,12 @@ public class VampireRevamp extends JavaPlugin {
 		return loaded;
 	}
 
-	public static void log(Level level, String rawMessage) {
+	public void log(Level level, String rawMessage) {
+		if (adventure == null) {
+			getLogger().log(level, rawMessage);
+			return;
+		}
+		rawMessage = "[" + getName() + "] " + rawMessage;
 		TextColor color = null;
 		if (level == Level.SEVERE)
 			color = NamedTextColor.RED;
@@ -576,24 +620,24 @@ public class VampireRevamp extends JavaPlugin {
 		if (color != null)
 			message = message.colorIfAbsent(color);
 
-		plugin.adventure.console().sendMessage(message);
+		adventure.console().sendMessage(message);
 	}
 
-	public static void debugLog(Level level, String message) {
+	public void debugLog(Level level, String message) {
 		if (getVampireConfig().general.debug)
 			log(level, message);
 	}
 
 	public static VampireRevamp getInstance() {
-		return VampireRevamp.plugin;
+		return (VampireRevamp) Bukkit.getPluginManager().getPlugin("VampireRevamp");
 	}
 
-	public static PluginConfig getVampireConfig() {
-		return VampireRevamp.plugin.conf;
+	public PluginConfig getVampireConfig() {
+		return conf;
 	}
 
-	public static PaperCommandManager getCommandManager() {
-		return VampireRevamp.plugin.manager;
+	public PaperCommandManager getCommandManager() {
+		return manager;
 	}
 
 	public File getPlayerFolder() {
@@ -606,13 +650,16 @@ public class VampireRevamp extends JavaPlugin {
 			this.adventure.close();
 			this.adventure = null;
 		}
-		if (disabled) {
-			return;
-		}
-		BukkitScheduler scheduler = getServer().getScheduler();
-		scheduler.cancelTask(cleanTaskId);
-		scheduler.cancelTask(theTaskId);
-		scheduler.cancelTask(batTaskId);
+		if (cleanTask != null)
+			cleanTask.cancel();
+		if (theTask != null)
+			theTask.cancel();
+		if (batTask != null)
+			batTask.cancel();
+		if (rayTraceTaskInstance != null)
+			rayTraceTaskInstance.stop();
+		if (rayTraceTask != null)
+			rayTraceTask.cancel();
 
 		if (vPlayerManager != null) {
 			log(Level.INFO, "Saving player data...");
@@ -649,37 +696,37 @@ public class VampireRevamp extends JavaPlugin {
 		);
 	}
 
-	private static CommandIssuer getCommandIssuer(CommandSender sender) {
-		return getInstance().manager.getCommandIssuer(sender);
+	private CommandIssuer getCommandIssuer(CommandSender sender) {
+		return manager.getCommandIssuer(sender);
 	}
 
-	public static void sendMessage(CommandSender recipient, Component message) {
+	public void sendMessage(CommandSender recipient, Component message) {
 		if (recipient instanceof Player) {
-			plugin.adventure.player(((Player) recipient).getUniqueId()).sendMessage(message);
+			adventure.player(((Player) recipient).getUniqueId()).sendMessage(message);
 		} else if (recipient instanceof ConsoleCommandSender) {
-			plugin.adventure.console().sendMessage(message);
+			adventure.console().sendMessage(message);
 		} else {
 			recipient.spigot().sendMessage(BungeeComponentSerializer.get().serialize(message));
 		}
 	}
 
-	public static void sendMessage(CommandSender recipient, MessageType type, MessageKeyProvider keyProvider, String... replacements) {
+	public void sendMessage(CommandSender recipient, MessageType type, MessageKeyProvider keyProvider, String... replacements) {
 		Component message = getMessage(recipient, keyProvider, replacements);
 		sendMessage(recipient, message, type);
 	}
 
 	@SafeVarargs
-    public static void sendMessage(CommandSender recipient, MessageType type, MessageKeyProvider keyProvider, Tuple<String, Component>... replacements) {
+    public final void sendMessage(CommandSender recipient, MessageType type, MessageKeyProvider keyProvider, Tuple<String, Component>... replacements) {
 		Component message = getMessage(recipient, keyProvider, replacements);
 		sendMessage(recipient, message, type);
 	}
 
-	public static void sendMessage(CommandSender recipient, MessageType type, MessageKeyProvider keyProvider) {
+	public void sendMessage(CommandSender recipient, MessageType type, MessageKeyProvider keyProvider) {
 		Component message = getMessage(recipient, keyProvider);
 		sendMessage(recipient, message, type);
 	}
 
-	private static void sendMessage(CommandSender recipient, Component message, MessageType type) {
+	private void sendMessage(CommandSender recipient, Component message, MessageType type) {
 		NamedTextColor color = null;
 		if (type == MessageType.ERROR)
 			color = NamedTextColor.RED;
@@ -695,10 +742,10 @@ public class VampireRevamp extends JavaPlugin {
 	}
 
 	@SafeVarargs
-	public static List<Component> getMessageList(CommandSender recipient, MessageKeyProvider keyProvider, Tuple<String, Component>... replacements) {
-		String[] rawMessages = VampireRevamp.getCommandManager()
+	public final List<Component> getMessageList(CommandSender recipient, MessageKeyProvider keyProvider, Tuple<String, Component>... replacements) {
+		String[] rawMessages = getCommandManager()
 				.getLocales()
-				.getMessage(VampireRevamp.getCommandIssuer(recipient), keyProvider)
+				.getMessage(getCommandIssuer(recipient), keyProvider)
 				.split("\\r?\\n");
         return Arrays.stream(rawMessages)
 				.map((rm) -> MiniMessage.miniMessage().deserialize(rm))
@@ -708,18 +755,18 @@ public class VampireRevamp extends JavaPlugin {
 					}
 					return comp;
 				})
-				.toList();
+				.collect(Collectors.toList());
 	}
 
-	public static Component getMessage(CommandSender recipient, MessageKeyProvider keyProvider) {
-		String rawMessage =  VampireRevamp.getCommandManager()
+	public Component getMessage(CommandSender recipient, MessageKeyProvider keyProvider) {
+		String rawMessage =  getCommandManager()
 				.getLocales()
-				.getMessage(VampireRevamp.getCommandIssuer(recipient), keyProvider)
+				.getMessage(getCommandIssuer(recipient), keyProvider)
 				.replaceAll("\\r?\\n", "\n");
 		return MiniMessage.miniMessage().deserialize(rawMessage);
 	}
 
-	public static Component getMessage(CommandSender recipient, MessageKeyProvider keyProvider, String... replacements) {
+	public Component getMessage(CommandSender recipient, MessageKeyProvider keyProvider, String... replacements) {
 		if (replacements.length % 2 == 1)
 			throw new IllegalArgumentException("Odd number of replacements. Please contact the dev and send them the whole error");
 		Tuple<String, Component>[] tuples = new Tuple[replacements.length / 2];
@@ -730,7 +777,7 @@ public class VampireRevamp extends JavaPlugin {
 	}
 
 	@SafeVarargs
-    public static Component getMessage(CommandSender recipient, MessageKeyProvider keyProvider, Tuple<String, Component>... replacements) {
+    public final Component getMessage(CommandSender recipient, MessageKeyProvider keyProvider, Tuple<String, Component>... replacements) {
 		Component message = getMessage(recipient, keyProvider);
         for (Tuple<String, Component> replacement : replacements) {
             message = message.replaceText(
@@ -740,8 +787,8 @@ public class VampireRevamp extends JavaPlugin {
 		return message;
 	}
 
-	@NonNull
-	public static Component[] getYouAreWere(@NonNull CommandSender sender, @NonNull OfflinePlayer target, boolean self) {
+	@NotNull
+	public Component[] getYouAreWere(@NotNull CommandSender sender, @NotNull OfflinePlayer target, boolean self) {
 		Component you;
 		MessageKeyProvider areKey;
 		MessageKeyProvider wereKey;
@@ -751,7 +798,8 @@ public class VampireRevamp extends JavaPlugin {
 			wereKey = GrammarMessageKeys.TO_BE_2ND_PAST;
 		}
 		else {
-			you = Component.text(target.getName());
+			String name = target.getName();
+			you = Component.text(name != null ? name : "UNKNOWN");
 			areKey = GrammarMessageKeys.TO_BE_3RD;
 			wereKey = GrammarMessageKeys.TO_BE_3RD_PAST;
 		}
@@ -761,19 +809,19 @@ public class VampireRevamp extends JavaPlugin {
 		return new Component[] {you, are, were};
 	}
 
-	public static void saveVPlayer(@Nullable UUID uuid) {
+	public void saveVPlayer(@Nullable UUID uuid) {
 		if (uuid == null)
 			return;
-		plugin.vPlayerManager.save(uuid);
+		vPlayerManager.save(uuid);
 	}
 
-	public static void saveVPlayer(@Nullable Player player) {
+	public void saveVPlayer(@Nullable Player player) {
 		if (player == null)
 			return;
 		saveVPlayer(player.getUniqueId());
 	}
 
-	public static void saveVPlayer(@Nullable OfflinePlayer offlinePlayer) {
+	public void saveVPlayer(@Nullable OfflinePlayer offlinePlayer) {
 		if (offlinePlayer == null)
 			return;
 		saveVPlayer(offlinePlayer.getUniqueId());
@@ -781,15 +829,15 @@ public class VampireRevamp extends JavaPlugin {
 
 	@Nullable
 	@Contract(value = "null -> null")
-	public static VPlayer getVPlayer(@Nullable UUID uuid) {
+	public VPlayer getVPlayer(@Nullable UUID uuid) {
 		if (uuid == null)
 			return null;
-		return playerCollection.computeIfAbsent(uuid, (k) -> plugin.vPlayerManager.tryGetDataNow(k));
+		return playerCollection.computeIfAbsent(uuid, (k) -> vPlayerManager.tryGetDataNow(k));
 	}
 
 	@Nullable
 	@Contract(value = "null -> null")
-	public static VPlayer getVPlayer(@Nullable Player player) {
+	public VPlayer getVPlayer(@Nullable Player player) {
 		if (player == null)
 			return null;
 		return getVPlayer(player.getUniqueId());
@@ -797,7 +845,7 @@ public class VampireRevamp extends JavaPlugin {
 
 	@Nullable
 	@Contract(value = "null -> null")
-	public static VPlayer getVPlayer(@Nullable OfflinePlayer offlinePlayer) {
+	public VPlayer getVPlayer(@Nullable OfflinePlayer offlinePlayer) {
 		if (offlinePlayer == null)
 			return null;
 		return getVPlayer(offlinePlayer.getUniqueId());
@@ -809,7 +857,7 @@ public class VampireRevamp extends JavaPlugin {
 	 * @return the previous stored value
 	 */
 	@Nullable
-	public static VPlayer storeVPlayer(@NotNull VPlayer vPlayer) {
+	public VPlayer storeVPlayer(@NotNull VPlayer vPlayer) {
 		return playerCollection.put(vPlayer.getUuid(), vPlayer);
 	}
 
@@ -817,7 +865,7 @@ public class VampireRevamp extends JavaPlugin {
 	 * Use this method at your own peril
 	 * @param uuid the UUID of the player to load
 	 */
-	public static void loadVPlayerFromDB(@NotNull UUID uuid) {
-		plugin.vPlayerManager.loadData(uuid);
+	public void loadVPlayerFromDB(@NotNull UUID uuid) {
+		vPlayerManager.loadData(uuid);
 	}
 }
