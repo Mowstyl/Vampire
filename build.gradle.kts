@@ -18,7 +18,7 @@ val getGitHash: String by lazy {
 }
 
 group = "com.clanjhoo"
-version = "1.0.0-SNAPSHOT"//.replace("SNAPSHOT", getGitHash)
+version = "1.0.0"//.replace("SNAPSHOT", getGitHash)
 description = "Anyone can become a vampire, but do you want to? During daytime vampires cower from sunlight. During the night the humans reach for their holy water and wooden stakes as the vampires roam the lands with inhuman strength, speed and levitation-powers. Driven by their endless bloodlust, they devour all living in their way."
 
 ext.set("projectName", gradle.extra["projectName"].toString())
