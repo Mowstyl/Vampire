@@ -75,7 +75,7 @@ public class ResourceUtil {
 		
 		int actualAmount = 0;
 		for (ItemStack pstack : player.getInventory().getStorageContents()) {
-			if (pstack.getType() == requiredType) {
+			if (pstack != null && pstack.getType() == requiredType) {
 				if (requiredPotion == null
 						|| plugin.getVersionCompat().getBasePotionType((PotionMeta) pstack.getItemMeta()) == requiredPotion) {
 					actualAmount += pstack.getAmount();
