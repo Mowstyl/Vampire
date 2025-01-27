@@ -7,6 +7,10 @@ authors: [Cayorion, Mowstyl]
 website: https://clanjhoo.com
 softdepend: [WorldEdit, WorldGuard, LibsDisguises, PlaceholderAPI, Vault, ProtocolLib]
 loadbefore: [Werewolf]
+libraries:
+  - ${libs.kyori.adventure.minimessage.get()}
+  - ${libs.kyori.adventure.gson.get()}
+  - ${libs.kyori.platform.bukkit.get()}
 permissions:
 # -------------------------------------------- #
 # THE REAL NODES

@@ -21,7 +21,7 @@ maven.pom {
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(17)
+        languageVersion = JavaLanguageVersion.of(21)
         vendor = JvmVendorSpec.ORACLE
     }
 }
@@ -54,6 +54,18 @@ repositories {
         }
     }
     maven {
+        url = uri("https://repo.md-5.net/content/repositories/releases/")
+        content {
+            includeGroup("LibsDisguises")
+        }
+    }
+    maven {
+        url = uri("https://repo.codemc.io/repository/maven-releases/")
+        content {
+            includeGroup("com.github.retrooper")
+        }
+    }
+    maven {
         url = uri("https://maven.enginehub.org/repo/")
         content {
             includeGroup("com.sk89q.worldedit")
@@ -77,12 +89,6 @@ repositories {
         content {
             includeGroup("com.clanjhoo")
             includeGroup("us.rfsmassacre")
-        }
-    }
-    maven {
-        url = uri("https://mvn.lumine.io/repository/maven-public/")
-        content {
-            includeGroup("LibsDisguises")
         }
     }
     maven {
@@ -110,7 +116,11 @@ dependencies {
     compileOnly(libs.sk89q.worldguard.bukkit) {
         isTransitive = false
     }
-    compileOnly(libs.libraryaddict.libsdisguises) {
+    //compileOnly(libs.libraryaddict.libsdisguises) {
+    //    isTransitive = false
+    //}
+    compileOnly(files("D:\\Users\\Mowser\\MineLibs\\LibsDisguises-10.0.44-SNAPSHOT-1520.jar"))
+    compileOnly(libs.packetevents.api) {
         isTransitive = false
     }
     compileOnly(libs.clip.placeholderapi) {
@@ -128,20 +138,20 @@ dependencies {
     }
     implementation(libs.aikar.acfpaper)
     implementation(libs.clanjhoo.dbhandler)
-    implementation(libs.kyori.adventure.minimessage)
-    implementation(libs.kyori.adventure.gson)
-    implementation(libs.kyori.platform.bukkit)
-}
-
-tasks.withType<JavaCompile> {
-    options.encoding = "UTF-8"
-}
-
-tasks.withType<Javadoc> {
-    options.encoding = "UTF-8"
+    compileOnly(libs.kyori.adventure.minimessage)
+    compileOnly(libs.kyori.adventure.gson)
+    compileOnly(libs.kyori.platform.bukkit)
 }
 
 tasks {
+    compileJava {
+        options.encoding = Charsets.UTF_8.name()
+    }
+
+    javadoc {
+        options.encoding = Charsets.UTF_8.name()
+    }
+
     processResources {
         filesMatching("**/plugin.yml") {
             expand( project.properties )
@@ -152,8 +162,8 @@ tasks {
         relocate("co.aikar.commands", "co.aikar.${rootProject.name.lowercase()}.acf")
         relocate("co.aikar.locales", "co.aikar.${rootProject.name.lowercase()}.locales")
         relocate("com.clanjhoo.dbhandler", "com.clanjhoo.${rootProject.name.lowercase()}.dbhandler")
-        relocate("net.kyori", "net.kyori.${rootProject.name.lowercase()}")
-        relocate("org.slf4j", "org.${rootProject.name.lowercase()}.sl4fj")
+        //relocate("net.kyori", "net.kyori.${rootProject.name.lowercase()}")
+        //relocate("org.slf4j", "org.${rootProject.name.lowercase()}.sl4fj")
         exclude("com/google/gson/**")
         exclude("META-INF/services/**")
         exclude("META-INF/versions/**")
@@ -161,7 +171,7 @@ tasks {
         exclude("META-INF/maven/com.zaxxer/**")
         exclude("META-INF/maven/com.google.code.gson/**")
         exclude("META-INF/maven/net.jodah/**")
-        exclude("META-INF/maven/org.slf4j/**")
+        //exclude("META-INF/maven/org.slf4j/**")
         exclude("META-INF/maven/com.clanjhoo/dbhandler/**")
     }
 

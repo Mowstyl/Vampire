@@ -1036,7 +1036,7 @@ public class VPlayer {
         double foodPerMilli = this.isNosferatu() ? conf.vampire.regenNosferatu.foodPerMilli : conf.vampire.regen.foodPerMilli;
         double healthPerFood = this.isNosferatu() ? conf.vampire.regenNosferatu.healthPerFood : conf.vampire.regen.healthPerFood;
 
-        AttributeInstance maxHealthAttr = me.getAttribute(Attribute.GENERIC_MAX_HEALTH);
+        AttributeInstance maxHealthAttr = me.getAttribute(Attribute.MAX_HEALTH);
         double maxHealth = 20;
         if (maxHealthAttr != null)
             maxHealth = maxHealthAttr.getValue();

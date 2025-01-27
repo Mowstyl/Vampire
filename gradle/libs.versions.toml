@@ -4,15 +4,18 @@ generatePOMPlugin = { id = "ru.vyarus.java-lib", version.ref = "generatePOMGradl
 spotBugsPlugin = { id = "com.github.spotbugs", version.ref = "spotBugsGradlePlugin" }
 
 [versions]
-shadowGradlePlugin = "8.3.0"
+shadowGradlePlugin = "9.0.0-beta6"
 generatePOMGradlePlugin = "3.0.0"
-spotBugsGradlePlugin = "6.0.20"
-bukkitAPI = "1.20.4-R0.1-SNAPSHOT"
+spotBugsGradlePlugin = "6.1.2"
+userdevGradlePlugin = "2.0.0-beta.14"
+
+bukkitAPI = "1.21.4-R0.1-SNAPSHOT"
 dbHandler = "4.0.3"
 acfPaper = "0.5.1-SNAPSHOT"
 worldEdit = "7.2.0-SNAPSHOT"
 worldGuard = "7.0.0"
 libsDisguises = "10.0.42"
+packetEvents = "2.7.0"
 placeholderAPI = "2.11.6"
 vaultAPI = "1.7.1"
 werewolves = "1.7.2"
@@ -31,6 +34,7 @@ sk89q-worldedit-bukkit = { group = "com.sk89q.worldedit", name = "worldedit-bukk
 sk89q-worldguard-core = { group = "com.sk89q.worldguard", name = "worldguard-core", version.ref = "worldGuard" }
 sk89q-worldguard-bukkit = { group = "com.sk89q.worldguard", name = "worldguard-bukkit", version.ref = "worldGuard" }
 libraryaddict-libsdisguises = { group = "LibsDisguises", name = "LibsDisguises", version.ref = "libsDisguises" }
+packetevents-api = { group = "com.github.retrooper", name = "packetevents-api", version.ref = "packetEvents" }
 clip-placeholderapi = { group = "me.clip", name = "placeholderapi", version.ref = "placeholderAPI" }
 milkbowl-vaultapi = { group = "com.github.MilkBowl", name = "VaultAPI", version.ref = "vaultAPI" }
 rfsmassacre-werewolves = { group = "us.rfsmassacre", name = "Werewolf", version.ref = "werewolves" }
