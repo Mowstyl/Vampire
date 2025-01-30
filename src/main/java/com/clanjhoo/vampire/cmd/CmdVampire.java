@@ -493,37 +493,36 @@ public class CmdVampire extends BaseCommand {
 			return;
 		}
 
-		Player pyou = Bukkit.getPlayer(targetName);
+		Player pYou = Bukkit.getPlayer(targetName);
 
-		if (pyou != null) {
-			double amount = MathUtil.limitNumber(rawamount, 0D, 20D);
-			if (amount != rawamount) {
-				plugin.sendMessage(sender,
-						MessageType.ERROR,
-						CommandMessageKeys.OFFER_INVALID_VALUE);
-				return;
-			}
-			VPlayer vMe = plugin.getVPlayer(sender);
-			if (vMe == null) {
-				plugin.sendMessage(sender,
-						MessageType.ERROR,
-						CommandMessageKeys.DATA_NOT_FOUND);
-				return;
-			}
-			VPlayer vYou = plugin.getVPlayer(sender);
-			if (vYou == null) {
-				plugin.sendMessage(sender,
-						MessageType.ERROR,
-						CommandMessageKeys.DATA_NOT_FOUND);
-				return;
-			}
-			vMe.tradeOffer(sender, vYou, amount);
-		}
-		else {
+		if (pYou == null) {
 			plugin.sendMessage(sender,
 					MessageType.ERROR,
 					CommandMessageKeys.NO_PLAYER_FOUND);
+			return;
 		}
+		double amount = MathUtil.limitNumber(rawamount, 0D, 20D);
+		if (amount != rawamount) {
+			plugin.sendMessage(sender,
+					MessageType.ERROR,
+					CommandMessageKeys.OFFER_INVALID_VALUE);
+			return;
+		}
+		VPlayer vMe = plugin.getVPlayer(sender);
+		if (vMe == null) {
+			plugin.sendMessage(sender,
+					MessageType.ERROR,
+					CommandMessageKeys.DATA_NOT_FOUND);
+			return;
+		}
+		VPlayer vYou = plugin.getVPlayer(pYou);
+		if (vYou == null) {
+			plugin.sendMessage(sender,
+					MessageType.ERROR,
+					CommandMessageKeys.DATA_NOT_FOUND);
+			return;
+		}
+		vMe.tradeOffer(sender, vYou, amount);
 	}
 
 	@Subcommand("accept|a")

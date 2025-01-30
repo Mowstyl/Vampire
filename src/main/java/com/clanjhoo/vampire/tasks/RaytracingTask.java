@@ -25,6 +25,10 @@ public class RaytracingTask implements Runnable {
         sunUtil = SunUtil.get(plugin);
     }
 
+    public SunUtil getSunUtil() {
+        return sunUtil;
+    }
+
     private void rayTraceEveryone() {
         // Raytrace for all vampire players
         for (Player player : Bukkit.getOnlinePlayers()) {

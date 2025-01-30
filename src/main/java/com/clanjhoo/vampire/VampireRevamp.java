@@ -490,6 +490,10 @@ public class VampireRevamp extends JavaPlugin {
 		return true;
 	}
 
+	public SunUtil getSunUtil() {
+		return rayTraceTaskInstance.getSunUtil();
+	}
+
 	@Override
 	public void onEnable() {
 		// Initialize an audiences instance for the plugin
