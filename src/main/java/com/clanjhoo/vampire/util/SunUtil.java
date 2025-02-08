@@ -211,7 +211,7 @@ public class SunUtil {
 	public double calcPlayerIrradiation(VPlayer vPlayer, Player player)
 	{
 		// Player must exist.
-		if ( ! player.isOnline()) return 0;
+		if (!player.isOnline()) return 0;
 		if (player.isDead()) return 0;
 		
 		// Insolation

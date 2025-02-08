@@ -24,6 +24,7 @@ public class VampireConfig {
     public final RegenConfig regen;
     public final RegenConfig regenNosferatu;
     public final double damageFactor;
+    public final double nosferatuDamageFactor;
     public final int respawnFood;
     public final int respawnHealth;
     public final HolyItemConfig holyItem;
@@ -53,6 +54,7 @@ public class VampireConfig {
         regen = new RegenConfig(false);
         regenNosferatu = new RegenConfig(true);
         damageFactor = 1;
+        nosferatuDamageFactor = 1;
         respawnFood = 20;
         respawnHealth = 20;
         holyItem = new HolyItemConfig(plugin);
@@ -142,6 +144,8 @@ public class VampireConfig {
 
         damageFactor = cs.getDouble("damageFactor", def.damageFactor);
 
+        nosferatuDamageFactor = cs.getDouble("nosferatuDamageFactor", def.nosferatuDamageFactor);
+
         respawnFood = cs.getInt("respawnFood", def.respawnFood);
 
         respawnHealth = cs.getInt("respawnFood", def.respawnHealth);
@@ -175,8 +179,10 @@ public class VampireConfig {
         result = result && this.regen.saveConfigToFile(configWriter, indent, level + 1);
         result = result && PluginConfig.writeLine(configWriter, "regenNosferatu:", indent, level);
         result = result && this.regenNosferatu.saveConfigToFile(configWriter, indent, level + 1);
-        result = result && PluginConfig.writeLine(configWriter, "# Damage multiplier applied to all attacks performed by a vampire player", indent, level);
+        result = result && PluginConfig.writeLine(configWriter, "# Damage multiplier applied to all attacks performed by a normal vampire", indent, level);
         result = result && PluginConfig.writeLine(configWriter, "damageFactor: " + this.damageFactor, indent, level);
+        result = result && PluginConfig.writeLine(configWriter, "# Damage multiplier applied to all attacks performed by a nosferatu", indent, level);
+        result = result && PluginConfig.writeLine(configWriter, "nosferatuDamageFactor: " + this.nosferatuDamageFactor, indent, level);
         result = result && PluginConfig.writeLine(configWriter, "# Food level when a vampire player is respawned", indent, level);
         result = result && PluginConfig.writeLine(configWriter, "respawnFood: " + this.respawnFood, indent, level);
         result = result && PluginConfig.writeLine(configWriter, "# Health level when a vampire player is respawned", indent, level);
@@ -204,6 +210,7 @@ public class VampireConfig {
                 ", regen=" + regen +
                 ", regenNosferatu=" + regenNosferatu +
                 ", damageFactor=" + damageFactor +
+                ", nosferatuDamageFactor=" + nosferatuDamageFactor +
                 ", respawnFood=" + respawnFood +
                 ", respawnHealth=" + respawnHealth +
                 ", holyItem=" + holyItem +

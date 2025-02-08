@@ -1354,15 +1354,15 @@ public class VPlayer {
     // -------------------------------------------- //
 
     public double combatDamageFactor() {
-        double damageFactor = 0D;
+        double damageFactor = 1D;
         Player me = Bukkit.getPlayer(uuid);
 
         if (me != null) {
             PluginConfig conf = plugin.getVampireConfig();
             if (this.isBloodlusting())
-                damageFactor = conf.vampire.bloodlust.damageFactor;
+                damageFactor = nosferatu ? conf.vampire.bloodlust.nosferatuDamageFactor : conf.vampire.bloodlust.damageFactor;
             else
-                damageFactor = conf.vampire.damageFactor;
+                damageFactor = nosferatu ? conf.vampire.nosferatuDamageFactor : conf.vampire.damageFactor;
         }
 
         return damageFactor;
