@@ -1142,7 +1142,7 @@ public class CmdVampire extends BaseCommand {
 				return;
 			}
 
-			AttributeInstance maxHealthAttr = player.getAttribute(Attribute.MAX_HEALTH);
+			AttributeInstance maxHealthAttr = player.getAttribute(plugin.getVersionCompat().HEALTH_ATTR);
 			double maxHealth = 20;
 			if (maxHealthAttr != null)
 				maxHealth = maxHealthAttr.getValue();

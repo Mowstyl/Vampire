@@ -634,11 +634,11 @@ public class ListenerMain implements Listener {
 
                             double food = damage * fullFoodQuotient;
                             if (conf.general.useOldFoodFormula) {
-                                AttributeInstance maxHealthDamagee = damagee.getAttribute(Attribute.MAX_HEALTH);
+                                AttributeInstance maxHealthDamagee = damagee.getAttribute(plugin.getVersionCompat().HEALTH_ATTR);
                                 double baseMaxHealthDamagee = 20;
                                 if (maxHealthDamagee != null)
                                     baseMaxHealthDamagee = maxHealthDamagee.getBaseValue();
-                                AttributeInstance maxHealthDamager = damagee.getAttribute(Attribute.MAX_HEALTH);
+                                AttributeInstance maxHealthDamager = damagee.getAttribute(plugin.getVersionCompat().HEALTH_ATTR);
                                 double baseMaxHealthDamager = 20;
                                 if (maxHealthDamager != null)
                                     baseMaxHealthDamager = maxHealthDamager.getBaseValue();

@@ -3,6 +3,7 @@ package com.clanjhoo.vampire.compat;
 import com.clanjhoo.vampire.VampireRevamp;
 import com.clanjhoo.vampire.util.SemVer;
 import org.bukkit.*;
+import org.bukkit.attribute.Attribute;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
 import org.bukkit.entity.*;
@@ -31,6 +32,7 @@ import java.util.regex.Pattern;
 
 
 public final class VersionCompat {
+    public final static SemVer v1_21_3 = new SemVer(1, 21, 3);  // Removed generic_ from attributes
     public final static SemVer v1_21 = new SemVer(1, 21);  // Breeze mob
     public final static SemVer v1_20_6 = new SemVer(1, 20, 6);
     public final static SemVer v1_20_5 = new SemVer(1, 20, 5);
@@ -44,11 +46,12 @@ public final class VersionCompat {
     public final static SemVer v1_15 = new SemVer(1, 15);  // Bees
     public final static SemVer v1_14 = new SemVer(1, 14);  // PersistentDataContainer
     public final static SemVer v1_13 = new SemVer(1, 13);
-    public final static SemVer minSupported = new SemVer(1, 17);  // Java 17
+    public final static SemVer minSupported = new SemVer(1, 18);  // Java 17
 
     private final SemVer currentVersion;
     private final VampireRevamp plugin;
     private final Set<EntityType> undeadMobsPre1205;
+    public final Attribute HEALTH_ATTR;
 
 
     public VersionCompat(@NotNull VampireRevamp plugin, @NotNull SemVer serverVersion) {
@@ -74,6 +77,10 @@ public final class VersionCompat {
         undeadMobsPre1205.add(getEntityTypeByName("zombified_piglin"));
         if (currentVersion.compareTo(v1_16) >= 0)
             undeadMobsPre1205.add(EntityType.valueOf("ZOGLIN"));
+        if (currentVersion.compareTo(v1_21_3) <= 0)
+            HEALTH_ATTR = Attribute.valueOf("GENERIC_MAX_HEALTH");
+        else
+            HEALTH_ATTR = Attribute.MAX_HEALTH;
     }
 
     @NotNull

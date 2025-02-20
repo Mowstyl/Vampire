@@ -10,7 +10,7 @@ spotBugsGradlePlugin = "6.1.2"
 userdevGradlePlugin = "2.0.0-beta.14"
 
 bukkitAPI = "1.21.4-R0.1-SNAPSHOT"
-dbHandler = "4.0.3"
+dbHandler = "4.0.4"
 acfPaper = "0.5.1-SNAPSHOT"
 worldEdit = "7.2.0-SNAPSHOT"
 worldGuard = "7.0.0"
