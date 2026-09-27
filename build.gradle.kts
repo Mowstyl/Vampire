@@ -70,6 +70,7 @@ repositories {
         content {
             includeGroup("com.sk89q.worldedit")
             includeGroup("com.sk89q.worldguard")
+            includeGroup("org.enginehub.lin-bus")
         }
     }
     maven {
