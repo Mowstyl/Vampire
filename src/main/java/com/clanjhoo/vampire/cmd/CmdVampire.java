@@ -1,167 +1,162 @@
 package com.clanjhoo.vampire.cmd;
 
-import co.aikar.commands.*;
-import co.aikar.commands.annotation.*;
-import co.aikar.commands.annotation.Optional;
 import com.clanjhoo.vampire.*;
-import com.clanjhoo.vampire.keyproviders.CommandMessageKeys;
-import com.clanjhoo.vampire.keyproviders.GrammarMessageKeys;
-import com.clanjhoo.vampire.keyproviders.SkillMessageKeys;
-import com.clanjhoo.vampire.keyproviders.VampirismMessageKeys;
+import com.clanjhoo.vampire.cmd.arguments.ReloadArgumentType;
+import com.clanjhoo.vampire.cmd.arguments.YesNoArgumentType;
+import com.clanjhoo.vampire.keyproviders.*;
 import com.clanjhoo.vampire.config.PluginConfig;
 import com.clanjhoo.vampire.entity.VPlayer;
 import com.clanjhoo.vampire.util.*;
+import com.destroystokyo.paper.profile.PlayerProfile;
+import com.mojang.brigadier.Command;
+import com.mojang.brigadier.arguments.DoubleArgumentType;
+import com.mojang.brigadier.arguments.IntegerArgumentType;
+import com.mojang.brigadier.arguments.StringArgumentType;
+import com.mojang.brigadier.builder.LiteralArgumentBuilder;
+import com.mojang.brigadier.context.CommandContext;
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import com.mojang.brigadier.tree.CommandNode;
+import com.mojang.brigadier.tree.LiteralCommandNode;
+import io.papermc.paper.command.brigadier.CommandSourceStack;
+import io.papermc.paper.command.brigadier.Commands;
+import io.papermc.paper.command.brigadier.argument.ArgumentTypes;
+import io.papermc.paper.command.brigadier.argument.resolvers.PlayerProfileListResolver;
+import io.papermc.paper.command.brigadier.argument.resolvers.selector.EntitySelectorArgumentResolver;
+import io.papermc.paper.command.brigadier.argument.resolvers.selector.PlayerSelectorArgumentResolver;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.JoinConfiguration;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
-import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.*;
-import java.util.Map.Entry;
 import java.util.logging.Level;
 
-@CommandAlias("v|vampire")
-@CommandPermission("vampire.basecommand")
-public class CmdVampire extends BaseCommand {
+import static com.clanjhoo.vampire.util.CommandUtils.*;
 
-	private final VampireRevamp plugin;
-	private final Map<String, RegisteredCommand> commandMap;
-	private final TextUtil textUtil;
-	private final ResourceUtil resUtil;
-	private final BloodFlaskUtil bloodUtil;
-	private final HolyWaterUtil holyUtil;
-	private final SunUtil sunUtil;
-	private final RingUtil ringUtil;
-	
 
-	public CmdVampire(VampireRevamp plugin) {
-		this.plugin = plugin;
-		commandMap = new HashMap<>();
-		textUtil = TextUtil.get(plugin);
-		resUtil = ResourceUtil.get(plugin);
-		bloodUtil = BloodFlaskUtil.get(plugin);
-		holyUtil = HolyWaterUtil.get(plugin);
-		sunUtil = SunUtil.get(plugin);
-		ringUtil = RingUtil.get(plugin);
+public class CmdVampire {
+	private static VampireRevamp plugin = null;
+	private static VampireRevamp getPlugin() {
+		if (plugin == null)
+			plugin = VampireRevamp.getInstance();
+		return plugin;
 	}
 
-	public void initialize() {
-		initializeMap();
+	private static TextUtil textUtil = null;
+	private static TextUtil getTextUtil() {
+		if (textUtil == null)
+			textUtil = TextUtil.get(getPlugin());
+		return textUtil;
 	}
 
-	private void initializeMap() {
-		RootCommand vampireCommand = plugin.getCommandManager().getRegisteredRootCommands().iterator().next();
+	private static ResourceUtil resUtil = null;
+	private static ResourceUtil getResourceUtil() {
+		if (resUtil == null)
+			resUtil = ResourceUtil.get(getPlugin());
+		return resUtil;
+	}
 
-		for (Entry<String, RegisteredCommand> entry : vampireCommand.getSubCommands().entries()) {
-			RegisteredCommand command = entry.getValue();
-			String commandName = command.getCommand();
-			if (commandName.length() > 2) {
-				commandName = commandName.substring(2);
-				if (!commandMap.containsKey(commandName)) {
-					commandMap.put(commandName, command);
-					plugin.debugLog(Level.INFO, "Key: " + commandName);
-				}
-			}
+	private static BloodFlaskUtil bloodUtil = null;
+	private static BloodFlaskUtil getBloodFlaskUtil() {
+		if (bloodUtil == null)
+			bloodUtil = BloodFlaskUtil.get(getPlugin());
+		return bloodUtil;
+	}
+
+	private static HolyWaterUtil holyUtil = null;
+	private static HolyWaterUtil getHolyWaterUtil() {
+		if (holyUtil == null)
+			holyUtil = HolyWaterUtil.get(getPlugin());
+		return holyUtil;
+	}
+
+	private static SunUtil sunUtil = null;
+	private static SunUtil getSunUtil() {
+		if (sunUtil == null)
+			sunUtil = SunUtil.get(getPlugin());
+		return sunUtil;
+	}
+
+	private static RingUtil ringUtil = null;
+	private static RingUtil getRingUtil() {
+		if (ringUtil == null)
+			ringUtil = RingUtil.get(getPlugin());
+		return ringUtil;
+	}
+
+	public static final LiteralCommandNode<CommandSourceStack> reload = Commands
+			.literal("reload")
+			.requires(sender -> sender.getSender().hasPermission(Perm.RELOAD.getPermissionNode()))
+			.executes(CmdVampire::reloadCommand)
+			.then(Commands.argument("what", ReloadArgumentType.reloadClass())
+					.requires(sender -> sender.getSender().hasPermission(Perm.RELOAD.getPermissionNode()))
+					.executes(CmdVampire::reloadCommand))
+			.build();
+	public static final CommandMessageKeys reloadDesc = CommandMessageKeys.RELOAD_DESCRIPTION;
+	public static int reloadCommand(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+		int result = 0;
+		CommandSender sender = ctx.getSource().getSender();
+
+		ReloadArgumentType.ReloadType reloadType;
+		try {
+			reloadType = ctx.getArgument("what", ReloadArgumentType.ReloadType.class);
 		}
-	}
-
-	@HelpCommand
-	@Subcommand("help|h|?")
-	@CommandCompletion("@range:1-2")
-	@Description("{@@commands.help.description}")
-	@Syntax("[page=1]")
-	public void onHelp(CommandSender sender, CommandHelp help) {
-		if (help.getSearch() == null || help.getSearch().isEmpty() || !help.getSearch().get(0).equalsIgnoreCase("set")) {
-			int maxPages = 2;
-
-			plugin.sendMessage(sender, textUtil.getHelpHeader(help, maxPages, help.getCommandName(), sender));
-
-			if (help.getPage() == 1) {
-				plugin.sendMessage(sender, textUtil.getCommandHelp("help", commandMap.get("help"), sender,  0));
-				plugin.sendMessage(sender, textUtil.getCommandHelp("show", commandMap.get("show"), sender, 0));
-				plugin.sendMessage(sender, textUtil.getCommandHelp("bloodlust", commandMap.get("bloodlust"), sender, 1));
-				plugin.sendMessage(sender, textUtil.getCommandHelp("intend", commandMap.get("intend"), sender, 1));
-				plugin.sendMessage(sender, textUtil.getCommandHelp("nightvision", commandMap.get("nightvision"), sender, 1));
-				plugin.sendMessage(sender, textUtil.getCommandHelp("offer", commandMap.get("offer"), sender, 0));
-				plugin.sendMessage(sender, textUtil.getCommandHelp("accept", commandMap.get("accept"), sender, 0));
-				plugin.sendMessage(sender, textUtil.getCommandHelp("flask", commandMap.get("flask"), sender, 0));
-				plugin.sendMessage(sender, textUtil.getCommandHelp("shriek", commandMap.get("shriek"), sender, 0));
-			} else {
-				plugin.sendMessage(sender, textUtil.getCommandHelp("batusi", commandMap.get("batusi"), sender, 2));
-				plugin.sendMessage(sender, textUtil.getCommandHelp("list", commandMap.get("list"), sender, 0));
-				plugin.sendMessage(sender, textUtil.getCommandHelp("set", commandMap.get("set"), sender, 0));
-				plugin.sendMessage(sender, textUtil.getCommandHelp("version", commandMap.get("version"), sender, 0));
-				plugin.sendMessage(sender, textUtil.getCommandHelp("reload", commandMap.get("reload"), sender, 0));
-			}
+		catch (IllegalArgumentException ex) {
+			if (!ex.getMessage().startsWith("No such argument"))
+				throw ex;
+			reloadType = ReloadArgumentType.ReloadType.ALL;
 		}
-		else {
-			(new CmdVampireSet()).onHelp(sender, help);
-		}
-	}
 
-	@Subcommand("reload")
-	@CommandCompletion("@reloads")
-	@CommandPermission("vampire.reload")
-	@Description("{@@commands.reload_description}")
-	@Syntax("[locales/config/all]")
-	public void onReload(CommandSender sender, @Optional String reloadType) {
-		boolean result = false;
-		boolean printResult = true;
-		if (reloadType == null || reloadType.equalsIgnoreCase("all"))
-			result = plugin.reloadAll();
-		else if (reloadType.equalsIgnoreCase("locales"))
-			result = plugin.reloadLocales();
-		else if (reloadType.equalsIgnoreCase("config"))
-			result = plugin.reloadVampireConfig();
-		else {
-			plugin.sendMessage(sender,
+		boolean success = switch (reloadType) {
+            case CONFIG -> getPlugin().reloadVampireConfig();
+			case LOCALES -> getPlugin().reloadLocales();
+            case ALL -> getPlugin().reloadAll();
+		};
+
+		if (success) {
+			result = Command.SINGLE_SUCCESS;
+			getPlugin().sendMessage(sender,
 					MessageType.ERROR,
-					CommandMessageKeys.NOT_VALID_VALUE,
-					"{value}", reloadType);
-			sender.sendMessage(getCommandSyntax("reload"));
-			printResult = false;
+					CommandMessageKeys.RELOAD_SUCCESS);
+		}
+		else {
+			getPlugin().sendMessage(sender,
+					MessageType.ERROR,
+					CommandMessageKeys.RELOAD_FAIL);
 		}
 
-		if (printResult) {
-			if (result)
-				plugin.sendMessage(sender,
-						MessageType.ERROR,
-						CommandMessageKeys.RELOAD_SUCCESS);
-			else
-				plugin.sendMessage(sender,
-						MessageType.ERROR,
-						CommandMessageKeys.RELOAD_FAIL);
-		}
+		return result;
 	}
 
 
-	private void showVampireData(CommandSender sender, OfflinePlayer offlinePlayer, VPlayer vPlayer, boolean self) {
-		PluginConfig conf = plugin.getVampireConfig();
-		Component[] youAreWere = plugin.getYouAreWere(sender, offlinePlayer, self);
+	private static int showVampireData(CommandSender sender, OfflinePlayer offlinePlayer, VPlayer vPlayer, boolean self) {
+		PluginConfig conf = getPlugin().getVampireConfig();
+		Component[] youAreWere = getPlugin().getYouAreWere(sender, offlinePlayer, self);
 		Component you = youAreWere[0];
 		Component are = youAreWere[1];
 		Component were = youAreWere[2];
-		Component vampireType = plugin.getMessage(sender, GrammarMessageKeys.VAMPIRE_TYPE);
-		Component on = plugin.getMessage(sender, GrammarMessageKeys.ON);
-		Component off = plugin.getMessage(sender, GrammarMessageKeys.OFF);
+		Component vampireType = getPlugin().getMessage(sender, GrammarMessageKeys.VAMPIRE_TYPE);
+		Component on = getPlugin().getMessage(sender, GrammarMessageKeys.ON);
+		Component off = getPlugin().getMessage(sender, GrammarMessageKeys.OFF);
 
 		String name = offlinePlayer.getName();
 		Component playerName = Component.text(name != null ? name : "UNKNOWN");
 
-		plugin.sendMessage(sender, textUtil.getPlayerInfoHeader(vPlayer.isVampire(),
+		sender.sendMessage(getTextUtil().getPlayerInfoHeader(vPlayer.isVampire(),
 				vPlayer.isNosferatu(),
 				playerName,
 				sender));
 		if (vPlayer.isVampire()) {
 			if (vPlayer.isNosferatu())
-				vampireType = plugin.getMessage(sender, GrammarMessageKeys.NOSFERATU_TYPE);
-			plugin.sendMessage(sender,
+				vampireType = getPlugin().getMessage(sender, GrammarMessageKeys.NOSFERATU_TYPE);
+			getPlugin().sendMessage(sender,
 					MessageType.INFO,
 					CommandMessageKeys.SHOW_TYPE,
 					new Tuple<>("{player}", you),
@@ -176,51 +171,50 @@ public class CmdVampire extends BaseCommand {
 			if (parent == null || parent.isEmpty()) {
 				parent = "someone";
 			}
-			plugin.sendMessage(sender,
+			getPlugin().sendMessage(sender,
 					MessageType.INFO,
 					reason.getDescKey(),
 					new Tuple<>("{player}", you),
 					new Tuple<>("{to_be_past}", were),
 					new Tuple<>("{parent}", Component.text(parent)));
 
-			Component bloodlustName = plugin.getMessage(sender, GrammarMessageKeys.BLOODLUST);
+			Component bloodlustName = getPlugin().getMessage(sender, GrammarMessageKeys.BLOODLUST);
 			bloodlustName = TextUtil.capitalizeFirst(bloodlustName);
-			plugin.sendMessage(sender,
+			getPlugin().sendMessage(sender,
 					MessageType.INFO,
 					CommandMessageKeys.SHOW_BLOODLUST,
 					new Tuple<>("{bloodlust}", bloodlustName),
 					new Tuple<>("{enabled}", vPlayer.isBloodlusting() ? on : off),
 					new Tuple<>("{percent}", Component.text(String.format("%.1f%%", vPlayer.combatDamageFactor() * 100))));
 
-			plugin.sendMessage(sender,
+			getPlugin().sendMessage(sender,
 					MessageType.INFO,
 					CommandMessageKeys.SHOW_INTENT,
 					new Tuple<>("{enabled}", vPlayer.isIntending() ? on : off),
 					new Tuple<>("{percent}", Component.text(String.format("%.1f%%", vPlayer.combatInfectRisk() * 100))));
 
-			plugin.sendMessage(sender,
+			getPlugin().sendMessage(sender,
 					MessageType.INFO,
 					CommandMessageKeys.SHOW_NIGHTVISION,
 					new Tuple<>("{enabled}", vPlayer.isUsingNightVision() ? on : off));
 
-			if (offlinePlayer instanceof Player) {
-				Player player = (Player) offlinePlayer;
-				plugin.sendMessage(sender,
+			if (offlinePlayer instanceof Player player) {
+                getPlugin().sendMessage(sender,
 						MessageType.INFO,
 						CommandMessageKeys.SHOW_TEMPERATURE,
 						"{percent}", String.format("%d%%", (int) Math.round(vPlayer.getTemp() * 100)));
 
 				int rad = (int) Math.round(100 * vPlayer.getRad());
-				int sun = (int) Math.round(100 * sunUtil.calcSolarRad(player.getWorld(), player));
-				double terrain = 1d - sunUtil.calcTerrainOpacity(player.getLocation().getBlock(), vPlayer.getLastRayTrace());
-				double armor = 1d - sunUtil.calcArmorOpacity(player);
+				int sun = (int) Math.round(100 * getSunUtil().calcSolarRad(player.getWorld(), player));
+				double terrain = 1d - getSunUtil().calcTerrainOpacity(player.getLocation().getBlock(), vPlayer.getLastRayTrace());
+				double armor = 1d - getSunUtil().calcArmorOpacity(player);
 				int base = (int) Math.round(100 * conf.radiation.baseRadiation);
 
-				plugin.sendMessage(sender,
+				getPlugin().sendMessage(sender,
 						MessageType.INFO,
 						CommandMessageKeys.SHOW_RADIATION_KEYS);
 
-				plugin.sendMessage(sender,
+				getPlugin().sendMessage(sender,
 						MessageType.INFO,
 						CommandMessageKeys.SHOW_RADIATION_VALUES,
 						"{rads}", String.format("%+d%%", rad),
@@ -230,7 +224,7 @@ public class CmdVampire extends BaseCommand {
 						"{base}", String.format("%+d", base));
 			}
 		} else if (vPlayer.isInfected()) {
-			plugin.sendMessage(sender,
+			getPlugin().sendMessage(sender,
 					MessageType.INFO,
 					CommandMessageKeys.SHOW_INFECTED,
 					new Tuple<>("{player}", you),
@@ -245,25 +239,26 @@ public class CmdVampire extends BaseCommand {
 			if (parent == null || parent.isEmpty()) {
 				parent = "someone";
 			}
-			plugin.sendMessage(sender,
+			getPlugin().sendMessage(sender,
 					MessageType.INFO,
 					reason.getDescKey(),
 					new Tuple<>("{player}", you),
 					new Tuple<>("{to_be_past}", were),
 					new Tuple<>("{parent}", Component.text(parent)));
 		} else {
-			plugin.sendMessage(sender,
+			getPlugin().sendMessage(sender,
 					MessageType.INFO,
 					CommandMessageKeys.SHOW_CURED,
 					new Tuple<>("{player}", you),
 					new Tuple<>("{to_be}", are),
 					new Tuple<>("{vampire_type}", vampireType));
 		}
+		return Command.SINGLE_SUCCESS;
 	}
 
-	private void showCommandLambda(CommandSender sender, OfflinePlayer player, boolean self, int attempt) {
+	private static int showCommandLambda(CommandSender sender, OfflinePlayer player, boolean self, int attempt) {
 		Bukkit.getScheduler().runTaskLater(plugin, () -> {
-			VPlayer data = plugin.getVPlayer(player);
+			VPlayer data = getPlugin().getVPlayer(player);
 			if (data != null) {
 				showVampireData(sender, player, data, self);
 			}
@@ -271,381 +266,519 @@ public class CmdVampire extends BaseCommand {
 				if (attempt < 50)
 					showCommandLambda(sender, player, self, attempt + 1);
 				else
-					plugin.sendMessage(sender,
+					getPlugin().sendMessage(sender,
 							MessageType.ERROR,
 							CommandMessageKeys.DATA_NOT_FOUND);
 			}
 		}, 2);
+		return Command.SINGLE_SUCCESS;
 	}
 
+	public static final LiteralCommandNode<CommandSourceStack> show = Commands
+			.literal("show")
+			.requires(sender -> sender.getSender().hasPermission(Perm.SHOW.getPermissionNode()))
+			.executes(CmdVampire::showCommand)
+			.then(Commands.argument("targets", ArgumentTypes.playerProfiles())
+					.requires(sender -> sender.getSender().hasPermission(Perm.SHOW_OTHER.getPermissionNode()))
+					.executes(CmdVampire::showCommand))
+			.build();
+	public static final CommandMessageKeys showDesc = CommandMessageKeys.SHOW_DESCRIPTION;
+	public static int showCommand(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+		CommandSender sender = ctx.getSource().getSender();
+		Entity executor = ctx.getSource().getExecutor();
 
-	@Subcommand("show")
-	@CommandCompletion("@players")
-	@CommandPermission("vampire.show")
-	@Description("{@@commands.show_description}")
-	@Syntax("[player=you]")
-	public void onShow(CommandSender sender, @Optional String targetName) {
-		if (sender instanceof Player || targetName != null) {
-			OfflinePlayer rawPlayer;
-			if (targetName == null) {
-				rawPlayer = (Player) sender;
-			}
-			else {
-				rawPlayer = Bukkit.getPlayer(targetName);
-				if (rawPlayer == null) {
-					rawPlayer = Bukkit.getOfflinePlayer(targetName);
-					if (!rawPlayer.hasPlayedBefore()) {
-						rawPlayer = null;
-					}
-				}
-			}
-			OfflinePlayer player = rawPlayer;
-			if (player != null) {
-				boolean self = sender instanceof Player && ((Player) sender).getUniqueId().equals(player.getUniqueId());
+		Collection<PlayerProfile> profiles = null;
+		try {
+			profiles = ctx.getArgument("targets", PlayerProfileListResolver.class)
+					.resolve(ctx.getSource());
+		}
+		catch (IllegalArgumentException ex) {
+			if (!ex.getMessage().startsWith("No such argument"))
+				throw ex;
+		}
 
-				// Test permissions
-				if (self || resUtil.hasPermission(sender, Perm.SHOW_OTHER, true)) {
-					VPlayer vPlayer = plugin.getVPlayer(player);
-					if (vPlayer == null) {
-						showCommandLambda(sender, player, self, 0);
-					}
-					else {
-						showVampireData(sender, player, vPlayer, self);
-					}
-				}
-			}
-			else {
-				plugin.sendMessage(sender,
-						MessageType.INFO,
-						CommandMessageKeys.NO_PLAYER_FOUND,
-						"{player}", targetName);
-			}
+		if (profiles == null) {
+			if (executor instanceof Player p)
+				profiles = List.of(p.getPlayerProfile());
+			else
+				throw EXECUTOR_NOT_PLAYER_OPTIONAL.create();
 		}
-		else {
-			plugin.sendMessage(sender,
-					MessageType.INFO,
-					CommandMessageKeys.NOT_ENOUGH_INPUTS);
-			sender.sendMessage(getCommandSyntax("show"));
+		if (profiles.isEmpty()) {
+			sendRichMessage(sender, executor, "<red>No targets found!");
+			return 0;
 		}
+
+		int result = 0;
+		for (PlayerProfile profile : profiles) {
+			if (profile.getName() == null)
+				continue;
+			OfflinePlayer target = Bukkit.getOfflinePlayer(profile.getName());
+			boolean self = sender instanceof Player && ((Player) sender).getUniqueId().equals(target.getUniqueId());
+
+			VPlayer vPlayer = getPlugin().getVPlayer(target);
+			if (vPlayer == null)
+				result += showCommandLambda(sender, target, self, 0);
+			else
+				result += showVampireData(sender, target, vPlayer, self);
+		}
+
+		if (result != 1)
+			sendMessage(sender, executor, "Info printed for " + result + " players.");
+
+		return result;
 	}
 
-	@Subcommand("bloodlust|modebloodlust|b")
-	@CommandCompletion("@yesno")
-	@CommandPermission("vampire.mode.bloodlust")
-	@Description("{@@commands.bloodlust_description}")
-	@Syntax("[yes/no=toggle]")
-	public void onModeBloodlust(Player sender, @Optional String yesno) {
-		plugin.debugLog(Level.INFO, "Executed command!");
-		if (plugin.getVampireConfig().general.isBlacklisted(sender.getWorld())) {
-			plugin.debugLog(Level.INFO, "Blacklisted world!");
-			plugin.sendMessage(sender,
+	public static final LiteralCommandNode<CommandSourceStack> bloodlust = Commands
+			.literal("bloodlust")
+			.requires(sender -> sender.getSender().hasPermission(Perm.MODE_BLOODLUST.getPermissionNode()))
+			.executes(CmdVampire::bloodlustCommand)
+			.then(Commands.argument("enable", YesNoArgumentType.yesNoClass())
+					.executes(CmdVampire::bloodlustCommand))
+			.build();
+	public static final LiteralCommandNode<CommandSourceStack> modebloodlust = Commands
+			.literal("modebloodlust")
+			.requires(sender -> sender.getSender().hasPermission(Perm.MODE_BLOODLUST.getPermissionNode()))
+			.executes(CmdVampire::bloodlustCommand)
+			.then(Commands.argument("enable", YesNoArgumentType.yesNoClass())
+					.executes(CmdVampire::bloodlustCommand))
+			.build();
+	public static final LiteralCommandNode<CommandSourceStack> b = Commands
+			.literal("b")
+			.requires(sender -> sender.getSender().hasPermission(Perm.MODE_BLOODLUST.getPermissionNode()))
+			.executes(CmdVampire::bloodlustCommand)
+			.then(Commands.argument("enable", YesNoArgumentType.yesNoClass())
+					.executes(CmdVampire::bloodlustCommand))
+			.build();
+	public static final CommandMessageKeys bloodlustDesc = CommandMessageKeys.BLOODLUST_DESCRIPTION;
+	public static int bloodlustCommand(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+		CommandSender sender = ctx.getSource().getSender();
+		Entity executor = ctx.getSource().getExecutor();
+
+		if (!(executor instanceof Player player))
+			throw EXECUTOR_NOT_PLAYER.create();
+
+		Boolean bloodlustEnabled = null;
+		try {
+			bloodlustEnabled = ctx.getArgument("enable", Boolean.class);
+		}
+		catch (IllegalArgumentException ex) {
+			if (!ex.getMessage().startsWith("No such argument"))
+				throw ex;
+		}
+
+		getPlugin().debugLog(Level.INFO, "Executed command!");
+		if (getPlugin().getVampireConfig().general.isBlacklisted(player.getWorld())) {
+			getPlugin().debugLog(Level.INFO, "Blacklisted world!");
+			getPlugin().sendMessage(sender,
 					MessageType.ERROR,
 					CommandMessageKeys.BLACKLISTED_WORLD);
-			return;
+			return 0;
 		}
 
-		if (yesno == null || yesno.equalsIgnoreCase("yes") || yesno.equalsIgnoreCase("no")) {
-			VPlayer vPlayer = plugin.getVPlayer(sender);
-			if (vPlayer == null) {
-				plugin.sendMessage(sender,
-						MessageType.ERROR,
-						CommandMessageKeys.DATA_NOT_FOUND);
-				return;
-			}
-			plugin.debugLog(Level.INFO, "Acceptance");
-			if (vPlayer.isVampire()) {
-				plugin.debugLog(Level.INFO, "Le vampire");
-				boolean isActive = vPlayer.isBloodlusting();
-
-				if (yesno != null) {
-					isActive = yesno.equals("no");
-				}
-
-				vPlayer.setBloodlusting(!isActive);
-			} else {
-				plugin.debugLog(Level.INFO, "Non non non!");
-				Component vampireType = plugin.getMessage(sender, GrammarMessageKeys.VAMPIRE_TYPE);
-				Component bloodlustAction = plugin.getMessage(sender, GrammarMessageKeys.BLOODLUST);
-				plugin.sendMessage(sender,
-						MessageType.ERROR,
-						GrammarMessageKeys.ONLY_TYPE_CAN_ACTION,
-						new Tuple<>("{vampire_type}", vampireType),
-						new Tuple<>("{action}", bloodlustAction));
-			}
-		}
-		else {
-			plugin.debugLog(Level.INFO, "Bad Syntax!");
-			plugin.sendMessage(sender,
-					MessageType.ERROR,
-					CommandMessageKeys.NOT_VALID_VALUE,
-					"{value}", yesno);
-			sender.sendMessage(getCommandSyntax("bloodlust"));
-		}
-		plugin.debugLog(Level.INFO, "End of ZA WARUDO");
-	}
-
-	@Subcommand("intend|modeintend|i")
-	@CommandCompletion("@yesno")
-	@CommandPermission("vampire.mode.intent")
-	@Description("{@@commands.intent_description}")
-	@Syntax("[yes/no=toggle]")
-	public void onModeIntend(Player sender, @Optional String yesno) {
-		if (plugin.getVampireConfig().general.isBlacklisted(sender.getWorld())) {
-			plugin.sendMessage(sender,
-					MessageType.ERROR,
-					CommandMessageKeys.BLACKLISTED_WORLD);
-			return;
-		}
-
-		if (yesno == null || yesno.equalsIgnoreCase("yes") || yesno.equalsIgnoreCase("no")) {
-			VPlayer vPlayer = plugin.getVPlayer(sender);
-			if (vPlayer == null) {
-				plugin.sendMessage(sender,
-						MessageType.ERROR,
-						CommandMessageKeys.DATA_NOT_FOUND);
-				return;
-			}
-			if (vPlayer.isVampire()) {
-				boolean isActive = vPlayer.isIntending();
-
-				if (yesno != null) {
-					isActive = yesno.equals("no");
-				}
-
-				vPlayer.setIntending(!isActive);
-			} else {
-				Component vampireType = plugin.getMessage(sender, GrammarMessageKeys.VAMPIRE_TYPE);
-				Component intentAction = plugin.getMessage(sender, GrammarMessageKeys.INTEND);
-				plugin.sendMessage(sender,
-						MessageType.ERROR,
-						GrammarMessageKeys.ONLY_TYPE_CAN_ACTION,
-						new Tuple<>("{vampire_type}", vampireType),
-						new Tuple<>("{action}", intentAction));
-			}
-		}
-		else {
-			plugin.sendMessage(sender,
-					MessageType.ERROR,
-					CommandMessageKeys.NOT_VALID_VALUE,
-					"{value}", yesno);
-			sender.sendMessage(getCommandSyntax("intend"));
-		}
-	}
-
-	@Subcommand("nightvision|modenightvision|nv")
-	@CommandCompletion("@yesno")
-	@CommandPermission("vampire.mode.nightvision")
-	@Description("{@@commands.nightvision_description}")
-	@Syntax("[yes/no=toggle]")
-	public void onModeNightvision(Player sender, @Optional String yesno) {
-		if (plugin.getVampireConfig().general.isBlacklisted(sender.getWorld())) {
-			plugin.sendMessage(sender,
-					MessageType.ERROR,
-					CommandMessageKeys.BLACKLISTED_WORLD);
-			return;
-		}
-
-		if (yesno == null || yesno.equalsIgnoreCase("yes") || yesno.equalsIgnoreCase("no")) {
-			VPlayer vPlayer = plugin.getVPlayer(sender);
-			if (vPlayer == null) {
-				plugin.sendMessage(sender,
-						MessageType.ERROR,
-						CommandMessageKeys.DATA_NOT_FOUND);
-				return;
-			}
-			if (vPlayer.isVampire()) {
-				boolean isActive = vPlayer.isUsingNightVision();
-
-				if (yesno != null) {
-					isActive = yesno.equals("no");
-				}
-
-				vPlayer.setUsingNightVision(!isActive);
-			} else {
-				Component vampireType = plugin.getMessage(sender, GrammarMessageKeys.VAMPIRE_TYPE);
-				Component nvAction = plugin.getMessage(sender, GrammarMessageKeys.NIGHTVISION);
-				plugin.sendMessage(sender,
-						MessageType.ERROR,
-						GrammarMessageKeys.ONLY_TYPE_CAN_ACTION,
-						new Tuple<>("{vampire_type}", vampireType),
-						new Tuple<>("{action}", nvAction));
-			}
-		}
-		else {
-			plugin.sendMessage(sender,
-					MessageType.ERROR,
-					CommandMessageKeys.NOT_VALID_VALUE,
-					"{value}", yesno);
-			sender.sendMessage(getCommandSyntax("nightvision"));
-		}
-	}
-
-	@Subcommand("offer|o")
-	@CommandCompletion("@players @range:1-20")
-	@CommandPermission("vampire.trade.offer")
-	@Description("{@@commands.offer_description}")
-	@Syntax("<player> [amount=4.0]")
-	public void onOffer(Player sender, String targetName, @Default("4") double rawamount) {
-		if (plugin.getVampireConfig().general.isBlacklisted(sender.getWorld())) {
-			plugin.sendMessage(sender,
-					MessageType.ERROR,
-					CommandMessageKeys.BLACKLISTED_WORLD);
-			return;
-		}
-
-		Player pYou = Bukkit.getPlayer(targetName);
-
-		if (pYou == null) {
-			plugin.sendMessage(sender,
-					MessageType.ERROR,
-					CommandMessageKeys.NO_PLAYER_FOUND);
-			return;
-		}
-		double amount = MathUtil.limitNumber(rawamount, 0D, 20D);
-		if (amount != rawamount) {
-			plugin.sendMessage(sender,
-					MessageType.ERROR,
-					CommandMessageKeys.OFFER_INVALID_VALUE);
-			return;
-		}
-		VPlayer vMe = plugin.getVPlayer(sender);
-		if (vMe == null) {
-			plugin.sendMessage(sender,
-					MessageType.ERROR,
-					CommandMessageKeys.DATA_NOT_FOUND);
-			return;
-		}
-		VPlayer vYou = plugin.getVPlayer(pYou);
-		if (vYou == null) {
-			plugin.sendMessage(sender,
-					MessageType.ERROR,
-					CommandMessageKeys.DATA_NOT_FOUND);
-			return;
-		}
-		vMe.tradeOffer(sender, vYou, amount);
-	}
-
-	@Subcommand("accept|a")
-	@CommandPermission("vampire.trade.accept")
-	@Description("{@@commands.nightvision_description}")
-	public void onAccept(Player sender) {
-		if (plugin.getVampireConfig().general.isBlacklisted(sender.getWorld())) {
-			plugin.sendMessage(sender,
-					MessageType.ERROR,
-					CommandMessageKeys.BLACKLISTED_WORLD);
-			return;
-		}
-		VPlayer vPlayer = plugin.getVPlayer(sender);
+		VPlayer vPlayer = getPlugin().getVPlayer(player);
 		if (vPlayer == null) {
-			plugin.sendMessage(sender,
+			getPlugin().sendMessage(sender,
 					MessageType.ERROR,
 					CommandMessageKeys.DATA_NOT_FOUND);
-			return;
+			return 0;
+		}
+		getPlugin().debugLog(Level.INFO, "Acceptance");
+		if (vPlayer.isVampire()) {
+			getPlugin().debugLog(Level.INFO, "Le vampire");
+			boolean isActive = bloodlustEnabled == null ? vPlayer.isBloodlusting() : bloodlustEnabled;
+			vPlayer.setBloodlusting(!isActive);
+		} else {
+			getPlugin().debugLog(Level.INFO, "Non non non!");
+			Component vampireType = getPlugin().getMessage(sender, GrammarMessageKeys.VAMPIRE_TYPE);
+			Component bloodlustAction = getPlugin().getMessage(sender, GrammarMessageKeys.BLOODLUST);
+			getPlugin().sendMessage(sender,
+					MessageType.ERROR,
+					GrammarMessageKeys.ONLY_TYPE_CAN_ACTION,
+					new Tuple<>("{vampire_type}", vampireType),
+					new Tuple<>("{action}", bloodlustAction));
+			return 0;
+		}
+
+		getPlugin().debugLog(Level.INFO, "End of ZA WARUDO");
+		return Command.SINGLE_SUCCESS;
+	}
+
+	public static final LiteralCommandNode<CommandSourceStack> intend = Commands
+			.literal("intend")
+			.requires(sender -> sender.getSender().hasPermission(Perm.MODE_INTENT.getPermissionNode()))
+			.executes(CmdVampire::intendCommand)
+			.then(Commands.argument("enable", YesNoArgumentType.yesNoClass())
+					.executes(CmdVampire::intendCommand))
+			.build();
+	public static final LiteralCommandNode<CommandSourceStack> modeintend = Commands
+			.literal("modeintend")
+			.requires(sender -> sender.getSender().hasPermission(Perm.MODE_INTENT.getPermissionNode()))
+			.executes(CmdVampire::intendCommand)
+			.then(Commands.argument("enable", YesNoArgumentType.yesNoClass())
+					.executes(CmdVampire::intendCommand))
+			.build();
+	public static final LiteralCommandNode<CommandSourceStack> i = Commands
+			.literal("i")
+			.requires(sender -> sender.getSender().hasPermission(Perm.MODE_INTENT.getPermissionNode()))
+			.executes(CmdVampire::intendCommand)
+			.then(Commands.argument("enable", YesNoArgumentType.yesNoClass())
+					.executes(CmdVampire::intendCommand))
+			.build();
+	public static final CommandMessageKeys intendDesc = CommandMessageKeys.INTENT_DESCRIPTION;
+	public static int intendCommand(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+		CommandSender sender = ctx.getSource().getSender();
+		Entity executor = ctx.getSource().getExecutor();
+
+		if (!(executor instanceof Player player))
+			throw EXECUTOR_NOT_PLAYER.create();
+
+		Boolean intendEnabled = null;
+		try {
+			intendEnabled = ctx.getArgument("enable", Boolean.class);
+		}
+		catch (IllegalArgumentException ex) {
+			if (!ex.getMessage().startsWith("No such argument"))
+				throw ex;
+		}
+
+		if (getPlugin().getVampireConfig().general.isBlacklisted(player.getWorld())) {
+			getPlugin().sendMessage(sender,
+					MessageType.ERROR,
+					CommandMessageKeys.BLACKLISTED_WORLD);
+			return 0;
+		}
+
+		VPlayer vPlayer = getPlugin().getVPlayer(player);
+		if (vPlayer == null) {
+			getPlugin().sendMessage(sender,
+					MessageType.ERROR,
+					CommandMessageKeys.DATA_NOT_FOUND);
+			return 0;
+		}
+		if (vPlayer.isVampire()) {
+			boolean isActive = intendEnabled == null ? vPlayer.isIntending() : intendEnabled;
+			vPlayer.setIntending(!isActive);
+		} else {
+			Component vampireType = getPlugin().getMessage(sender, GrammarMessageKeys.VAMPIRE_TYPE);
+			Component intentAction = getPlugin().getMessage(sender, GrammarMessageKeys.INTEND);
+			getPlugin().sendMessage(sender,
+					MessageType.ERROR,
+					GrammarMessageKeys.ONLY_TYPE_CAN_ACTION,
+					new Tuple<>("{vampire_type}", vampireType),
+					new Tuple<>("{action}", intentAction));
+			return 0;
+		}
+		return Command.SINGLE_SUCCESS;
+	}
+
+	public static final LiteralCommandNode<CommandSourceStack> nightvision = Commands
+			.literal("nightvision")
+			.requires(sender -> sender.getSender().hasPermission(Perm.MODE_NIGHTVISION.getPermissionNode()))
+			.executes(CmdVampire::nightvisionCommand)
+			.then(Commands.argument("enable", YesNoArgumentType.yesNoClass())
+					.executes(CmdVampire::nightvisionCommand))
+			.build();
+	public static final LiteralCommandNode<CommandSourceStack> modenightvision = Commands
+			.literal("modenightvision")
+			.requires(sender -> sender.getSender().hasPermission(Perm.MODE_NIGHTVISION.getPermissionNode()))
+			.executes(CmdVampire::nightvisionCommand)
+			.then(Commands.argument("enable", YesNoArgumentType.yesNoClass())
+					.executes(CmdVampire::nightvisionCommand))
+			.build();
+	public static final LiteralCommandNode<CommandSourceStack> nv = Commands
+			.literal("nv")
+			.requires(sender -> sender.getSender().hasPermission(Perm.MODE_NIGHTVISION.getPermissionNode()))
+			.executes(CmdVampire::nightvisionCommand)
+			.then(Commands.argument("enable", YesNoArgumentType.yesNoClass())
+					.executes(CmdVampire::nightvisionCommand))
+			.build();
+	public static final CommandMessageKeys nightvisionDesc = CommandMessageKeys.NIGHTVISION_DESCRIPTION;
+	public static int nightvisionCommand(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+		CommandSender sender = ctx.getSource().getSender();
+		Entity executor = ctx.getSource().getExecutor();
+
+		if (!(executor instanceof Player player))
+			throw EXECUTOR_NOT_PLAYER.create();
+
+		Boolean nvEnabled = null;
+		try {
+			nvEnabled = ctx.getArgument("enable", Boolean.class);
+		}
+		catch (IllegalArgumentException ex) {
+			if (!ex.getMessage().startsWith("No such argument"))
+				throw ex;
+		}
+		if (getPlugin().getVampireConfig().general.isBlacklisted(player.getWorld())) {
+			getPlugin().sendMessage(sender,
+					MessageType.ERROR,
+					CommandMessageKeys.BLACKLISTED_WORLD);
+			return 0;
+		}
+
+		VPlayer vPlayer = getPlugin().getVPlayer(player);
+		if (vPlayer == null) {
+			getPlugin().sendMessage(sender,
+					MessageType.ERROR,
+					CommandMessageKeys.DATA_NOT_FOUND);
+			return 0;
+		}
+		if (vPlayer.isVampire()) {
+			boolean isActive = nvEnabled == null ? vPlayer.isUsingNightVision() : nvEnabled;
+			vPlayer.setUsingNightVision(!isActive);
+		} else {
+			Component vampireType = getPlugin().getMessage(sender, GrammarMessageKeys.VAMPIRE_TYPE);
+			Component nvAction = getPlugin().getMessage(sender, GrammarMessageKeys.NIGHTVISION);
+			getPlugin().sendMessage(sender,
+					MessageType.ERROR,
+					GrammarMessageKeys.ONLY_TYPE_CAN_ACTION,
+					new Tuple<>("{vampire_type}", vampireType),
+					new Tuple<>("{action}", nvAction));
+			return 0;
+		}
+		return Command.SINGLE_SUCCESS;
+	}
+
+	public static final LiteralCommandNode<CommandSourceStack> offer = Commands
+			.literal("offer")
+			.requires(sender -> sender.getSender().hasPermission(Perm.TRADE_OFFER.getPermissionNode()))
+			.then(Commands.argument("target", ArgumentTypes.player())
+					.executes(CmdVampire::offerCommand)
+					.then(Commands.argument("amount", DoubleArgumentType.doubleArg(0, 20))
+							.executes(CmdVampire::offerCommand)))
+			.build();
+	public static final LiteralCommandNode<CommandSourceStack> o = Commands
+			.literal("o")
+			.requires(sender -> sender.getSender().hasPermission(Perm.TRADE_OFFER.getPermissionNode()))
+			.then(Commands.argument("target", ArgumentTypes.player())
+					.executes(CmdVampire::offerCommand)
+					.then(Commands.argument("amount", DoubleArgumentType.doubleArg(0, 20))
+							.executes(CmdVampire::offerCommand)))
+			.build();
+	public static final CommandMessageKeys offerDesc = CommandMessageKeys.OFFER_DESCRIPTION;
+	public static int offerCommand(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+		CommandSender sender = ctx.getSource().getSender();
+		Entity executor = ctx.getSource().getExecutor();
+
+		if (!(executor instanceof Player player))
+			throw EXECUTOR_NOT_PLAYER.create();
+
+		Player pYou = ctx.getArgument("target", PlayerSelectorArgumentResolver.class)
+				.resolve(ctx.getSource()).getFirst();
+
+		double amount = 4;
+		try {
+			amount = ctx.getArgument("amount", double.class);
+		}
+		catch (IllegalArgumentException ex) {
+			if (!ex.getMessage().startsWith("No such argument"))
+				throw ex;
+		}
+		if (getPlugin().getVampireConfig().general.isBlacklisted(player.getWorld())) {
+			getPlugin().sendMessage(sender,
+					MessageType.ERROR,
+					CommandMessageKeys.BLACKLISTED_WORLD);
+			return 0;
+		}
+
+		VPlayer vMe = getPlugin().getVPlayer(player);
+		if (vMe == null) {
+			getPlugin().sendMessage(sender,
+					MessageType.ERROR,
+					CommandMessageKeys.DATA_NOT_FOUND);
+			return 0;
+		}
+		VPlayer vYou = getPlugin().getVPlayer(pYou);
+		if (vYou == null) {
+			getPlugin().sendMessage(sender,
+					MessageType.ERROR,
+					CommandMessageKeys.DATA_NOT_FOUND);
+			return 0;
+		}
+		vMe.tradeOffer(player, vYou, amount);
+		return Command.SINGLE_SUCCESS;
+	}
+
+	public static final LiteralCommandNode<CommandSourceStack> accept = Commands
+			.literal("accept")
+			.requires(sender -> sender.getSender().hasPermission(Perm.TRADE_ACCEPT.getPermissionNode()))
+			.executes(CmdVampire::acceptCommand)
+			.build();
+	public static final LiteralCommandNode<CommandSourceStack> a = Commands
+			.literal("a")
+			.requires(sender -> sender.getSender().hasPermission(Perm.TRADE_ACCEPT.getPermissionNode()))
+			.executes(CmdVampire::acceptCommand)
+			.build();
+	public static final CommandMessageKeys acceptDesc = CommandMessageKeys.ACCEPT_DESCRIPTION;
+	public static int acceptCommand(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+		CommandSender sender = ctx.getSource().getSender();
+		Entity executor = ctx.getSource().getExecutor();
+
+		if (!(executor instanceof Player player))
+			throw EXECUTOR_NOT_PLAYER.create();
+
+		if (getPlugin().getVampireConfig().general.isBlacklisted(player.getWorld())) {
+			getPlugin().sendMessage(sender,
+					MessageType.ERROR,
+					CommandMessageKeys.BLACKLISTED_WORLD);
+			return 0;
+		}
+		VPlayer vPlayer = getPlugin().getVPlayer(player);
+		if (vPlayer == null) {
+			getPlugin().sendMessage(sender,
+					MessageType.ERROR,
+					CommandMessageKeys.DATA_NOT_FOUND);
+			return 0;
 		}
 		vPlayer.tradeAccept();
+		return Command.SINGLE_SUCCESS;
 	}
 
-	@Subcommand("flask|f")
-	@CommandCompletion("@range:1-20")
-	@CommandPermission("vampire.flask")
-	@Description("{@@commands.flask_description}")
-	@Syntax("[amount=4.0]")
-	public void onFlask(Player sender, @Default("4") Integer amount) {
-		if (amount <= 0) {
-			plugin.sendMessage(sender,
-					MessageType.ERROR,
-					CommandMessageKeys.NOT_VALID_VALUE,
-					"{value}", amount.toString());
-			return;
+	public static final LiteralCommandNode<CommandSourceStack> flask = Commands
+			.literal("flask")
+			.requires(sender -> sender.getSender().hasPermission(Perm.FLASK.getPermissionNode()))
+			.executes(CmdVampire::flaskCommand)
+			.then(Commands.argument("amount", DoubleArgumentType.doubleArg(0, 20))
+					.executes(CmdVampire::flaskCommand))
+			.build();
+	public static final LiteralCommandNode<CommandSourceStack> f = Commands
+			.literal("f")
+			.requires(sender -> sender.getSender().hasPermission(Perm.FLASK.getPermissionNode()))
+			.executes(CmdVampire::flaskCommand)
+			.then(Commands.argument("amount", DoubleArgumentType.doubleArg(0, 20))
+					.executes(CmdVampire::flaskCommand))
+			.build();
+	public static final CommandMessageKeys flaskDesc = CommandMessageKeys.FLASK_DESCRIPTION;
+	public static int flaskCommand(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+		CommandSender sender = ctx.getSource().getSender();
+		Entity executor = ctx.getSource().getExecutor();
+
+		if (!(executor instanceof Player player))
+			throw EXECUTOR_NOT_PLAYER.create();
+
+		double amount = 4;
+		try {
+			amount = ctx.getArgument("amount", double.class);
 		}
-		if (plugin.getVampireConfig().general.isBlacklisted(sender.getWorld())) {
-			plugin.sendMessage(sender,
+		catch (IllegalArgumentException ex) {
+			if (!ex.getMessage().startsWith("No such argument"))
+				throw ex;
+		}
+		if (getPlugin().getVampireConfig().general.isBlacklisted(player.getWorld())) {
+			getPlugin().sendMessage(sender,
 					MessageType.ERROR,
 					CommandMessageKeys.BLACKLISTED_WORLD);
-			return;
+			return 0;
 		}
-		VPlayer vPlayer = plugin.getVPlayer(sender);
+		VPlayer vPlayer = getPlugin().getVPlayer(player);
 		if (vPlayer == null) {
-			plugin.sendMessage(sender,
+			getPlugin().sendMessage(sender,
 					MessageType.ERROR,
 					CommandMessageKeys.DATA_NOT_FOUND);
-			return;
+			return 0;
 		}
 		// Does the player have the required amount?
-		boolean consumeFood = plugin.getVampireConfig().general.vampiresUseFoodAsBlood && vPlayer.isVampire();
-		if ((consumeFood && amount > vPlayer.getFood()) || (!consumeFood && amount > sender.getHealth())) {
-			plugin.sendMessage(sender,
+		boolean consumeFood = getPlugin().getVampireConfig().general.vampiresUseFoodAsBlood && vPlayer.isVampire();
+		if ((consumeFood && amount > vPlayer.getFood()) || (!consumeFood && amount > player.getHealth())) {
+			getPlugin().sendMessage(sender,
 					MessageType.ERROR,
 					SkillMessageKeys.FLASK_INSUFFICIENT);
-		} else {
-			// ... create a blood flask!
-			if (bloodUtil.fillBottle(vPlayer, amount)) {
-				if (consumeFood) {
-					vPlayer.addFood(-amount);
-				} else {
-					sender.setHealth(sender.getHealth() - amount);
-				}
-				// Inform
-				plugin.sendMessage(sender,
-						MessageType.INFO,
-						SkillMessageKeys.FLASK_SUCCESS);
-			}
-			else {
-				plugin.sendMessage(sender,
-						MessageType.ERROR,
-						SkillMessageKeys.FLASK_NO_BOTTLE);
-			}
+			return 0;
 		}
+		// ... create a blood flask!
+		if (getBloodFlaskUtil().fillBottle(vPlayer, amount)) {
+			if (consumeFood) {
+				vPlayer.addFood(-amount);
+			} else {
+				player.setHealth(player.getHealth() - amount);
+			}
+			// Inform
+			getPlugin().sendMessage(sender,
+					MessageType.INFO,
+					SkillMessageKeys.FLASK_SUCCESS);
+		}
+		else {
+			getPlugin().sendMessage(sender,
+					MessageType.ERROR,
+					SkillMessageKeys.FLASK_NO_BOTTLE);
+		}
+		return Command.SINGLE_SUCCESS;
 	}
 
-	@Subcommand("shriek")
-	@CommandPermission("vampire.shriek")
-	@Description("{@@commands.shriek_description}")
-	public void onShriek(Player sender) {
-		if (plugin.getVampireConfig().general.isBlacklisted(sender.getWorld())) {
-			plugin.sendMessage(sender,
+	public static final LiteralCommandNode<CommandSourceStack> shriek = Commands
+			.literal("shriek")
+			.requires(sender -> sender.getSender().hasPermission(Perm.SHRIEK.getPermissionNode()))
+			.executes(CmdVampire::shriekCommand)
+			.build();
+	public static final CommandMessageKeys shriekDesc = CommandMessageKeys.SHRIEK_DESCRIPTION;
+	public static int shriekCommand(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+		CommandSender sender = ctx.getSource().getSender();
+		Entity executor = ctx.getSource().getExecutor();
+
+		if (!(executor instanceof Player player))
+			throw EXECUTOR_NOT_PLAYER.create();
+
+		if (getPlugin().getVampireConfig().general.isBlacklisted(player.getWorld())) {
+			getPlugin().sendMessage(sender,
 					MessageType.ERROR,
 					CommandMessageKeys.BLACKLISTED_WORLD);
-			return;
+			return 0;
 		}
-		VPlayer vPlayer = plugin.getVPlayer(sender);
+		VPlayer vPlayer = getPlugin().getVPlayer(player);
 		if (vPlayer == null) {
-			plugin.sendMessage(sender,
+			getPlugin().sendMessage(sender,
 					MessageType.ERROR,
 					CommandMessageKeys.DATA_NOT_FOUND);
-			return;
+			return 0;
 		}
 		if (vPlayer.isVampire()) {
 			vPlayer.shriek();
 		} else {
-			Component vampireType = plugin.getMessage(sender, GrammarMessageKeys.VAMPIRE_TYPE);
-			Component shriekAction = plugin.getMessage(sender, GrammarMessageKeys.SHRIEK);
-			plugin.sendMessage(sender,
+			Component vampireType = getPlugin().getMessage(sender, GrammarMessageKeys.VAMPIRE_TYPE);
+			Component shriekAction = getPlugin().getMessage(sender, GrammarMessageKeys.SHRIEK);
+			getPlugin().sendMessage(sender,
 					MessageType.ERROR,
 					GrammarMessageKeys.ONLY_TYPE_CAN_ACTION,
 					new Tuple<>("{vampire_type}", vampireType),
 					new Tuple<>("{action}", shriekAction));
+			return 0;
 		}
+		return Command.SINGLE_SUCCESS;
 	}
 
-	@Subcommand("list")
-	@CommandCompletion("@range:1-5")
-	@CommandPermission("vampire.list")
-	@Description("{@@commands.list_description}")
-	@Syntax("[page=1]")
-	public void onList(CommandSender sender, @Default("1") int page) {
+	public static final LiteralCommandNode<CommandSourceStack> list = Commands
+			.literal("list")
+			.requires(sender -> sender.getSender().hasPermission(Perm.LIST.getPermissionNode()))
+			.executes(CmdVampire::listCommand)
+			.then(Commands.argument("page", IntegerArgumentType.integer(1))
+					.executes(CmdVampire::listCommand))
+			.build();
+	public static final CommandMessageKeys listDesc = CommandMessageKeys.LIST_DESCRIPTION;
+	public static int listCommand(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+		CommandSender sender = ctx.getSource().getSender();
+		Entity executor = ctx.getSource().getExecutor();
+		if (executor != null)
+			sender = executor;
+
+		int page = 1;
+		try {
+			page = ctx.getArgument("page", int.class);
+		}
+		catch (IllegalArgumentException ex) {
+			if (!ex.getMessage().startsWith("No such argument"))
+				throw ex;
+		}
 		List<Component> vampiresOnline = new ArrayList<>();
 		List<Component> infectedOnline = new ArrayList<>();
 
 		for (Player player : Bukkit.getOnlinePlayers()) {
-			VPlayer vPlayer = plugin.getVPlayer(player);
+			VPlayer vPlayer = getPlugin().getVPlayer(player);
 			if (vPlayer == null)
 				continue;
 			Player auxPlayer = vPlayer.getPlayer();
 			if (auxPlayer == null)
 				continue;
 
-			Component compName = Component.text(auxPlayer.getDisplayName());
+			Component compName = auxPlayer.displayName();
 			if (vPlayer.isVampire())
 				vampiresOnline.add(compName);
 			else if (vPlayer.isInfected())
@@ -655,12 +788,12 @@ public class CmdVampire extends BaseCommand {
 		// Create Messages
 		List<Component> lines = new ArrayList<>();
 
-		Component vampireType = plugin.getMessage(sender, GrammarMessageKeys.VAMPIRE_TYPE);
+		Component vampireType = getPlugin().getMessage(sender, GrammarMessageKeys.VAMPIRE_TYPE);
 		vampireType = TextUtil.capitalizeFirst(vampireType);
-		Component infectedType = plugin.getMessage(sender, GrammarMessageKeys.INFECTED_TYPE);
+		Component infectedType = getPlugin().getMessage(sender, GrammarMessageKeys.INFECTED_TYPE);
 		infectedType = TextUtil.capitalizeFirst(infectedType);
-		Component onlineStr = plugin.getMessage(sender, GrammarMessageKeys.ONLINE);
-		//String offlineStr = plugin.getMessage(sender, GrammarMessageKeys.OFFLINE);
+		Component onlineStr = getPlugin().getMessage(sender, GrammarMessageKeys.ONLINE);
+		//String offlineStr = getPlugin().getMessage(sender, GrammarMessageKeys.OFFLINE);
 
 		if (!vampiresOnline.isEmpty())
 		{
@@ -693,481 +826,826 @@ public class CmdVampire extends BaseCommand {
 		}
 
 		// Send them
-		// lines = TextUtil.wrap(lines);
-		for (Component line : lines) {
-			plugin.sendMessage(sender, line);
-		}
+		// lines = getTextUtil().wrap(lines);
+		for (Component line : lines)
+			sender.sendMessage(line);
+		return Command.SINGLE_SUCCESS;
 	}
 
-	@Subcommand("version|v")
-	@CommandPermission("vampire.version")
-	@Description("{@@commands.version_description}")
-	public void onVersion(CommandSender sender) {
+	public static final LiteralCommandNode<CommandSourceStack> version = Commands
+			.literal("version")
+			.requires(sender -> sender.getSender().hasPermission(Perm.VERSION.getPermissionNode()))
+			.executes(CmdVampire::versionCommand)
+			.build();
+	public static final LiteralCommandNode<CommandSourceStack> v = Commands
+			.literal("v")
+			.requires(sender -> sender.getSender().hasPermission(Perm.VERSION.getPermissionNode()))
+			.executes(CmdVampire::versionCommand)
+			.build();
+	public static final CommandMessageKeys versionDesc = CommandMessageKeys.VERSION_DESCRIPTION;
+	public static int versionCommand(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+		CommandSender sender = ctx.getSource().getSender();
+		Entity executor = ctx.getSource().getExecutor();
+		if (executor != null)
+			sender = executor;
+
 		List<Component> pd = TextUtil.getPluginDescription(plugin);
-		for (Component mess : pd) {
-			plugin.sendMessage(sender, mess);
-		}
+		for (Component mess : pd)
+			sender.sendMessage(mess);
+
+		return Command.SINGLE_SUCCESS;
 	}
 
-	@Subcommand("batusi|bat")
-	@CommandCompletion("@yesno")
-	@CommandPermission("vampire.mode.batusi")
-	@Description("{@@commands.batusi_description}")
-	@Syntax("[yes/no=toggle] [numberOfBats=config_default]")
-	public void onModeBatusi(Player sender, @Optional String yesno, @Optional Integer numberOfBats) {
-		if (plugin.getVampireConfig().general.isBlacklisted(sender.getWorld())) {
-			plugin.sendMessage(sender,
+	public static final LiteralCommandNode<CommandSourceStack> batusi = Commands
+			.literal("batusi")
+			.requires(sender -> sender.getSender().hasPermission(Perm.MODE_BATUSI.getPermissionNode()))
+			.executes(CmdVampire::batusiCommand)
+			.then(Commands.argument("numberOfBats", IntegerArgumentType.integer(0, getPlugin().getVampireConfig().vampire.batusi.maxBats))
+					.executes(CmdVampire::batusiCommand)
+					.then(Commands.argument("enableBatusi", YesNoArgumentType.yesNoClass())
+							.executes(CmdVampire::batusiCommand)))
+			.then(Commands.argument("enableBatusi", YesNoArgumentType.yesNoClass())
+					.executes(CmdVampire::batusiCommand)
+					.then(Commands.argument("numberOfBats", IntegerArgumentType.integer(0, getPlugin().getVampireConfig().vampire.batusi.maxBats))
+							.executes(CmdVampire::batusiCommand)))
+			.build();
+	public static final LiteralCommandNode<CommandSourceStack> bat = Commands
+			.literal("bat")
+			.requires(sender -> sender.getSender().hasPermission(Perm.MODE_BATUSI.getPermissionNode()))
+			.executes(CmdVampire::batusiCommand)
+			.then(Commands.argument("numberOfBats", IntegerArgumentType.integer(0, getPlugin().getVampireConfig().vampire.batusi.maxBats))
+					.executes(CmdVampire::batusiCommand)
+					.then(Commands.argument("enableBatusi", YesNoArgumentType.yesNoClass())
+							.executes(CmdVampire::batusiCommand)))
+			.then(Commands.argument("enableBatusi", YesNoArgumentType.yesNoClass())
+					.executes(CmdVampire::batusiCommand)
+					.then(Commands.argument("numberOfBats", IntegerArgumentType.integer(0, getPlugin().getVampireConfig().vampire.batusi.maxBats))
+							.executes(CmdVampire::batusiCommand)))
+			.build();
+	public static final CommandMessageKeys batusiDesc = CommandMessageKeys.BATUSI_DESCRIPTION;
+	public static int batusiCommand(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+		CommandSender sender = ctx.getSource().getSender();
+		Entity executor = ctx.getSource().getExecutor();
+
+		if (!(executor instanceof Player player))
+			throw EXECUTOR_NOT_PLAYER.create();
+
+		Boolean batusiEnabled = null;
+		try {
+			batusiEnabled = ctx.getArgument("enableBatusi", Boolean.class);
+		}
+		catch (IllegalArgumentException ex) {
+			if (!ex.getMessage().startsWith("No such argument"))
+				throw ex;
+		}
+
+		int numberOfBats = getPlugin().getVampireConfig().vampire.batusi.numberOfBats;
+		boolean specifiedNum = false;
+		try {
+			numberOfBats = ctx.getArgument("numberOfBats", int.class);
+			specifiedNum = true;
+		}
+		catch (IllegalArgumentException ex) {
+			if (!ex.getMessage().startsWith("No such argument"))
+				throw ex;
+		}
+
+		if (getPlugin().getVampireConfig().general.isBlacklisted(player.getWorld())) {
+			getPlugin().sendMessage(sender,
 					MessageType.ERROR,
 					CommandMessageKeys.BLACKLISTED_WORLD);
-			return;
+			return 0;
 		}
 
-		if (yesno == null || yesno.equalsIgnoreCase("yes") || yesno.equalsIgnoreCase("no")) {
-			VPlayer vPlayer = plugin.getVPlayer(sender);
+		VPlayer vPlayer = getPlugin().getVPlayer(player);
+		if (vPlayer == null) {
+			getPlugin().sendMessage(sender,
+					MessageType.ERROR,
+					CommandMessageKeys.DATA_NOT_FOUND);
+			return 0;
+		}
+		if (!getPlugin().getVampireConfig().vampire.batusi.nosferatuOnly || vPlayer.isNosferatu()) {
+			boolean activate = !getPlugin().batEnabled.getOrDefault(player.getUniqueId(), false);
+			int numBats = 0;
+
+			if (batusiEnabled != null) {
+				activate = batusiEnabled;
+			}
+
+			if (activate) {
+				int defNumBats = getPlugin().getVampireConfig().vampire.batusi.numberOfBats;
+				int maxNumBats = getPlugin().getVampireConfig().vampire.batusi.maxBats;
+				if (defNumBats < 0) {
+					getPlugin().sendMessage(sender,
+							MessageType.ERROR,
+							CommandMessageKeys.BATUSI_DEFVALUE_ERROR);
+					defNumBats = 0;
+				}
+				if (maxNumBats < 0) {
+					getPlugin().sendMessage(sender,
+							MessageType.ERROR,
+							CommandMessageKeys.BATUSI_DEFVALUE_ERROR);
+					maxNumBats = defNumBats;
+				}
+				numBats = numberOfBats;
+				if (numBats > maxNumBats) {
+					getPlugin().sendMessage(sender,
+							MessageType.ERROR,
+							CommandMessageKeys.BATUSI_TOO_MANY,
+							"{default_bats}", Integer.toString(maxNumBats));
+					numBats = maxNumBats;
+				}
+			}
+			else if (specifiedNum) {
+				getPlugin().sendMessage(sender,
+						MessageType.INFO,
+						CommandMessageKeys.BATUSI_IGNORED_BATS);
+			}
+
+			vPlayer.setBatusi(activate, numBats);
+			return Command.SINGLE_SUCCESS;
+		} else {
+			Component nosferatuType = getPlugin().getMessage(sender, GrammarMessageKeys.NOSFERATU_TYPE);
+			Component batusiAction = getPlugin().getMessage(sender, GrammarMessageKeys.BATUSI);
+			getPlugin().sendMessage(sender,
+					MessageType.ERROR,
+					GrammarMessageKeys.ONLY_TYPE_CAN_ACTION,
+					new Tuple<>("{vampire_type}", nosferatuType),
+					new Tuple<>("{action}", batusiAction));
+		}
+		return 0;
+	}
+
+	public static final LiteralCommandNode<CommandSourceStack> holywater = Commands
+			.literal("holywater")
+			.requires(sender -> sender.getSender().hasPermission(Perm.GIVE_HOLYWATER.getPermissionNode()))
+			.executes(CmdVampire::holywaterCommand)
+			.then(Commands.argument("amount", IntegerArgumentType.integer(1, 64))
+					.executes(CmdVampire::holywaterCommand))
+			.build();
+	public static final CommandMessageKeys holywaterDesc = CommandMessageKeys.HOLYWATER_DESCRIPTION;
+	public static int holywaterCommand(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+		CommandSender sender = ctx.getSource().getSender();
+		Entity executor = ctx.getSource().getExecutor();
+
+		if (!(executor instanceof Player player))
+			throw EXECUTOR_NOT_PLAYER.create();
+
+		int quantity = 1;
+		try {
+			quantity = ctx.getArgument("amount", int.class);
+		}
+		catch (IllegalArgumentException ex) {
+			if (!ex.getMessage().startsWith("No such argument"))
+				throw ex;
+		}
+
+		ItemStack water = getHolyWaterUtil().createHolyWater(player);
+		water.setAmount(quantity);
+		Map<Integer, ItemStack> result = player.getInventory().addItem(water);
+		if (!result.isEmpty()) {
+			getPlugin().sendMessage(sender,
+					MessageType.ERROR,
+					CommandMessageKeys.FULL_INVENTORY);
+			return 0;
+		}
+		return Command.SINGLE_SUCCESS;
+	}
+
+	public static final LiteralCommandNode<CommandSourceStack> ring = Commands
+			.literal("ring")
+			.requires(sender -> sender.getSender().hasPermission(Perm.GIVE_RING.getPermissionNode()))
+			.executes(CmdVampire::ringCommand)
+			.build();
+	public static final CommandMessageKeys ringDesc = CommandMessageKeys.RING_DESCRIPTION;
+	public static int ringCommand(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+		CommandSender sender = ctx.getSource().getSender();
+		Entity executor = ctx.getSource().getExecutor();
+
+		if (!(executor instanceof Player player))
+			throw EXECUTOR_NOT_PLAYER.create();
+
+		ItemStack ring = getRingUtil().getSunRing();
+		Map<Integer, ItemStack> result = player.getInventory().addItem(ring);
+		if (!result.isEmpty()) {
+			getPlugin().sendMessage(sender,
+					MessageType.ERROR,
+					CommandMessageKeys.FULL_INVENTORY);
+			return 0;
+		}
+		return Command.SINGLE_SUCCESS;
+	}
+
+	public static final LiteralCommandNode<CommandSourceStack> setVampire = Commands
+			.literal("vampire")
+			.requires(sender -> sender.getSender().hasPermission(Perm.SET_VAMPIRE.getPermissionNode()))
+			.then(Commands.argument("isVampire", YesNoArgumentType.yesNoClass())
+					.executes(CmdVampire::setVampireCommand)
+					.then(Commands.argument("targets", ArgumentTypes.playerProfiles())
+							.requires(sender -> sender.getSender().hasPermission(Perm.SET_VAMPIRE_OTHER.getPermissionNode()))
+							.executes(CmdVampire::setVampireCommand)))
+			.build();
+	public static final LiteralCommandNode<CommandSourceStack> setV = Commands
+			.literal("v")
+			.requires(sender -> sender.getSender().hasPermission(Perm.SET_VAMPIRE.getPermissionNode()))
+			.then(Commands.argument("isVampire", YesNoArgumentType.yesNoClass())
+					.executes(CmdVampire::setVampireCommand)
+					.then(Commands.argument("targets", ArgumentTypes.playerProfiles())
+							.requires(sender -> sender.getSender().hasPermission(Perm.SET_VAMPIRE_OTHER.getPermissionNode()))
+							.executes(CmdVampire::setVampireCommand)))
+			.build();
+	public static final CommandMessageKeys setVampireDesc = CommandMessageKeys.SET_VAMPIRE_DESCRIPTION;
+	public static int setVampireCommand(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+		CommandSender sender = ctx.getSource().getSender();
+		Entity executor = ctx.getSource().getExecutor();
+
+		boolean isVampire = ctx.getArgument("isVampire", boolean.class);
+
+		Collection<PlayerProfile> profiles = null;
+		try {
+			profiles = ctx.getArgument("targets", PlayerProfileListResolver.class)
+					.resolve(ctx.getSource());
+		}
+		catch (IllegalArgumentException ex) {
+			if (!ex.getMessage().startsWith("No such argument"))
+				throw ex;
+		}
+
+		if (profiles == null) {
+			if (executor instanceof Player p)
+				profiles = List.of(p.getPlayerProfile());
+			else
+				throw EXECUTOR_NOT_PLAYER_OPTIONAL.create();
+		}
+		if (profiles.isEmpty()) {
+			sendRichMessage(sender, executor, "<red>No targets found!");
+			return 0;
+		}
+
+		int result = 0;
+		for (PlayerProfile profile : profiles) {
+			if (profile.getName() == null)
+				continue;
+			OfflinePlayer target = Bukkit.getOfflinePlayer(profile.getName());
+
+			VPlayer vPlayer = getPlugin().getVPlayer(target);
 			if (vPlayer == null) {
-				plugin.sendMessage(sender,
+				getPlugin().sendMessage(sender,
 						MessageType.ERROR,
 						CommandMessageKeys.DATA_NOT_FOUND);
-				return;
+				continue;
 			}
-			if (!plugin.getVampireConfig().vampire.batusi.nosferatuOnly || vPlayer.isNosferatu()) {
-				boolean activate = !plugin.batEnabled.getOrDefault(sender.getUniqueId(), false);
-				int numBats = 0;
+			if (vPlayer.isVampire() != isVampire) {
+				Component displayName = Component.text(profile.getName());
+				if (!isVampire || !getPlugin().getWerewolvesCompat().isWerewolf(profile.getId())) {
+					vPlayer.setReason(InfectionReason.OPERATOR);
+					vPlayer.setMaker(null);
+					vPlayer.setVampire(isVampire);
 
-				if (yesno != null) {
-					activate = yesno.equals("yes");
-				}
+					vPlayer.update();
 
-				if (activate) {
-					int defNumBats = plugin.getVampireConfig().vampire.batusi.numberOfBats;
-					int maxNumBats = plugin.getVampireConfig().vampire.batusi.maxBats;
-					if (defNumBats < 0) {
-						plugin.sendMessage(sender,
-								MessageType.ERROR,
-								CommandMessageKeys.BATUSI_DEFVALUE_ERROR);
-						defNumBats = 0;
-					}
-					if (maxNumBats < 0) {
-						plugin.sendMessage(sender,
-								MessageType.ERROR,
-								CommandMessageKeys.BATUSI_DEFVALUE_ERROR);
-						maxNumBats = defNumBats;
-					}
-					if (numberOfBats == null) {
-						numBats = defNumBats;
-					}
-					else {
-						numBats = numberOfBats;
-						if (numBats < 0) {
-							plugin.sendMessage(sender,
-									MessageType.ERROR,
-									CommandMessageKeys.BATUSI_NEGATIVE_BATS);
-							return;
-						}
-						if (numBats > maxNumBats) {
-							plugin.sendMessage(sender,
-									MessageType.ERROR,
-									CommandMessageKeys.BATUSI_TOO_MANY,
-									"{default_bats}", Integer.toString(maxNumBats));
-							numBats = maxNumBats;
-						}
-					}
-				}
-				else if (numberOfBats != null) {
-					plugin.sendMessage(sender,
+					Component onOff = isVampire ? getPlugin().getMessage(sender, GrammarMessageKeys.ON) : getPlugin().getMessage(sender, GrammarMessageKeys.OFF);
+					Component attributeName = getPlugin().getMessage(sender, CommandMessageKeys.SET_VAMPIRE_ATTRIBUTE);
+					getPlugin().sendMessage(sender,
 							MessageType.INFO,
-							CommandMessageKeys.BATUSI_IGNORED_BATS);
-				}
-
-				vPlayer.setBatusi(activate, numBats);
-			} else {
-				Component nosferatuType = plugin.getMessage(sender, GrammarMessageKeys.NOSFERATU_TYPE);
-				Component batusiAction = plugin.getMessage(sender, GrammarMessageKeys.BATUSI);
-				plugin.sendMessage(sender,
-						MessageType.ERROR,
-						GrammarMessageKeys.ONLY_TYPE_CAN_ACTION,
-						new Tuple<>("{vampire_type}", nosferatuType),
-						new Tuple<>("{action}", batusiAction));
-			}
-		}
-		else {
-			plugin.sendMessage(sender,
-					MessageType.ERROR,
-					CommandMessageKeys.NOT_VALID_VALUE,
-					"{value}", yesno);
-			sender.sendMessage(getCommandSyntax("batusi"));
-		}
-	}
-
-	@Subcommand("holywater")
-	@CommandPermission("vampire.give.holywater")
-	@Description("{@@commands.holywater_description}")
-	public void onHolyWater(Player sender, @Default("1") Integer quantity) {
-		if (quantity < 1 || quantity > 64) {
-			plugin.sendMessage(sender,
-					MessageType.ERROR,
-					CommandMessageKeys.NOT_VALID_VALUE,
-					"{value}", quantity.toString());
-			return;
-		}
-		ItemStack water = holyUtil.createHolyWater(sender);
-		water.setAmount(quantity);
-		Map<Integer, ItemStack> result = sender.getInventory().addItem(water);
-		if (!result.isEmpty()) {
-			plugin.sendMessage(sender,
-					MessageType.ERROR,
-					CommandMessageKeys.FULL_INVENTORY);
-		}
-	}
-
-	@Subcommand("ring")
-	@CommandPermission("vampire.give.ring")
-	@Description("{@@commands.ring_description}")
-	public void onRing(Player sender) {
-		ItemStack ring = ringUtil.getSunRing();
-		Map<Integer, ItemStack> result = sender.getInventory().addItem(ring);
-		if (!result.isEmpty()) {
-			plugin.sendMessage(sender,
-					MessageType.ERROR,
-					CommandMessageKeys.FULL_INVENTORY);
-		}
-	}
-
-	@Subcommand("set")
-	@CommandPermission("vampire.set")
-	@Description("{@@commands.set_description}")
-	public class CmdVampireSet extends BaseCommand {
-		@Subcommand("help|h|?")
-		public void onHelp(CommandSender sender, CommandHelp help) {
-			int maxPages = 1;
-
-			plugin.sendMessage(sender, textUtil.getHelpHeader(help, maxPages, "set", sender));
-
-			if (help.getPage() == 1) {
-				plugin.sendMessage(sender, textUtil.getCommandHelp("vampire", commandMap.get("set vampire"), sender, 0));
-				plugin.sendMessage(sender, textUtil.getCommandHelp("nosferatu", commandMap.get("set nosferatu"), sender, 0));
-				plugin.sendMessage(sender, textUtil.getCommandHelp("infection", commandMap.get("set infection"), sender, 0));
-				plugin.sendMessage(sender, textUtil.getCommandHelp("food", commandMap.get("set food"), sender, 0));
-				plugin.sendMessage(sender, textUtil.getCommandHelp("health", commandMap.get("set health"), sender, 0));
-			}
-		}
-
-		@Subcommand("vampire|v")
-		@CommandCompletion("@yesno @players")
-		@Description("{@@commands.set_vampire_description}")
-		@Syntax("<yes/no> [player=you]")
-		public void onSetVampire(CommandSender sender, String yesno, @Optional String targetName) {
-			if (yesno.equalsIgnoreCase("yes") || yesno.equalsIgnoreCase("no")) {
-				boolean val = yesno.equalsIgnoreCase("yes");
-				Perm perm = val ? Perm.SET_VAMPIRE_TRUE : Perm.SET_VAMPIRE_FALSE;
-				if (resUtil.hasPermission(sender, perm, true)) {
-					Player player = null;
-					if (targetName != null) {
-						player = Bukkit.getPlayer(targetName);
-					} else if (sender instanceof Player) {
-						player = (Player) sender;
-					} else {
-						plugin.sendMessage(sender,
-								MessageType.ERROR,
-								CommandMessageKeys.NOT_ENOUGH_INPUTS);
-						sender.sendMessage(getCommandSyntax("set vampire"));
-					}
-
-					if (player != null) {
-						VPlayer vPlayer = plugin.getVPlayer(player);
-						if (vPlayer == null) {
-							plugin.sendMessage(sender,
-									MessageType.ERROR,
-									CommandMessageKeys.DATA_NOT_FOUND);
-							return;
-						}
-						if (vPlayer.isVampire() != val) {
-							Component displayName = Component.text(player.getDisplayName());
-							if (!val || !plugin.getWerewolvesCompat().isWerewolf(player)) {
-								vPlayer.setReason(InfectionReason.OPERATOR);
-								vPlayer.setMaker(null);
-								vPlayer.setVampire(val);
-
-								vPlayer.update();
-
-								Component onOff = val ? plugin.getMessage(sender, GrammarMessageKeys.ON) : plugin.getMessage(sender, GrammarMessageKeys.OFF);
-								Component attributeName = plugin.getMessage(sender, CommandMessageKeys.SET_VAMPIRE_ATTRIBUTE);
-								plugin.sendMessage(sender,
-										MessageType.INFO,
-										CommandMessageKeys.SET_CHANGED_VALUE,
-										new Tuple<>("{player}", displayName),
-										new Tuple<>("{attribute}", attributeName),
-										new Tuple<>("{value}", onOff));
-							} else {
-								plugin.sendMessage(sender,
-										MessageType.ERROR,
-										CommandMessageKeys.SET_ERROR_HYBRID,
-										new Tuple<>("{player}", displayName));
-							}
-						}
-					}
-					else {
-						plugin.sendMessage(sender,
-								MessageType.ERROR,
-								CommandMessageKeys.NO_PLAYER_FOUND,
-								"{player}", targetName);
-					}
-				}
-			}
-			else {
-				plugin.sendMessage(sender,
-						MessageType.ERROR,
-						CommandMessageKeys.NOT_VALID_VALUE,
-						"{value}", yesno);
-				sender.sendMessage(getCommandSyntax("set vampire"));
-			}
-		}
-
-		@Subcommand("nosferatu|n")
-		@CommandCompletion("@yesno @players")
-		@Description("{@@commands.set_nosferatu_description}")
-		@Syntax("<yes/no> [player=you]")
-		public void onSetNosferatu(CommandSender sender, String yesno, @Optional String targetName) {
-			if (yesno.equalsIgnoreCase("yes") || yesno.equalsIgnoreCase("no")) {
-				boolean val = yesno.equalsIgnoreCase("yes");
-				Perm perm = val ? Perm.SET_NOSFERATU_TRUE : Perm.SET_NOSFERATU_FALSE;
-				if (resUtil.hasPermission(sender, perm, true)) {
-					Player player = null;
-					if (targetName != null) {
-						player = Bukkit.getPlayer(targetName);
-					} else if (sender instanceof Player) {
-						player = (Player) sender;
-					} else {
-						plugin.sendMessage(sender,
-								MessageType.ERROR,
-								CommandMessageKeys.NOT_ENOUGH_INPUTS);
-						sender.sendMessage(getCommandSyntax("set nosferatu"));
-					}
-
-					if (player != null) {
-						VPlayer vPlayer = plugin.getVPlayer(player);
-						if (vPlayer == null) {
-							plugin.sendMessage(sender,
-									MessageType.ERROR,
-									CommandMessageKeys.DATA_NOT_FOUND);
-							return;
-						}
-						Component displayName = Component.text(player.getDisplayName());
-						if (!val || !plugin.getWerewolvesCompat().isWerewolf(player)) {
-							if (val && vPlayer.isVampire() != val) {
-								vPlayer.setReason(InfectionReason.OPERATOR);
-								vPlayer.setMaker(null);
-								vPlayer.setVampire(val);
-
-								vPlayer.update();
-							}
-							if (vPlayer.isNosferatu() != val) {
-								vPlayer.setNosferatu(val);
-
-								vPlayer.update();
-							}
-
-							Component onOff = val ? plugin.getMessage(sender, GrammarMessageKeys.ON) : plugin.getMessage(sender, GrammarMessageKeys.OFF);
-							Component attributeName = plugin.getMessage(sender, CommandMessageKeys.SET_NOSFERATU_ATTRIBUTE);
-							plugin.sendMessage(sender,
-									MessageType.INFO,
-									CommandMessageKeys.SET_CHANGED_VALUE,
-									new Tuple<>("{player}", displayName),
-									new Tuple<>("{attribute}", attributeName),
-									new Tuple<>("{value}", onOff));
-						}
-						else {
-							plugin.sendMessage(sender,
-									MessageType.ERROR,
-									CommandMessageKeys.SET_ERROR_HYBRID,
-									new Tuple<>("{player}", displayName));
-						}
-					}
-					else {
-						plugin.sendMessage(sender,
-								MessageType.ERROR,
-								CommandMessageKeys.NO_PLAYER_FOUND,
-								"{player}", targetName);
-					}
-				}
-			}
-			else {
-				plugin.sendMessage(sender,
-						MessageType.ERROR,
-						CommandMessageKeys.NOT_VALID_VALUE,
-						"{value}", yesno);
-				sender.sendMessage(getCommandSyntax("set nosferatu"));
-			}
-		}
-
-		@Subcommand("infection|i")
-		@CommandPermission("vampire.set.infection")
-		@CommandCompletion("@range:0-1 @players")
-		@Description("{@@commands.set_infection_description}")
-		@Syntax("<val> [player=you]")
-		public void onSetInfection(CommandSender sender, double value, @Optional String targetName) {
-			Double res = MathUtil.limitNumber(value, 0D, 100D);
-
-			Player player = null;
-			if (targetName != null) {
-				player = Bukkit.getPlayer(targetName);
-			} else if (sender instanceof Player) {
-				player = (Player) sender;
-			} else {
-				plugin.sendMessage(sender,
-						MessageType.ERROR,
-						CommandMessageKeys.NOT_ENOUGH_INPUTS);
-				sender.sendMessage(getCommandSyntax("set infection"));
-				return;
-			}
-
-			if (player != null) {
-				VPlayer vPlayer = plugin.getVPlayer(player);
-				if (vPlayer == null) {
-					plugin.sendMessage(sender,
-							MessageType.ERROR,
-							CommandMessageKeys.DATA_NOT_FOUND);
-					return;
-				}
-				Component displayName = Component.text(player.getDisplayName());
-				if (vPlayer.isVampire()) {
-					plugin.sendMessage(sender,
-							MessageType.ERROR,
-							VampirismMessageKeys.ALREADY_VAMPIRE,
-							new Tuple<>("{player}", displayName));
+							CommandMessageKeys.SET_CHANGED_VALUE,
+							new Tuple<>("{player}", displayName),
+							new Tuple<>("{attribute}", attributeName),
+							new Tuple<>("{value}", onOff));
 				} else {
-					if (!plugin.getWerewolvesCompat().isWerewolf(player)) {
-						InfectionReason reason = vPlayer.getReason();
-						UUID makerUUID = vPlayer.getMakerUUID();
-						if (reason == null) {
-							reason = InfectionReason.OPERATOR;
-							makerUUID = null;
-						}
-						vPlayer.setInfection(0);
-						vPlayer.addInfection(res, reason, makerUUID);
-						vPlayer.update();
-
-						Component attributeName = plugin.getMessage(sender, CommandMessageKeys.SET_INFECTION_ATTRIBUTE);
-						Component valComp = Component.text(String.format("%.2f%%", value * 100));
-						plugin.sendMessage(sender,
-								MessageType.INFO,
-								CommandMessageKeys.SET_CHANGED_VALUE,
-								new Tuple<>("{player}", displayName),
-								new Tuple<>("{attribute}", attributeName),
-								new Tuple<>("{value}", valComp));
-					} else {
-						plugin.sendMessage(sender,
-								MessageType.ERROR,
-								CommandMessageKeys.SET_ERROR_HYBRID,
-								new Tuple<>("{player}", displayName));
-					}
+					getPlugin().sendMessage(sender,
+							MessageType.ERROR,
+							CommandMessageKeys.SET_ERROR_HYBRID,
+							new Tuple<>("{player}", displayName));
+					continue;
 				}
 			}
-			else {
-				plugin.sendMessage(sender,
-						MessageType.ERROR,
-						CommandMessageKeys.NO_PLAYER_FOUND,
-						"{player}", targetName);
-			}
+			result += Command.SINGLE_SUCCESS;
 		}
 
-		@Subcommand("food|f")
-		@CommandPermission("vampire.set.food")
-		@CommandCompletion("@range:0-20 @players")
-		@Description("{@@commands.set_food_description}")
-		@Syntax("<val> [player=you]")
-		public void onSetFood(CommandSender sender, int value, @Optional String targetName) {
-			Player player = null;
-			if (targetName != null) {
-				player = Bukkit.getPlayer(targetName);
+		if (result != 1)
+			sendMessage(sender, executor, "Set vampire for " + result + " players.");
 
-				if (player == null) {
-					plugin.sendMessage(sender,
+		return result;
+	}
+
+	public static final LiteralCommandNode<CommandSourceStack> setNosferatu = Commands
+			.literal("nosferatu")
+			.requires(sender -> sender.getSender().hasPermission(Perm.SET_NOSFERATU.getPermissionNode()))
+			.then(Commands.argument("isNosferatu", YesNoArgumentType.yesNoClass())
+					.executes(CmdVampire::setNosferatuCommand)
+					.then(Commands.argument("targets", ArgumentTypes.playerProfiles())
+							.requires(sender -> sender.getSender().hasPermission(Perm.SET_NOSFERATU_OTHER.getPermissionNode()))
+							.executes(CmdVampire::setNosferatuCommand)))
+			.build();
+	public static final LiteralCommandNode<CommandSourceStack> setN = Commands
+			.literal("n")
+			.requires(sender -> sender.getSender().hasPermission(Perm.SET_NOSFERATU.getPermissionNode()))
+			.then(Commands.argument("isNosferatu", YesNoArgumentType.yesNoClass())
+					.executes(CmdVampire::setNosferatuCommand)
+					.then(Commands.argument("targets", ArgumentTypes.playerProfiles())
+							.requires(sender -> sender.getSender().hasPermission(Perm.SET_NOSFERATU_OTHER.getPermissionNode()))
+							.executes(CmdVampire::setNosferatuCommand)))
+			.build();
+	public static final CommandMessageKeys setNosferatuDesc = CommandMessageKeys.SET_NOSFERATU_DESCRIPTION;
+	public static int setNosferatuCommand(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+		CommandSender sender = ctx.getSource().getSender();
+		Entity executor = ctx.getSource().getExecutor();
+
+		boolean isNosferatu = ctx.getArgument("isNosferatu", boolean.class);
+
+		Collection<PlayerProfile> profiles = null;
+		try {
+			profiles = ctx.getArgument("targets", PlayerProfileListResolver.class)
+					.resolve(ctx.getSource());
+		}
+		catch (IllegalArgumentException ex) {
+			if (!ex.getMessage().startsWith("No such argument"))
+				throw ex;
+		}
+
+		if (profiles == null) {
+			if (executor instanceof Player p)
+				profiles = List.of(p.getPlayerProfile());
+			else
+				throw EXECUTOR_NOT_PLAYER_OPTIONAL.create();
+		}
+		if (profiles.isEmpty()) {
+			sendRichMessage(sender, executor, "<red>No targets found!");
+			return 0;
+		}
+
+		int result = 0;
+		for (PlayerProfile profile : profiles) {
+			if (profile.getName() == null)
+				continue;
+			OfflinePlayer target = Bukkit.getOfflinePlayer(profile.getName());
+
+			VPlayer vPlayer = getPlugin().getVPlayer(target);
+			if (vPlayer == null) {
+				getPlugin().sendMessage(sender,
+						MessageType.ERROR,
+						CommandMessageKeys.DATA_NOT_FOUND);
+				continue;
+			}
+			if (vPlayer.isVampire() != isNosferatu) {
+				Component displayName = Component.text(profile.getName());
+				if (!isNosferatu || !getPlugin().getWerewolvesCompat().isWerewolf(profile.getId())) {
+					if (isNosferatu && !vPlayer.isVampire()) {
+						vPlayer.setReason(InfectionReason.OPERATOR);
+						vPlayer.setMaker(null);
+						vPlayer.setVampire(true);
+
+						vPlayer.update();
+					}
+					if (vPlayer.isNosferatu() != isNosferatu) {
+						vPlayer.setNosferatu(isNosferatu);
+
+						vPlayer.update();
+					}
+
+					Component onOff = isNosferatu ? getPlugin().getMessage(sender, GrammarMessageKeys.ON) : getPlugin().getMessage(sender, GrammarMessageKeys.OFF);
+					Component attributeName = getPlugin().getMessage(sender, CommandMessageKeys.SET_NOSFERATU_ATTRIBUTE);
+					getPlugin().sendMessage(sender,
+							MessageType.INFO,
+							CommandMessageKeys.SET_CHANGED_VALUE,
+							new Tuple<>("{player}", displayName),
+							new Tuple<>("{attribute}", attributeName),
+							new Tuple<>("{value}", onOff));
+				}
+				else {
+					getPlugin().sendMessage(sender,
 							MessageType.ERROR,
-							CommandMessageKeys.NO_PLAYER_FOUND,
-							"{player}", targetName);
-					return;
+							CommandMessageKeys.SET_ERROR_HYBRID,
+							new Tuple<>("{player}", displayName));
+					continue;
 				}
 			}
-			else if (sender instanceof Player) {
-				player = (Player) sender;
-			}
-			else {
-				plugin.sendMessage(sender,
+			result += Command.SINGLE_SUCCESS;
+		}
+
+		if (result != 1)
+			sendMessage(sender, executor, "Set nosferatu for " + result + " players.");
+
+		return result;
+	}
+
+	public static final LiteralCommandNode<CommandSourceStack> setInfection = Commands
+			.literal("infection")
+			.requires(sender -> sender.getSender().hasPermission(Perm.SET_INFECTION.getPermissionNode()))
+			.then(Commands.argument("value", DoubleArgumentType.doubleArg(0, 100))
+					.executes(CmdVampire::setInfectionCommand)
+					.then(Commands.argument("targets", ArgumentTypes.playerProfiles())
+							.requires(sender -> sender.getSender().hasPermission(Perm.SET_INFECTION_OTHER.getPermissionNode()))
+							.executes(CmdVampire::setInfectionCommand)))
+			.build();
+	public static final LiteralCommandNode<CommandSourceStack> setI = Commands
+			.literal("i")
+			.requires(sender -> sender.getSender().hasPermission(Perm.SET_INFECTION.getPermissionNode()))
+			.then(Commands.argument("value", DoubleArgumentType.doubleArg(0, 100))
+					.executes(CmdVampire::setInfectionCommand)
+					.then(Commands.argument("targets", ArgumentTypes.playerProfiles())
+							.requires(sender -> sender.getSender().hasPermission(Perm.SET_INFECTION_OTHER.getPermissionNode()))
+							.executes(CmdVampire::setInfectionCommand)))
+			.build();
+	public static final CommandMessageKeys setInfectionDesc = CommandMessageKeys.SET_INFECTION_DESCRIPTION;
+	public static int setInfectionCommand(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+		CommandSender sender = ctx.getSource().getSender();
+		Entity executor = ctx.getSource().getExecutor();
+
+		double value = ctx.getArgument("value", double.class);
+
+		Collection<PlayerProfile> profiles = null;
+		try {
+			profiles = ctx.getArgument("targets", PlayerProfileListResolver.class)
+					.resolve(ctx.getSource());
+		}
+		catch (IllegalArgumentException ex) {
+			if (!ex.getMessage().startsWith("No such argument"))
+				throw ex;
+		}
+
+		if (profiles == null) {
+			if (executor instanceof Player p)
+				profiles = List.of(p.getPlayerProfile());
+			else
+				throw EXECUTOR_NOT_PLAYER_OPTIONAL.create();
+		}
+		if (profiles.isEmpty()) {
+			sendRichMessage(sender, executor, "<red>No targets found!");
+			return 0;
+		}
+
+		int result = 0;
+		for (PlayerProfile profile : profiles) {
+			if (profile.getName() == null)
+				continue;
+			OfflinePlayer target = Bukkit.getOfflinePlayer(profile.getName());
+
+			VPlayer vPlayer = getPlugin().getVPlayer(target);
+			if (vPlayer == null) {
+				getPlugin().sendMessage(sender,
 						MessageType.ERROR,
-						CommandMessageKeys.NOT_ENOUGH_INPUTS);
-				sender.sendMessage(getCommandSyntax("set food"));
-				return;
+						CommandMessageKeys.DATA_NOT_FOUND);
+				continue;
 			}
+			Component displayName = Component.text(profile.getName());
+			if (vPlayer.isVampire()) {
+				getPlugin().sendMessage(sender,
+						MessageType.ERROR,
+						VampirismMessageKeys.ALREADY_VAMPIRE,
+						new Tuple<>("{player}", displayName));
+				continue;
+			} else {
+				if (!getPlugin().getWerewolvesCompat().isWerewolf(profile.getId())) {
+					InfectionReason reason = vPlayer.getReason();
+					UUID makerUUID = vPlayer.getMakerUUID();
+					if (reason == null) {
+						reason = InfectionReason.OPERATOR;
+						makerUUID = null;
+					}
+					vPlayer.setInfection(0);
+					vPlayer.addInfection(value / 100, reason, makerUUID);
+					vPlayer.update();
 
-			Integer res = MathUtil.limitNumber(value, 0, 20);
-			player.setFoodLevel(res);
+					Component attributeName = getPlugin().getMessage(sender, CommandMessageKeys.SET_INFECTION_ATTRIBUTE);
+					Component valComp = Component.text(String.format("%.2f%%", value));
+					getPlugin().sendMessage(sender,
+							MessageType.INFO,
+							CommandMessageKeys.SET_CHANGED_VALUE,
+							new Tuple<>("{player}", displayName),
+							new Tuple<>("{attribute}", attributeName),
+							new Tuple<>("{value}", valComp));
+				} else {
+					getPlugin().sendMessage(sender,
+							MessageType.ERROR,
+							CommandMessageKeys.SET_ERROR_HYBRID,
+							new Tuple<>("{player}", displayName));
+					continue;
+				}
+			}
+			result += Command.SINGLE_SUCCESS;
+		}
 
-			Component attributeName = plugin.getMessage(sender, CommandMessageKeys.SET_FOOD_ATTRIBUTE);
-			Component displayName = Component.text(player.getDisplayName());
-			plugin.sendMessage(sender,
+		if (result != 1)
+			sendMessage(sender, executor, "Set infection level for " + result + " players.");
+
+		return result;
+	}
+
+	public static final LiteralCommandNode<CommandSourceStack> setFood = Commands
+			.literal("food")
+			.requires(sender -> sender.getSender().hasPermission(Perm.SET_FOOD.getPermissionNode()))
+			.then(Commands.argument("value", IntegerArgumentType.integer(0, 20))
+					.executes(CmdVampire::setFoodCommand)
+					.then(Commands.argument("targets", ArgumentTypes.players())
+							.requires(sender -> sender.getSender().hasPermission(Perm.SET_FOOD_OTHER.getPermissionNode()))
+							.executes(CmdVampire::setFoodCommand)))
+			.build();
+	public static final LiteralCommandNode<CommandSourceStack> setF = Commands
+			.literal("f")
+			.requires(sender -> sender.getSender().hasPermission(Perm.SET_FOOD.getPermissionNode()))
+			.then(Commands.argument("value", IntegerArgumentType.integer(0, 20))
+					.executes(CmdVampire::setFoodCommand)
+					.then(Commands.argument("targets", ArgumentTypes.players())
+							.requires(sender -> sender.getSender().hasPermission(Perm.SET_FOOD_OTHER.getPermissionNode()))
+							.executes(CmdVampire::setFoodCommand)))
+			.build();
+	public static final CommandMessageKeys setFoodDesc = CommandMessageKeys.SET_FOOD_DESCRIPTION;
+	public static int setFoodCommand(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+		CommandSender sender = ctx.getSource().getSender();
+		Entity executor = ctx.getSource().getExecutor();
+
+		int value = ctx.getArgument("value", int.class);
+
+		List<Player> targets = null;
+		try {
+			targets = ctx.getArgument("targets", PlayerSelectorArgumentResolver.class)
+					.resolve(ctx.getSource());
+		}
+		catch (IllegalArgumentException ex) {
+			if (!ex.getMessage().startsWith("No such argument"))
+				throw ex;
+		}
+
+		if (targets == null) {
+			if (executor instanceof Player p)
+				targets = List.of(p);
+			else
+				throw EXECUTOR_NOT_PLAYER_OPTIONAL.create();
+		}
+		if (targets.isEmpty()) {
+			sendRichMessage(sender, executor, "<red>No targets found!");
+			return 0;
+		}
+
+		int result = 0;
+		for (Player target : targets) {
+			target.setFoodLevel(value);
+
+			Component attributeName = getPlugin().getMessage(sender, CommandMessageKeys.SET_FOOD_ATTRIBUTE);
+			Component displayName = target.displayName();
+			getPlugin().sendMessage(sender,
 					MessageType.INFO,
 					CommandMessageKeys.SET_CHANGED_VALUE,
 					new Tuple<>("{player}", displayName),
 					new Tuple<>("{attribute}", attributeName),
-					new Tuple<>("{value}", Component.text(String.format("%d", res))));
+					new Tuple<>("{value}", Component.text(String.format("%d", value))));
+			result += Command.SINGLE_SUCCESS;
 		}
 
-		@Subcommand("health|h")
-		@CommandPermission("vampire.set.health")
-		@CommandCompletion("@range:0-20 @players")
-		@Description("{@@commands.set_health_description}")
-		@Syntax("<val> [player=you]")
-		public void onSetHealth(CommandSender sender, double value, @Optional String targetName) {
-			Player player = null;
-			if (targetName != null) {
-				player = Bukkit.getPlayer(targetName);
+		if (result != 1)
+			sendMessage(sender, executor, "Set food for " + result + " players.");
 
-				if (player == null) {
-					plugin.sendMessage(sender,
-							MessageType.ERROR,
-							CommandMessageKeys.NO_PLAYER_FOUND,
-							"{player}", targetName);
-					return;
-				}
-			}
-			else if (sender instanceof Player) {
-				player = (Player) sender;
-			}
-			else {
-				plugin.sendMessage(sender,
-						MessageType.ERROR,
-						CommandMessageKeys.NOT_ENOUGH_INPUTS);
-				sender.sendMessage(getCommandSyntax("set health"));
-				return;
-			}
+		return result;
+	}
 
-			AttributeInstance maxHealthAttr = player.getAttribute(plugin.getVersionCompat().HEALTH_ATTR);
+	public static final LiteralCommandNode<CommandSourceStack> setHealth = Commands
+			.literal("health")
+			.requires(sender -> sender.getSender().hasPermission(Perm.SET_HEALTH.getPermissionNode()))
+			.then(Commands.argument("value", DoubleArgumentType.doubleArg(0))
+					.executes(CmdVampire::setHealthCommand)
+					.then(Commands.argument("targets", ArgumentTypes.players())
+							.requires(sender -> sender.getSender().hasPermission(Perm.SET_HEALTH_OTHER.getPermissionNode()))
+							.executes(CmdVampire::setHealthCommand)))
+			.build();
+	public static final LiteralCommandNode<CommandSourceStack> setH = Commands
+			.literal("h")
+			.requires(sender -> sender.getSender().hasPermission(Perm.SET_HEALTH.getPermissionNode()))
+			.then(Commands.argument("value", DoubleArgumentType.doubleArg(0))
+					.executes(CmdVampire::setHealthCommand)
+					.then(Commands.argument("targets", ArgumentTypes.players())
+							.requires(sender -> sender.getSender().hasPermission(Perm.SET_HEALTH_OTHER.getPermissionNode()))
+							.executes(CmdVampire::setHealthCommand)))
+			.build();
+	public static final CommandMessageKeys setHealthDesc = CommandMessageKeys.SET_HEALTH_DESCRIPTION;
+	public static int setHealthCommand(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+		CommandSender sender = ctx.getSource().getSender();
+		Entity executor = ctx.getSource().getExecutor();
+
+		double value = ctx.getArgument("value", double.class);
+
+		List<Entity> targets = null;
+		try {
+			targets = ctx.getArgument("targets", EntitySelectorArgumentResolver.class)
+					.resolve(ctx.getSource());
+		}
+		catch (IllegalArgumentException ex) {
+			if (!ex.getMessage().startsWith("No such argument"))
+				throw ex;
+		}
+
+		if (targets == null) {
+			if (executor instanceof LivingEntity p)
+				targets = List.of(p);
+			else
+				throw EXECUTOR_NOT_LIVING_OPTIONAL.create();
+		}
+		if (targets.isEmpty()) {
+			sendRichMessage(sender, executor, "<red>No targets found!");
+			return 0;
+		}
+
+		int result = 0;
+		for (Entity rawTarget : targets) {
+			if (!(rawTarget instanceof LivingEntity target))
+				continue;
+			AttributeInstance maxHealthAttr = target.getAttribute(getPlugin().getVersionCompat().HEALTH_ATTR);
 			double maxHealth = 20;
 			if (maxHealthAttr != null)
 				maxHealth = maxHealthAttr.getValue();
 			double newHealth = MathUtil.limitNumber(value, 0D, maxHealth);
-			player.setHealth(newHealth);
+			target.setHealth(newHealth);
 
-			Component attributeName = plugin.getMessage(sender, CommandMessageKeys.SET_HEALTH_ATTRIBUTE);
-			Component displayName = Component.text(player.getDisplayName());
-			plugin.sendMessage(sender,
+			Component attributeName = getPlugin().getMessage(sender, CommandMessageKeys.SET_HEALTH_ATTRIBUTE);
+			Component displayName = target instanceof Player p ? p.displayName() : target.name();
+			getPlugin().sendMessage(sender,
 					MessageType.INFO,
 					CommandMessageKeys.SET_CHANGED_VALUE,
 					new Tuple<>("{player}", displayName),
 					new Tuple<>("{attribute}", attributeName),
 					new Tuple<>("{value}", Component.text(String.format("%f", newHealth))));
+			result += Command.SINGLE_SUCCESS;
 		}
-	}
 
-	public String getCommandSyntax(String commandName) {
-		String result = "";
-
-		if (commandMap.containsKey(commandName)) {
-			RegisteredCommand command = commandMap.get(commandName);
-			result = "/" + command.getCommand() + " " +command.getSyntaxText();
-		}
+		if (result != 1)
+			sendMessage(sender, executor, "Set health for " + result + " entities.");
 
 		return result;
+	}
+
+	public static final LiteralCommandNode<CommandSourceStack> setHelp = Commands
+			.literal("help")
+			.requires(sender -> sender.getSender().hasPermission(Perm.SET_HELP.getPermissionNode()))
+			.executes(CmdVampire::setHelpCommand)
+			.then(Commands.argument("subcommand", StringArgumentType.word())
+					.executes(CmdVampire::setHelpCommand))
+			.build();
+	public static final CommandMessageKeys setHelpDesc = CommandMessageKeys.SET_HELP_DESCRIPTION;;
+	public static int setHelpCommand(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+		CommandSender sender = ctx.getSource().getSender();
+		Entity executor = ctx.getSource().getExecutor();
+
+		Tuple<LiteralCommandNode<CommandSourceStack>, KeyProvider> commandInfo = setData;
+		String subcommand = "";
+		try {
+			subcommand = ctx.getArgument("subcommand", String.class);
+			commandInfo = setCommandData.get(subcommand);
+			if (commandInfo == null)
+				throw SUBCOMMAND_DOESNT_EXIST.create(subcommand);
+			subcommand += " ";
+		}
+		catch (IllegalArgumentException ex) {
+			if (!ex.getMessage().startsWith("No such argument"))
+				throw ex;
+		}
+
+		VampireRevamp.getInstance().sendMessage(executor, MessageType.HELP, commandInfo.y);
+		Map<CommandNode<CommandSourceStack>, String> usages = VampireRevamp.getInstance().getDispatcher()
+				.getSmartUsage(commandInfo.x, ctx.getSource());
+		String finalSubcommand = subcommand;
+		usages.forEach((node, usage) ->
+				sendMessage(sender, executor, "/vampire set " + finalSubcommand + usage)
+		);
+
+		return Command.SINGLE_SUCCESS;
+	}
+
+	public static final LiteralCommandNode<CommandSourceStack> set = Commands
+			.literal("set")
+			.requires(sender -> sender.getSender().hasPermission(Perm.SET.getPermissionNode()))
+			.then(setVampire)
+			.then(setV)
+			.then(setNosferatu)
+			.then(setN)
+			.then(setInfection)
+			.then(setI)
+			.then(setFood)
+			.then(setF)
+			.then(setHealth)
+			.then(setH)
+			.then(setHelp)
+			.build();
+	public static final CommandMessageKeys setDesc = CommandMessageKeys.SET_DESCRIPTION;
+
+	public static final LiteralCommandNode<CommandSourceStack> help = Commands
+			.literal("help")
+			.requires(sender -> sender.getSender().hasPermission(Perm.HELP.getPermissionNode()))
+			.executes(CmdVampire::helpCommand)
+			.then(Commands.argument("subcommand", StringArgumentType.word())
+					.executes(CmdVampire::helpCommand))
+			.build();
+	public static final CommandMessageKeys helpDesc = CommandMessageKeys.HELP_DESCRIPTION;;
+	public static int helpCommand(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+		CommandSender sender = ctx.getSource().getSender();
+		Entity executor = ctx.getSource().getExecutor();
+
+		Tuple<LiteralCommandNode<CommandSourceStack>, KeyProvider> commandInfo = baseData;
+		String subcommand = "";
+		try {
+			subcommand = ctx.getArgument("subcommand", String.class);
+			commandInfo = commandData.get(subcommand);
+			if (commandInfo == null)
+				throw SUBCOMMAND_DOESNT_EXIST.create(subcommand);
+			subcommand += " ";
+		}
+		catch (IllegalArgumentException ex) {
+			if (!ex.getMessage().startsWith("No such argument"))
+				throw ex;
+		}
+
+		VampireRevamp.getInstance().sendMessage(executor, MessageType.HELP, commandInfo.y);
+		Map<CommandNode<CommandSourceStack>, String> usages = VampireRevamp.getInstance().getDispatcher()
+				.getSmartUsage(commandInfo.x, ctx.getSource());
+		String finalSubcommand = subcommand;
+		usages.forEach((node, usage) ->
+				sendMessage(sender, executor, "/vampire " + finalSubcommand + usage)
+		);
+
+		return Command.SINGLE_SUCCESS;
+	}
+
+	public static final LiteralCommandNode<CommandSourceStack> VAMPIRE_COMMAND = Commands
+			.literal("vampire")
+			.requires(sender -> sender.getSender().hasPermission(Perm.BASECOMMAND.getPermissionNode()))
+			.then(reload)
+			.then(show)
+			.then(bloodlust)
+			.then(modebloodlust)
+			.then(b)
+			.then(intend)
+			.then(modeintend)
+			.then(i)
+			.then(nightvision)
+			.then(modenightvision)
+			.then(nv)
+			.then(offer)
+			.then(o)
+			.then(accept)
+			.then(a)
+			.then(flask)
+			.then(f)
+			.then(shriek)
+			.then(list)
+			.then(version)
+			.then(v)
+			.then(batusi)
+			.then(bat)
+			.then(holywater)
+			.then(ring)
+			.then(set)
+			.then(help)
+			.build();
+	private static final Tuple<LiteralCommandNode<CommandSourceStack>, KeyProvider> baseData = new Tuple<>(
+			VAMPIRE_COMMAND,
+			CommandMessageKeys.BASE_DESCRIPTION
+	);
+	private static final Map<String, Tuple<LiteralCommandNode<CommandSourceStack>, KeyProvider>> commandData = new HashMap<>(VAMPIRE_COMMAND.getChildren().size() + 1);
+	static {
+		commandData.put("reload", new Tuple<>(reload, reloadDesc));
+		commandData.put("show", new Tuple<>(show, showDesc));
+		commandData.put("bloodlust", new Tuple<>(bloodlust, bloodlustDesc));
+		commandData.put("modebloodlust", new Tuple<>(modebloodlust, bloodlustDesc));
+		commandData.put("b", new Tuple<>(b, bloodlustDesc));
+		commandData.put("intend", new Tuple<>(intend, intendDesc));
+		commandData.put("modeintend", new Tuple<>(modeintend, intendDesc));
+		commandData.put("i", new Tuple<>(i, intendDesc));
+		commandData.put("nightvision", new Tuple<>(nightvision, nightvisionDesc));
+		commandData.put("modenightvision", new Tuple<>(modenightvision, nightvisionDesc));
+		commandData.put("nv", new Tuple<>(nv, nightvisionDesc));
+		commandData.put("offer", new Tuple<>(offer, offerDesc));
+		commandData.put("o", new Tuple<>(o, offerDesc));
+		commandData.put("accept", new Tuple<>(accept, acceptDesc));
+		commandData.put("a", new Tuple<>(a, acceptDesc));
+		commandData.put("flask", new Tuple<>(flask, flaskDesc));
+		commandData.put("f", new Tuple<>(f, flaskDesc));
+		commandData.put("shriek", new Tuple<>(shriek, shriekDesc));
+		commandData.put("list", new Tuple<>(list, listDesc));
+		commandData.put("version", new Tuple<>(version, versionDesc));
+		commandData.put("v", new Tuple<>(v, versionDesc));
+		commandData.put("batusi", new Tuple<>(batusi, batusiDesc));
+		commandData.put("bat", new Tuple<>(bat, batusiDesc));
+		commandData.put("holywater", new Tuple<>(holywater, holywaterDesc));
+		commandData.put("ring", new Tuple<>(ring, ringDesc));
+		commandData.put("set", new Tuple<>(set, setDesc));
+		commandData.put("help", new Tuple<>(help, helpDesc));
+	}
+	private static final Tuple<LiteralCommandNode<CommandSourceStack>, KeyProvider> setData = new Tuple<>(
+			set,
+			CommandMessageKeys.SET_DESCRIPTION
+	);
+	private static final Map<String, Tuple<LiteralCommandNode<CommandSourceStack>, KeyProvider>> setCommandData = new HashMap<>(VAMPIRE_COMMAND.getChildren().size() + 1);
+	static {
+		commandData.put("set vampire", new Tuple<>(setVampire, setVampireDesc));
+		commandData.put("set v", new Tuple<>(setV, setVampireDesc));
+		commandData.put("set nosferatu", new Tuple<>(setNosferatu, setNosferatuDesc));
+		commandData.put("set n", new Tuple<>(setN, setNosferatuDesc));
+		commandData.put("set infection", new Tuple<>(setInfection, setInfectionDesc));
+		commandData.put("set i", new Tuple<>(setI, setInfectionDesc));
+		commandData.put("set food", new Tuple<>(setFood, setFoodDesc));
+		commandData.put("set f", new Tuple<>(setF, setFoodDesc));
+		commandData.put("set health", new Tuple<>(setHealth, setHealthDesc));
+		commandData.put("set h", new Tuple<>(setH, setHealthDesc));
+		commandData.put("set help", new Tuple<>(setHelp, setHelpDesc));
 	}
 }

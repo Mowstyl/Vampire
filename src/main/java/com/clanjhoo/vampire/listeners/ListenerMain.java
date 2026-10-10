@@ -1,8 +1,8 @@
 package com.clanjhoo.vampire.listeners;
 
-import co.aikar.commands.MessageType;
 import com.clanjhoo.dbhandler.data.LoadResult;
 import com.clanjhoo.vampire.*;
+import com.clanjhoo.vampire.cmd.MessageType;
 import com.clanjhoo.vampire.event.VampireLoadedEvent;
 import com.clanjhoo.vampire.keyproviders.HolyWaterMessageKeys;
 import com.clanjhoo.vampire.keyproviders.SkillMessageKeys;
@@ -12,7 +12,6 @@ import com.clanjhoo.vampire.entity.VPlayer;
 import com.clanjhoo.vampire.util.*;
 import net.kyori.adventure.text.Component;
 import org.bukkit.*;
-import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.block.Block;
 import org.bukkit.entity.*;

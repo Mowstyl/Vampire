@@ -4,7 +4,6 @@ import com.clanjhoo.vampire.VampireRevamp;
 import com.clanjhoo.vampire.entity.VPlayer;
 import com.clanjhoo.vampire.keyproviders.SkillMessageKeys;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.serializer.bungeecord.BungeeComponentSerializer;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
@@ -72,11 +71,8 @@ public class BloodFlaskUtil {
         assert meta != null;
 
         if (plugin.isPaperMc()) {
-            BungeeComponentSerializer serializer = BungeeComponentSerializer.get();
-            meta.setDisplayNameComponent(serializer.serialize(displayName));
-            meta.setLoreComponents(lore.stream()
-                    .map(serializer::serialize)
-                    .collect(Collectors.toList()));
+            meta.displayName(displayName);
+            meta.lore(lore);
         }
         else {
             LegacyComponentSerializer serializer = LegacyComponentSerializer.legacySection();

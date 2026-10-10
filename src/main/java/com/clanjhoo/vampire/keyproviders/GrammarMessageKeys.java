@@ -1,9 +1,7 @@
 package com.clanjhoo.vampire.keyproviders;
 
-import co.aikar.locales.MessageKey;
-import co.aikar.locales.MessageKeyProvider;
 
-public enum GrammarMessageKeys implements MessageKeyProvider {
+public enum GrammarMessageKeys implements KeyProvider {
     PLAYER("grammar.player"),
     YOU("grammar.you"),
     TO_BE_2ND("grammar.toBeSecond"),
@@ -29,13 +27,13 @@ public enum GrammarMessageKeys implements MessageKeyProvider {
     ;
 
     GrammarMessageKeys(String key) {
-        this.key = MessageKey.of(key);
+        this.key = key;
     }
 
-    private final MessageKey key;
+    private final String key;
 
     @Override
-    public MessageKey getMessageKey() {
+    public String getKey() {
         return key;
     }
 }

@@ -11,7 +11,7 @@ plugins {
 
 
 group = "com.clanjhoo"
-version = "1.0.2"
+version = "1.1.0"
 description = "Anyone can become a vampire, but do you want to? During daytime vampires cower from sunlight. During the night the humans reach for their holy water and wooden stakes as the vampires roam the lands with inhuman strength, speed and levitation-powers. Driven by their endless bloodlust, they devour all living in their way."
 
 ext.set("projectName", gradle.extra["projectName"].toString())
@@ -136,11 +136,9 @@ dependencies {
     compileOnly(libs.comphenix.protocollib) {
         isTransitive = false
     }
-    implementation(libs.aikar.acfpaper)
     implementation(libs.clanjhoo.dbhandler)
     compileOnly(libs.kyori.adventure.minimessage)
     compileOnly(libs.kyori.adventure.gson)
-    compileOnly(libs.kyori.platform.bukkit)
 }
 
 tasks {

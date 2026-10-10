@@ -1,9 +1,7 @@
 package com.clanjhoo.vampire.keyproviders;
 
-import co.aikar.locales.MessageKey;
-import co.aikar.locales.MessageKeyProvider;
 
-public enum VampirismMessageKeys implements MessageKeyProvider {
+public enum VampirismMessageKeys implements KeyProvider {
     ALREADY_VAMPIRE("vampirism.alreadyVampire"),
     TURNED_VAMPIRE("vampirism.turnedVampire"),
     CURED_VAMPIRE("vampirism.curedVampire"),
@@ -15,13 +13,13 @@ public enum VampirismMessageKeys implements MessageKeyProvider {
     ;
 
     VampirismMessageKeys(String key) {
-        this.key = MessageKey.of(key);
+        this.key = key;
     }
 
-    private final MessageKey key;
+    private final String key;
 
     @Override
-    public MessageKey getMessageKey() {
+    public String getKey() {
         return key;
     }
 }

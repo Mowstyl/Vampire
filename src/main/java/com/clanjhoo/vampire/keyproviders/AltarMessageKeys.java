@@ -1,9 +1,7 @@
 package com.clanjhoo.vampire.keyproviders;
 
-import co.aikar.locales.MessageKey;
-import co.aikar.locales.MessageKeyProvider;
 
-public enum AltarMessageKeys implements MessageKeyProvider {
+public enum AltarMessageKeys implements KeyProvider {
     INCOMPLETE("altars.incomplete"),
     RESOURCE("altars.resource"),
     ACTIVATE_SUCCESS("altars.activateSuccess"),
@@ -23,13 +21,13 @@ public enum AltarMessageKeys implements MessageKeyProvider {
     ;
 
     AltarMessageKeys(String key) {
-        this.key = MessageKey.of(key);
+        this.key = key;
     }
 
-    private final MessageKey key;
+    private final String key;
 
     @Override
-    public MessageKey getMessageKey() {
+    public String getKey() {
         return key;
     }
 }

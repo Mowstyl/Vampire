@@ -9,7 +9,7 @@ generatePOMGradlePlugin = "3.0.0"
 spotBugsGradlePlugin = "6.4.4"
 userdevGradlePlugin = "2.0.0-beta.14"
 
-bukkitAPI = "26.1.2.build.+"
+bukkitAPI = "26.2.build.+"
 dbHandler = "4.0.4"
 acfPaper = "0.5.1-SNAPSHOT"
 worldEdit = "7.4.0"
@@ -20,8 +20,7 @@ placeholderAPI = "2.11.6"
 vaultAPI = "1.7.1"
 werewolves = "1.7.2"
 protocolLib = "5.4.0-SNAPSHOT"
-adventure = "4.24.0"
-adventurePlatform = "4.4.1"
+adventure = "5.2.0"
 annotations = "24.1.0"
 
 [libraries]
@@ -44,7 +43,4 @@ kyori-adventure-minimessage = { group = "net.kyori", name = "adventure-text-mini
 kyori-adventure-gson = { group = "net.kyori", name = "adventure-text-serializer-gson", version.ref = "adventure" }
 kyori-adventure-ansi = { group = "net.kyori", name = "adventure-text-serializer-ansi", version.ref = "adventure" }
 kyori-adventure-legacy = { group = "net.kyori", name = "adventure-text-serializer-legacy", version.ref = "adventure" }
-kyori-platform-api = { group = "net.kyori", name = "adventure-platform-api", version.ref = "adventurePlatform" }
-kyori-platform-bukkit = { group = "net.kyori", name = "adventure-platform-bukkit", version.ref = "adventurePlatform" }
-kyori-platform-bungee = { group = "net.kyori", name = "adventure-platform-bungeecord", version.ref = "adventurePlatform" }
 jetbrains-annotations = { group = "org.jetbrains", name = "annotations", version.ref = "annotations" }

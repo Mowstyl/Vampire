@@ -1,10 +1,9 @@
 package com.clanjhoo.vampire;
 
-import com.clanjhoo.vampire.util.ResourceUtil;
-import org.bukkit.permissions.Permissible;
 import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.Locale;
 
 public enum Perm {
 	// -------------------------------------------- //
@@ -12,7 +11,8 @@ public enum Perm {
 	// -------------------------------------------- //
 	
 	BASECOMMAND,
-	
+
+	HELP,
 	SHOW,
 	SHOW_OTHER,
 	SHRIEK,
@@ -24,17 +24,23 @@ public enum Perm {
 	TRADE_OFFER,
 	TRADE_ACCEPT,
 	FLASK,
+	GIVE_HOLYWATER,
+	GIVE_RING,
 	COMBAT_INFECT,
 	COMBAT_CONTRACT,
 	LIST,
 	SET,
-	SET_VAMPIRE_TRUE,
-	SET_VAMPIRE_FALSE,
-	SET_NOSFERATU_TRUE,
-	SET_NOSFERATU_FALSE,
+	SET_HELP,
+	SET_VAMPIRE,
+	SET_VAMPIRE_OTHER,
+	SET_NOSFERATU,
+	SET_NOSFERATU_OTHER,
 	SET_INFECTION,
+	SET_INFECTION_OTHER,
 	SET_FOOD,
+	SET_FOOD_OTHER,
 	SET_HEALTH,
+	SET_HEALTH_OTHER,
 	VERSION,
 	
 	ALTAR_DARK,
@@ -42,9 +48,14 @@ public enum Perm {
 	
 	CONFIG,
 	LANG,
+	RELOAD
 	
 	// END OF LIST
 	;
+
+	public String getPermissionNode() {
+		return "vampire." + this.name().toLowerCase(Locale.ROOT).replace("_", ".");
+	}
 
 	@Nullable
 	@Contract(value = "null -> null", pure = true)
@@ -92,17 +103,11 @@ public enum Perm {
 				case "version":
 					perm = Perm.VERSION;
 					break;
-				case "vampire on":
-					perm = Perm.SET_VAMPIRE_TRUE;
+				case "vampire":
+					perm = Perm.SET_VAMPIRE;
 					break;
-				case "vampire off":
-					perm = Perm.SET_VAMPIRE_FALSE;
-					break;
-				case "nosferatu on":
-					perm = Perm.SET_NOSFERATU_TRUE;
-					break;
-				case "nosferatu off":
-					perm = Perm.SET_NOSFERATU_FALSE;
+				case "nosferatu":
+					perm = Perm.SET_NOSFERATU;
 					break;
 				case "infection":
 					perm = Perm.SET_INFECTION;

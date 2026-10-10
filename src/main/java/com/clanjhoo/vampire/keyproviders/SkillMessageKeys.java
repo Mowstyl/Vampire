@@ -1,9 +1,7 @@
 package com.clanjhoo.vampire.keyproviders;
 
-import co.aikar.locales.MessageKey;
-import co.aikar.locales.MessageKeyProvider;
 
-public enum SkillMessageKeys implements MessageKeyProvider {
+public enum SkillMessageKeys implements KeyProvider {
     BLOODLUST_LOW_FOOD("skills.bloodlust_lowFood"),
     BLOODLUST_GAMEMODE_CHECK("skills.bloodlust_gamemodeCheck"),
     FLASK_INSUFFICIENT("skills.flask_insufficient"),
@@ -18,13 +16,13 @@ public enum SkillMessageKeys implements MessageKeyProvider {
     ;
 
     SkillMessageKeys(String key) {
-        this.key = MessageKey.of(key);
+        this.key = key;
     }
 
-    private final MessageKey key;
+    private final String key;
 
     @Override
-    public MessageKey getMessageKey() {
+    public String getKey() {
         return key;
     }
 }

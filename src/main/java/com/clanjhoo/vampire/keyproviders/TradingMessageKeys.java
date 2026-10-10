@@ -1,9 +1,7 @@
 package com.clanjhoo.vampire.keyproviders;
 
-import co.aikar.locales.MessageKey;
-import co.aikar.locales.MessageKeyProvider;
 
-public enum TradingMessageKeys implements MessageKeyProvider {
+public enum TradingMessageKeys implements KeyProvider {
     SELF("trading.self"),
     NOT_CLOSE("trading.notClose"),
     OFFER_OUT("trading.offerOut"),
@@ -18,13 +16,13 @@ public enum TradingMessageKeys implements MessageKeyProvider {
     ;
 
     TradingMessageKeys(String key) {
-        this.key = MessageKey.of(key);
+        this.key = key;
     }
 
-    private final MessageKey key;
+    private final String key;
 
     @Override
-    public MessageKey getMessageKey() {
+    public String getKey() {
         return key;
     }
 }

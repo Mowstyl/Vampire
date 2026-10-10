@@ -25,7 +25,7 @@ public class FxUtil
 	{
 		boolean now = player.hasPotionEffect(type);
 		if (now) return;
-		player.addPotionEffect(new PotionEffect(type, ticks, 1), true);
+		player.addPotionEffect(new PotionEffect(type, ticks, 1));
 	}
 	
 	// -------------------------------------------- //
@@ -35,7 +35,7 @@ public class FxUtil
 	public static void smoke(Location location, int direction)
 	{
 		if (location == null) return;
-		location.getWorld().playEffect(location, Effect.SMOKE, direction);
+		location.getWorld().playEffect(location, Effect.SMOKE_SHOOT, direction);
 	}
 	
 	public static void smoke(Location location)

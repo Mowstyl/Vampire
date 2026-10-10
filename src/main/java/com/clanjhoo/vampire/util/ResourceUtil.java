@@ -1,11 +1,11 @@
 package com.clanjhoo.vampire.util;
 
-import co.aikar.commands.MessageType;
-import co.aikar.locales.MessageKeyProvider;
+import com.clanjhoo.vampire.cmd.MessageType;
 import com.clanjhoo.vampire.keyproviders.AltarMessageKeys;
 import com.clanjhoo.vampire.keyproviders.CommandMessageKeys;
 import com.clanjhoo.vampire.Perm;
 import com.clanjhoo.vampire.VampireRevamp;
+import com.clanjhoo.vampire.keyproviders.KeyProvider;
 import org.bukkit.Material;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -128,7 +128,7 @@ public class ResourceUtil {
 		}
 	}
 	
-	public boolean playerRemoveAttempt(Player player, Collection<? extends ItemStack> stacks, MessageKeyProvider success, MessageKeyProvider fail) {
+	public boolean playerRemoveAttempt(Player player, Collection<? extends ItemStack> stacks, KeyProvider success, KeyProvider fail) {
 		boolean result = false;
 		if (playerHas(player, stacks)) {
 			playerRemove(player, stacks);

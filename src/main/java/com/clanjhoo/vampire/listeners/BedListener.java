@@ -1,6 +1,6 @@
 package com.clanjhoo.vampire.listeners;
-import co.aikar.commands.MessageType;
 import com.clanjhoo.vampire.VampireRevamp;
+import com.clanjhoo.vampire.cmd.MessageType;
 import com.clanjhoo.vampire.entity.VPlayer;
 import com.clanjhoo.vampire.keyproviders.VampirismMessageKeys;
 import com.clanjhoo.vampire.util.EntityUtil;
@@ -11,7 +11,6 @@ import com.comphenix.protocol.events.PacketAdapter;
 import com.comphenix.protocol.events.PacketEvent;
 import com.comphenix.protocol.events.PacketListener;
 import com.comphenix.protocol.wrappers.EnumWrappers;
-import org.bukkit.GameRule;
 import org.bukkit.GameRules;
 import org.bukkit.World;
 import org.bukkit.block.data.type.Bed;

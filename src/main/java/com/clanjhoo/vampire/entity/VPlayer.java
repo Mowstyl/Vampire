@@ -1,11 +1,11 @@
 package com.clanjhoo.vampire.entity;
 
-import co.aikar.commands.MessageType;
 import com.clanjhoo.dbhandler.annotations.DataField;
 import com.clanjhoo.dbhandler.annotations.Entity;
 import com.clanjhoo.dbhandler.annotations.NotNullField;
 import com.clanjhoo.dbhandler.annotations.PrimaryKey;
 import com.clanjhoo.vampire.InfectionReason;
+import com.clanjhoo.vampire.cmd.MessageType;
 import com.clanjhoo.vampire.compat.VersionCompat;
 import com.clanjhoo.vampire.compat.WorldGuardCompat;
 import com.clanjhoo.vampire.keyproviders.*;
@@ -18,8 +18,8 @@ import com.clanjhoo.vampire.event.VampireTypeChangeEvent;
 import com.clanjhoo.vampire.util.*;
 import net.kyori.adventure.text.Component;
 import org.bukkit.*;
-import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeInstance;
+import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Creature;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
@@ -1000,10 +1000,10 @@ public class VPlayer {
     public void tickInfection(long millis) {
         Player me = Bukkit.getPlayer(uuid);
         if (this.isInfected() && me != null) {
-            int indexOld = this.infectionGetMessageIndex();
+            int indexOld = this.infectionGetMessageIndex(me);
             PluginConfig conf = plugin.getVampireConfig();
             this.addInfection(millis * conf.infection.amountPerMilli);
-            int indexNew = this.infectionGetMessageIndex();
+            int indexNew = this.infectionGetMessageIndex(me);
 
             if (!this.isVampire() && indexOld != indexNew) {
                 if (conf.infection.progressDamage != 0)
@@ -1013,16 +1013,21 @@ public class VPlayer {
 
                 plugin.sendMessage(me,
                         MessageType.INFO,
-                        InfectionMessageKeys.getFeeling(indexNew));
+                        InfectionMessageKeys.FEELING,
+                        indexNew);
                 plugin.sendMessage(me,
                         MessageType.INFO,
-                        InfectionMessageKeys.getHint(ThreadLocalRandom.current().nextInt(InfectionMessageKeys.getMaxHint())));
+                        InfectionMessageKeys.HINT,
+                        ThreadLocalRandom.current().nextInt(plugin.getNumValues(me, InfectionMessageKeys.HINT)));
             }
         }
     }
 
-    public int infectionGetMessageIndex() {
-        return (int) ((InfectionMessageKeys.getMaxFeeling() + 1) * this.getInfection()) - 1;
+    public int infectionGetMessageIndex(CommandSender target) {
+        int thyMax = plugin.getNumValues(target, InfectionMessageKeys.FEELING);
+        if (thyMax < 0)
+            return thyMax;
+        return (int) ((thyMax + 1) * this.getInfection()) - 1;
     }
 
     public void tickRegen(long millis) {

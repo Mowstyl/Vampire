@@ -1,9 +1,9 @@
 package com.clanjhoo.vampire.keyproviders;
 
-import co.aikar.locales.MessageKey;
-import co.aikar.locales.MessageKeyProvider;
 
-public enum CommandMessageKeys implements MessageKeyProvider {
+import java.util.Locale;
+
+public enum CommandMessageKeys implements KeyProvider {
     COMMAND_HELP_HEADER("commands.commandHelpHeader"),
     NO_PLAYER_FOUND("commands.noPlayerFound"),
     BLACKLISTED_WORLD("commands.blacklistedWorld"),
@@ -47,9 +47,11 @@ public enum CommandMessageKeys implements MessageKeyProvider {
     BATUSI_IGNORED_BATS("commands.batusi_ignored_bats"),
     BATUSI_ERROR("commands.batusi_error"),
     RING_DESCRIPTION("commands.ring_description"),
+    BASE_DESCRIPTION("commands.base_description"),
     SET_DESCRIPTION("commands.set_description"),
     SET_ERROR_HYBRID("commands.set_errorHybrid"),
     SET_CHANGED_VALUE("commands.set_changedValue"),
+    SET_HELP_DESCRIPTION("commands.set_description"),
     SET_VAMPIRE_DESCRIPTION("commands.set_vampire_description"),
     SET_VAMPIRE_ATTRIBUTE("commands.set_vampire_attribute"),
     SET_NOSFERATU_DESCRIPTION("commands.set_nosferatu_description"),
@@ -60,90 +62,48 @@ public enum CommandMessageKeys implements MessageKeyProvider {
     SET_FOOD_ATTRIBUTE("commands.set_food_attribute"),
     SET_HEALTH_DESCRIPTION("commands.set_health_description"),
     SET_HEALTH_ATTRIBUTE("commands.set_health_attribute"),
+    HOLYWATER_DESCRIPTION("commands.holywater_description"),
     UNKNOWN_DESCRIPTION("commands.unknown_description")
     ;
 
     CommandMessageKeys(String key) {
-        this.key = MessageKey.of(key);
+        this.key = key;
     }
 
-    private final MessageKey key;
+    private final String key;
 
     @Override
-    public MessageKey getMessageKey() {
+    public String getKey() {
         return key;
     }
 
     public static CommandMessageKeys getProviderFromCommand(String commandName) {
-        CommandMessageKeys result;
-
-        switch (commandName) {
-            case "help":
-                result = HELP_DESCRIPTION;
-                break;
-            case "reload":
-                result = RELOAD_DESCRIPTION;
-                break;
-            case "list":
-                result = LIST_DESCRIPTION;
-                break;
-            case "version":
-                result = VERSION_DESCRIPTION;
-                break;
-            case "show":
-                result = SHOW_DESCRIPTION;
-                break;
-            case "bloodlust":
-                result = BLOODLUST_DESCRIPTION;
-                break;
-            case "nightvision":
-                result = NIGHTVISION_DESCRIPTION;
-                break;
-            case "intend":
-                result = INTENT_DESCRIPTION;
-                break;
-            case "offer":
-                result = OFFER_DESCRIPTION;
-                break;
-            case "accept":
-                result = ACCEPT_DESCRIPTION;
-                break;
-            case "flask":
-                result = FLASK_DESCRIPTION;
-                break;
-            case "shriek":
-                result = SHRIEK_DESCRIPTION;
-                break;
-            case "batusi":
-                result = BATUSI_DESCRIPTION;
-                break;
-            case "ring":
-                result = RING_DESCRIPTION;
-                break;
-            case "set help":
-                result = SET_DESCRIPTION;
-                break;
-            case "set vampire":
-                result = SET_VAMPIRE_DESCRIPTION;
-                break;
-            case "set nosferatu":
-                result = SET_NOSFERATU_DESCRIPTION;
-                break;
-            case "set infection":
-                result = SET_INFECTION_DESCRIPTION;
-                break;
-            case "set health":
-                result = SET_HEALTH_DESCRIPTION;
-                break;
-            case "set food":
-                result = SET_FOOD_DESCRIPTION;
-                break;
-            default:
-                result = UNKNOWN_DESCRIPTION;
-        }
 
         //VampireRevamp.debugLog(Level.INFO, commandName);
 
-        return result;
+        return switch (commandName) {
+            case "help" -> HELP_DESCRIPTION;
+            case "reload" -> RELOAD_DESCRIPTION;
+            case "list" -> LIST_DESCRIPTION;
+            case "version" -> VERSION_DESCRIPTION;
+            case "show" -> SHOW_DESCRIPTION;
+            case "bloodlust" -> BLOODLUST_DESCRIPTION;
+            case "nightvision" -> NIGHTVISION_DESCRIPTION;
+            case "intend" -> INTENT_DESCRIPTION;
+            case "offer" -> OFFER_DESCRIPTION;
+            case "accept" -> ACCEPT_DESCRIPTION;
+            case "flask" -> FLASK_DESCRIPTION;
+            case "shriek" -> SHRIEK_DESCRIPTION;
+            case "batusi" -> BATUSI_DESCRIPTION;
+            case "holywater" -> HOLYWATER_DESCRIPTION;
+            case "ring" -> RING_DESCRIPTION;
+            case "set help" -> SET_DESCRIPTION;
+            case "set vampire" -> SET_VAMPIRE_DESCRIPTION;
+            case "set nosferatu" -> SET_NOSFERATU_DESCRIPTION;
+            case "set infection" -> SET_INFECTION_DESCRIPTION;
+            case "set health" -> SET_HEALTH_DESCRIPTION;
+            case "set food" -> SET_FOOD_DESCRIPTION;
+            default -> UNKNOWN_DESCRIPTION;
+        };
     }
 }

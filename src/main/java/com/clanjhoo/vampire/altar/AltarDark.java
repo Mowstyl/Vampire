@@ -1,7 +1,7 @@
 package com.clanjhoo.vampire.altar;
 
-import co.aikar.commands.MessageType;
 import com.clanjhoo.vampire.InfectionReason;
+import com.clanjhoo.vampire.cmd.MessageType;
 import com.clanjhoo.vampire.keyproviders.AltarMessageKeys;
 import com.clanjhoo.vampire.Perm;
 import com.clanjhoo.vampire.VampireRevamp;

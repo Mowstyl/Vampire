@@ -1,14 +1,14 @@
 package com.clanjhoo.vampire;
 
-import co.aikar.commands.*;
-import co.aikar.locales.MessageKey;
-import co.aikar.locales.MessageKeyProvider;
 import com.clanjhoo.dbhandler.data.DBObjectManager;
 import com.clanjhoo.dbhandler.data.SaveOperation;
 import com.clanjhoo.dbhandler.data.StorageType;
+import com.clanjhoo.vampire.cmd.MessageType;
 import com.clanjhoo.vampire.compat.*;
 import com.clanjhoo.vampire.config.StorageConfig;
 import com.clanjhoo.vampire.event.VampireLoadedEvent;
+import com.clanjhoo.vampire.keyproviders.InfectionMessageKeys;
+import com.clanjhoo.vampire.keyproviders.KeyProvider;
 import com.clanjhoo.vampire.listeners.*;
 import com.clanjhoo.vampire.keyproviders.GrammarMessageKeys;
 import com.clanjhoo.vampire.altar.AltarDark;
@@ -21,19 +21,18 @@ import com.clanjhoo.vampire.tasks.BatTask;
 import com.clanjhoo.vampire.tasks.RaytracingTask;
 import com.clanjhoo.vampire.tasks.TheTask;
 import com.clanjhoo.vampire.util.*;
-import net.kyori.adventure.platform.AudienceProvider;
-import net.kyori.adventure.platform.bukkit.BukkitAudiences;
+import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.tree.LiteralCommandNode;
+import io.papermc.paper.command.brigadier.CommandSourceStack;
+import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.minimessage.MiniMessage;
-import net.kyori.adventure.text.serializer.bungeecord.BungeeComponentSerializer;
 import net.milkbowl.vault.permission.Permission;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
-import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -53,6 +52,7 @@ import java.io.*;
 import java.nio.file.Files;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -68,13 +68,13 @@ public class VampireRevamp extends JavaPlugin {
 	// INSTANCE & CONSTRUCT
 	// -------------------------------------------- //
 
-	private AudienceProvider adventure;
 	private BukkitTask cleanTask = null;
 	private BukkitTask theTask = null;
 	private BukkitTask batTask = null;
 	private BukkitTask rayTraceTask = null;
 	private RaytracingTask rayTraceTaskInstance = null;
-	private PaperCommandManager manager;
+	public final Map<Locale, Map<String, String>> locales = new HashMap<>();
+	public final Map<Locale, Tuple<Integer, Integer>> maxFeelHint = new HashMap<>();
 	public final Map<UUID, Boolean> batEnabled = new ConcurrentHashMap<>();
 	public final Set<LivingEntity> bats = new HashSet<>();
 	public final Map<UUID, List<LivingEntity>> batmap = new ConcurrentHashMap<>();
@@ -95,12 +95,17 @@ public class VampireRevamp extends JavaPlugin {
 	private VersionCompat vc;
 
 	private DBObjectManager<VPlayer> vPlayerManager;
+	private CommandDispatcher<CommandSourceStack> dispatcher;
 
 
 	// -------------------------------------------- //
 	// FIELDS
 	// -------------------------------------------- //
 
+
+	public CommandDispatcher<CommandSourceStack> getDispatcher() {
+		return dispatcher;
+	}
 
 	public boolean isDisguiseEnabled() {
 		return isDisguiseEnabled;
@@ -248,6 +253,7 @@ public class VampireRevamp extends JavaPlugin {
 
 		vPlayerManager = null;
 		loadConfig(true);
+		loadLocales(false);
 
 		// WorldGuard compat
 		if (Bukkit.getPluginManager().getPlugin("WorldGuard") != null)
@@ -433,6 +439,7 @@ public class VampireRevamp extends JavaPlugin {
 		try {
 			File folder = new File(this.getDataFolder() + "/locales");
 			File[] files = folder.listFiles();
+			locales.clear();
 			if (files != null) {
 				for (final File file : files) {
 					if (file.isFile()) {
@@ -440,22 +447,24 @@ public class VampireRevamp extends JavaPlugin {
 						if (raw.length != 2 || (!raw[1].equalsIgnoreCase("yml") && !raw[1].equalsIgnoreCase("yaml")))
 							continue;
 						raw = raw[0].split("_");
-						if (raw.length != 2 || !raw[0].equalsIgnoreCase("lang"))
+						if (!raw[0].equalsIgnoreCase("lang"))
 							continue;
-						Locale loc = new Locale(raw[1]);
-						manager.addSupportedLanguage(loc);
-						if (conf.general.debug)
-							localeLoader(file, loc);
-						boolean result = manager.getLocales().loadYamlLanguageFile(file, loc);
-						if (result) {
+						if (raw.length > 3 || raw.length < 2) {
+							log(Level.WARNING, "Malformed lang file name: " + file.getName() + ". Expected lang_<language code>(_country).yml");
+							continue;
+						}
+						Locale loc;
+						if (raw.length == 2)
+							loc = Locale.of(raw[1]);
+						else
+							loc = Locale.of(raw[1], raw[2]);
+						boolean result = localeLoader(file, loc);
+						if (result)
 							log(Level.INFO, "Loaded language: " + loc);
-						}
-						else {
+						else
 							log(Level.INFO, "Nothing loaded from " + file.getName());
-						}
 						if (conf.general.defaultLocale.equals(loc) && result) {
 							hasDefaultLocale = true;
-							manager.getLocales().setDefaultLocale(conf.general.defaultLocale);
 						}
 					}
 				}
@@ -496,9 +505,6 @@ public class VampireRevamp extends JavaPlugin {
 
 	@Override
 	public void onEnable() {
-		// Initialize an audiences instance for the plugin
-		this.adventure = BukkitAudiences.create(this);
-
 		// ProtocolLib compat
 		if (Bukkit.getPluginManager().getPlugin("ProtocolLib") != null)
 			plc = new ProtocolLibCompat(this);
@@ -529,21 +535,7 @@ public class VampireRevamp extends JavaPlugin {
 		}
 
 		loadCompat();
-
-		manager = new PaperCommandManager(this);
-
-		manager.enableUnstableAPI("help");
-		setFormatting(manager);
-		manager.addSupportedLanguage(conf.general.defaultLocale);
-		manager.usePerIssuerLocale(true);
-		if (!loadLocales(true))
-			return;
-
-		CmdVampire baseCommand = new CmdVampire(this);
-		manager.registerCommand(baseCommand);
-		baseCommand.initialize();
-		manager.getCommandCompletions().registerAsyncCompletion("yesno", c -> List.of("yes", "no"));
-		manager.getCommandCompletions().registerAsyncCompletion("reloads", c -> List.of("locales", "config", "all"));
+		registerCommands();
 
 		altarDark = new AltarDark(this);
 		altarLight = new AltarLight(this);
@@ -569,6 +561,13 @@ public class VampireRevamp extends JavaPlugin {
 		}
 	}
 
+	private void registerCommands() {
+		this.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, commands -> {
+			dispatcher = commands.registrar().getDispatcher();
+			commands.registrar().register(CmdVampire.VAMPIRE_COMMAND, List.of("vampire", "v"));
+		});
+	}
+
 	public static YamlConfiguration fileToYamlConfig (File file) throws IOException, InvalidConfigurationException {
 		YamlConfiguration yamlConfiguration = new YamlConfiguration();
 		yamlConfiguration.load(file);
@@ -576,41 +575,62 @@ public class VampireRevamp extends JavaPlugin {
 		return yamlConfiguration;
 	}
 
-	public boolean localeLoader(File file, Locale locale) {
-		boolean loaded = false;
-		try {
-			YamlConfiguration config = fileToYamlConfig(file);
+	public boolean localeLoader(File file, Locale locale) throws IOException, InvalidConfigurationException {
+		Map<String, String> localeFile = new HashMap<>();
+		YamlConfiguration config = fileToYamlConfig(file);
+		int maxFeels = 0,
+			maxHints = 0;
+		boolean hasOneFeel = false,
+				hasOneHint = false;
 
-			for (String configKey : config.getKeys(false)) {
-				ConfigurationSection inner = config.getConfigurationSection(configKey);
-				if (inner == null) {
-					continue;
-				}
+		for (String configKey : config.getKeys(false)) {
+			ConfigurationSection inner = config.getConfigurationSection(configKey);
+			if (inner == null) {
+				continue;
+			}
 
-				for (String key : inner.getKeys(false)) {
-					String value = inner.getString(key);
-					if (value != null && !value.isEmpty()) {
-						MessageKey loadedKey = MessageKey.of(configKey + "." + key);
-						debugLog(Level.INFO, "[" + locale.toString() +
-								"] Loaded key " + loadedKey.getKey() +
-								" with value " + value);
-						loaded = true;
+			configKey = configKey.toLowerCase();
+			for (String key : inner.getKeys(false)) {
+				String value = inner.getString(key);
+				key = key.toLowerCase();
+				if (value != null && !value.isEmpty()) {
+					localeFile.put(configKey + "." + key, value);
+					if (configKey.equals("infection")) {
+						if (key.startsWith("feeling")) {
+							if (key.equals("feeling"))
+								hasOneFeel = true;
+							maxFeels++;
+						}
+						else if (key.startsWith("hint")) {
+							if (key.equals("hint"))
+								hasOneHint = true;
+							maxHints++;
+						}
 					}
+					debugLog(Level.INFO, "[" + locale.toString() +
+							"] Loaded key " + configKey + "." + key +
+							" with value " + value);
 				}
 			}
 		}
-		catch (Exception ex) {
-			ex.printStackTrace();
+
+		if (localeFile.isEmpty())
 			return false;
+		locales.put(locale, localeFile);
+		if (hasOneFeel && maxFeels > 1) {
+			log(Level.WARNING, "Locale [" + locale.toString() + "] has an infection feeling without index alongside indexed feelings. Only that feeling will be used");
+			maxFeels = -1;
 		}
-		return loaded;
+		if (hasOneHint && maxHints > 1) {
+			log(Level.WARNING, "Locale [" + locale.toString() + "] has an infection hint without index alongside indexed hints. Only that hint will be used");
+			maxHints = -1;
+		}
+		maxFeelHint.put(locale, new Tuple<>(maxFeels, maxHints));
+
+		return true;
 	}
 
 	public void log(Level level, String rawMessage) {
-		if (adventure == null) {
-			getLogger().log(level, rawMessage);
-			return;
-		}
 		rawMessage = "[" + getName() + "] " + rawMessage;
 		TextColor color = null;
 		if (level == Level.SEVERE)
@@ -624,7 +644,7 @@ public class VampireRevamp extends JavaPlugin {
 		if (color != null)
 			message = message.colorIfAbsent(color);
 
-		adventure.console().sendMessage(message);
+		Bukkit.getConsoleSender().sendMessage(message);
 	}
 
 	public void debugLog(Level level, String message) {
@@ -640,20 +660,12 @@ public class VampireRevamp extends JavaPlugin {
 		return conf;
 	}
 
-	public PaperCommandManager getCommandManager() {
-		return manager;
-	}
-
 	public File getPlayerFolder() {
 		return new File(this.getDataFolder(), "store");
 	}
 
 	@Override
 	public void onDisable() {
-		if(this.adventure != null) {
-			this.adventure.close();
-			this.adventure = null;
-		}
 		if (cleanTask != null)
 			cleanTask.cancel();
 		if (theTask != null)
@@ -673,60 +685,32 @@ public class VampireRevamp extends JavaPlugin {
 		}
 	}
 
-	@SuppressWarnings("deprecation")
-	public void setFormatting(CommandManager<?, ?, ChatColor, ?, ?, ?> manager) {
-		Set<MessageType> messageTypes = getMessageTypes();
-
-		for (MessageType mtype : messageTypes) {
-			manager.setFormat(mtype, 1, ChatColor.RESET);
-			int ordis = ChatColor.RESET.ordinal();
-			for (ChatColor cc : ChatColor.values()) {
-				int thisIndex = 1 + cc.ordinal();
-				if (cc.ordinal() < ordis)
-					thisIndex += 1;
-				if (cc.ordinal() != ordis) {
-					manager.setFormat(mtype, thisIndex, cc);
-				}
-			}
-		}
+	public void sendMessage(CommandSender recipient, MessageType type, KeyProvider key, @Nullable Integer index, String... replacements) {
+		Component message = getMessage(recipient, key, index, replacements);
+		sendMessage(recipient, message, type);
 	}
 
-	public Set<MessageType> getMessageTypes() {
-		return CollectionUtil.set(
-				MessageType.ERROR,
-				MessageType.HELP,
-				MessageType.INFO,
-				MessageType.SYNTAX
-		);
+	public void sendMessage(CommandSender recipient, MessageType type, KeyProvider key, String... replacements) {
+		sendMessage(recipient, type, key, null, replacements);
 	}
 
-	private CommandIssuer getCommandIssuer(CommandSender sender) {
-		return manager.getCommandIssuer(sender);
-	}
-
-	public void sendMessage(CommandSender recipient, Component message) {
-		if (recipient instanceof Player) {
-			adventure.player(((Player) recipient).getUniqueId()).sendMessage(message);
-		} else if (recipient instanceof ConsoleCommandSender) {
-			adventure.console().sendMessage(message);
-		} else {
-			recipient.spigot().sendMessage(BungeeComponentSerializer.get().serialize(message));
-		}
-	}
-
-	public void sendMessage(CommandSender recipient, MessageType type, MessageKeyProvider keyProvider, String... replacements) {
-		Component message = getMessage(recipient, keyProvider, replacements);
+	@SafeVarargs
+    public final void sendMessage(CommandSender recipient, MessageType type, KeyProvider key, @Nullable Integer index, Tuple<String, Component>... replacements) {
+		Component message = getMessage(recipient, key, index, replacements);
 		sendMessage(recipient, message, type);
 	}
 
 	@SafeVarargs
-    public final void sendMessage(CommandSender recipient, MessageType type, MessageKeyProvider keyProvider, Tuple<String, Component>... replacements) {
-		Component message = getMessage(recipient, keyProvider, replacements);
-		sendMessage(recipient, message, type);
+	public final void sendMessage(CommandSender recipient, MessageType type, KeyProvider key, Tuple<String, Component>... replacements) {
+		sendMessage(recipient, type, key, null, replacements);
 	}
 
-	public void sendMessage(CommandSender recipient, MessageType type, MessageKeyProvider keyProvider) {
-		Component message = getMessage(recipient, keyProvider);
+	public void sendMessage(CommandSender recipient, MessageType type, KeyProvider key) {
+		sendMessage(recipient, type, key, (Integer) null);
+	}
+
+	public void sendMessage(CommandSender recipient, MessageType type, KeyProvider key, @Nullable Integer index) {
+		Component message = getMessage(recipient, key, index);
 		sendMessage(recipient, message, type);
 	}
 
@@ -742,15 +726,29 @@ public class VampireRevamp extends JavaPlugin {
 		if (color != null)
 			message = message.colorIfAbsent(color);
 
-		sendMessage(recipient, message);
+		recipient.sendMessage(message);
 	}
 
 	@SafeVarargs
-	public final List<Component> getMessageList(CommandSender recipient, MessageKeyProvider keyProvider, Tuple<String, Component>... replacements) {
-		String[] rawMessages = getCommandManager()
-				.getLocales()
-				.getMessage(getCommandIssuer(recipient), keyProvider)
-				.split("\\r?\\n");
+	public final List<Component> getMessageList(CommandSender recipient, KeyProvider key, Tuple<String, Component>... replacements) {
+		Locale locale = conf.general.defaultLocale;
+		if (recipient instanceof Player player)
+			locale = player.locale();
+		Map<String, String> messages = locales.get(locale);
+		if (messages == null)
+			messages = locales.get(Locale.of(locale.getCountry()));
+		if (messages == null)
+			messages = locales.get(conf.general.defaultLocale);
+		String rawMessage = messages.get(key.getKey());
+		if (rawMessage == null) {
+			messages = locales.get(conf.general.defaultLocale);
+			rawMessage = messages.get(key.getKey());
+		}
+		if (rawMessage == null)
+			rawMessage = "<red>Key \"" + key.getKey() + "\" undefined for your locale and default locale. Please ask an admin for support.";
+
+		rawMessage = rawMessage.replaceAll("\\r?\\n", "\n");
+		String[] rawMessages = rawMessage.split("\\r?\\n");
         return Arrays.stream(rawMessages)
 				.map((rm) -> MiniMessage.miniMessage().deserialize(rm))
 				.map((comp) -> {
@@ -762,40 +760,100 @@ public class VampireRevamp extends JavaPlugin {
 				.collect(Collectors.toList());
 	}
 
-	public Component getMessage(CommandSender recipient, MessageKeyProvider keyProvider) {
-		String rawMessage =  getCommandManager()
-				.getLocales()
-				.getMessage(getCommandIssuer(recipient), keyProvider)
-				.replaceAll("\\r?\\n", "\n");
+	/*
+	 * Returns < 0 if not indexed, null if not found and positive number if found
+	 */
+	public Integer getNumValues(CommandSender recipient, KeyProvider key) {
+		Locale locale = conf.general.defaultLocale;
+
+		if (key != InfectionMessageKeys.FEELING && key != InfectionMessageKeys.HINT)
+			return -1;
+
+		if (recipient instanceof Player player)
+			locale = player.locale();
+		Tuple<Integer, Integer> maxes = maxFeelHint.get(locale);
+		if (maxes == null ||
+				(key == InfectionMessageKeys.FEELING && maxes.x == 0) ||
+				(key == InfectionMessageKeys.HINT && maxes.y == 0))
+			maxes = maxFeelHint.get(Locale.of(locale.getCountry()));
+		if (maxes == null ||
+				(key == InfectionMessageKeys.FEELING && maxes.x == 0) ||
+				(key == InfectionMessageKeys.HINT && maxes.y == 0))
+			maxes = maxFeelHint.get(conf.general.defaultLocale);
+		if (maxes == null ||
+				(key == InfectionMessageKeys.FEELING && maxes.x == 0) ||
+				(key == InfectionMessageKeys.HINT && maxes.y == 0))
+			return null;
+		return key == InfectionMessageKeys.FEELING ? maxes.x : maxes.y;
+	}
+
+	public Component getMessage(CommandSender recipient, KeyProvider key, @Nullable Integer index) {
+		Locale locale = conf.general.defaultLocale;
+		String strKey = key.getKey().toLowerCase();
+		if (index != null && index >= 0)
+			strKey += index;
+
+		if (recipient instanceof Player player)
+			locale = player.locale();
+		Map<String, String> messages = locales.get(locale);
+		if (messages == null) {
+			messages = locales.get(Locale.of(locale.getCountry()));
+		}
+		if (messages == null) {
+			messages = locales.get(conf.general.defaultLocale);
+		}
+
+		String rawMessage = messages.get(strKey);
+		if (rawMessage == null) {
+			messages = locales.get(conf.general.defaultLocale);
+			rawMessage = messages.get(strKey);
+		}
+		if (rawMessage == null)
+			rawMessage = "<red>Key \"" + strKey + "\" undefined for your locale and default locale. Please ask an admin for support.";
+
+		rawMessage = rawMessage.replaceAll("\\r?\\n", "\n");
 		return MiniMessage.miniMessage().deserialize(rawMessage);
 	}
 
-	public Component getMessage(CommandSender recipient, MessageKeyProvider keyProvider, String... replacements) {
+	public Component getMessage(CommandSender recipient, KeyProvider key) {
+		return getMessage(recipient, key, (Integer) null);
+	}
+
+	public Component getMessage(CommandSender recipient, KeyProvider key, @Nullable Integer index, String... replacements) {
 		if (replacements.length % 2 == 1)
 			throw new IllegalArgumentException("Odd number of replacements. Please contact the dev and send them the whole error");
 		Tuple<String, Component>[] tuples = new Tuple[replacements.length / 2];
 		for (int i = 0; i < tuples.length; i++) {
 			tuples[i] = new Tuple<>(replacements[2 * i], Component.text(replacements[2 * i + 1]));
 		}
-		return getMessage(recipient, keyProvider, tuples);
+		return getMessage(recipient, key, tuples);
+	}
+
+	public Component getMessage(CommandSender recipient, KeyProvider key, String... replacements) {
+		return getMessage(recipient, key, null, replacements);
 	}
 
 	@SafeVarargs
-    public final Component getMessage(CommandSender recipient, MessageKeyProvider keyProvider, Tuple<String, Component>... replacements) {
-		Component message = getMessage(recipient, keyProvider);
-        for (Tuple<String, Component> replacement : replacements) {
-            message = message.replaceText(
+	public final Component getMessage(CommandSender recipient, KeyProvider key, @Nullable Integer index, Tuple<String, Component>... replacements) {
+		Component message = getMessage(recipient, key, index);
+		for (Tuple<String, Component> replacement : replacements) {
+			message = message.replaceText(
 					(config) -> config.matchLiteral(replacement.x).replacement(replacement.y)
 			);
-        }
+		}
 		return message;
+	}
+
+	@SafeVarargs
+	public final Component getMessage(CommandSender recipient, KeyProvider key, Tuple<String, Component>... replacements) {
+		return getMessage(recipient, key, null, replacements);
 	}
 
 	@NotNull
 	public Component[] getYouAreWere(@NotNull CommandSender sender, @NotNull OfflinePlayer target, boolean self) {
 		Component you;
-		MessageKeyProvider areKey;
-		MessageKeyProvider wereKey;
+		KeyProvider areKey;
+		KeyProvider wereKey;
 		if (self) {
 			you = TextUtil.capitalizeFirst(getMessage(sender, GrammarMessageKeys.YOU));
 			areKey = GrammarMessageKeys.TO_BE_2ND;

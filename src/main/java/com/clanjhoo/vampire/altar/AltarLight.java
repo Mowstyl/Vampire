@@ -1,6 +1,6 @@
 package com.clanjhoo.vampire.altar;
 
-import co.aikar.commands.MessageType;
+import com.clanjhoo.vampire.cmd.MessageType;
 import com.clanjhoo.vampire.util.HolyWaterUtil;
 import com.clanjhoo.vampire.keyproviders.AltarMessageKeys;
 import com.clanjhoo.vampire.keyproviders.HolyWaterMessageKeys;
@@ -98,9 +98,8 @@ public class AltarLight extends Altar {
 
 		if (player != null) {
 			ItemStack item = player.getInventory().getItemInMainHand();
-			if (item != null && item.getType() == Material.POTION && item.hasItemMeta() && item.getItemMeta() instanceof PotionMeta) {
-				PotionMeta potionMeta = (PotionMeta) item.getItemMeta();
-				holdsWater = plugin.getVersionCompat().getBasePotionType(potionMeta) == PotionType.WATER;
+			if (item.getType() == Material.POTION && item.hasItemMeta() && item.getItemMeta() instanceof PotionMeta potionMeta) {
+                holdsWater = plugin.getVersionCompat().getBasePotionType(potionMeta) == PotionType.WATER;
 			}
 		}
 

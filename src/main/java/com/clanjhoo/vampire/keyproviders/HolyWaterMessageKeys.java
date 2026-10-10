@@ -1,9 +1,7 @@
 package com.clanjhoo.vampire.keyproviders;
 
-import co.aikar.locales.MessageKey;
-import co.aikar.locales.MessageKeyProvider;
 
-public enum HolyWaterMessageKeys implements MessageKeyProvider {
+public enum HolyWaterMessageKeys implements KeyProvider {
     NAME("holyWater.name"),
     LORE("holyWater.lore"),
     CREATE_SUCCESS("holyWater.createSuccess"),
@@ -16,13 +14,13 @@ public enum HolyWaterMessageKeys implements MessageKeyProvider {
     ;
 
     HolyWaterMessageKeys(String key) {
-        this.key = MessageKey.of(key);
+        this.key = key;
     }
 
-    private final MessageKey key;
+    private final String key;
 
     @Override
-    public MessageKey getMessageKey() {
+    public String getKey() {
         return key;
     }
 }

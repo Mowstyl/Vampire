@@ -3,14 +3,13 @@ main: ${rootProject.group}.${rootProject.name}.${rootProject.projectName}
 version: ${rootProject.version}
 description: ${rootProject.description}
 api-version: "1.14"
-authors: [Cayorion, Mowstyl]
+authors: [Cayorion, Massivecraft, Mowstyl]
 website: https://clanjhoo.com
 softdepend: [WorldEdit, WorldGuard, LibsDisguises, PlaceholderAPI, Vault, ProtocolLib]
 loadbefore: [Werewolf]
 libraries:
   - ${libs.kyori.adventure.minimessage.get()}
   - ${libs.kyori.adventure.gson.get()}
-  - ${libs.kyori.platform.bukkit.get()}
 permissions:
 # -------------------------------------------- #
 # THE REAL NODES

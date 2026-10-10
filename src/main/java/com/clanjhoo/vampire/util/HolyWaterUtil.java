@@ -3,7 +3,6 @@ package com.clanjhoo.vampire.util;
 import com.clanjhoo.vampire.VampireRevamp;
 import com.clanjhoo.vampire.keyproviders.HolyWaterMessageKeys;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.serializer.bungeecord.BungeeComponentSerializer;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
@@ -48,11 +47,8 @@ public class HolyWaterUtil {
         List<Component> holyWaterLore = plugin.getMessageList(creator, HolyWaterMessageKeys.LORE);
         plugin.getVersionCompat().setBasePotionType(meta, PotionType.WATER);
         if (plugin.isPaperMc()) {
-            BungeeComponentSerializer serializer = BungeeComponentSerializer.get();
-            meta.setDisplayNameComponent(serializer.serialize(holyWaterName));
-            meta.setLoreComponents(holyWaterLore.stream()
-                    .map(serializer::serialize)
-                    .collect(Collectors.toList()));
+            meta.displayName(holyWaterName);
+            meta.lore(holyWaterLore);
         }
         else {
             LegacyComponentSerializer serializer = LegacyComponentSerializer.legacySection();
