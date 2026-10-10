@@ -15,35 +15,40 @@ permissions:
 # THE REAL NODES
 # -------------------------------------------- #
 # COMMANDS
-  vampire.basecommand:         {description: use the vampire base command, default: false}
-  vampire.help:                {description: show command help, default: false}
-  vampire.show:                {description: show player info, default: false}
-  vampire.show.other:          {description: show other player info, default: false}
-  vampire.shriek:              {description: shriek, default: false}
-  vampire.mode.bloodlust:      {description: use bloodlust, default: false}
-  vampire.mode.intent:         {description: use intent to infect, default: false}
-  vampire.mode.nightvision:    {description: use nightvision, default: false}
-  vampire.mode.batusi:         {description: use batcloud, default: false}
-  vampire.trade.offer:         {description: offer blood to someone, default: false}
-  vampire.trade.accept:        {description: accept blood offer, default: false}
-  vampire.flask:               {description: create blood flask, default: false}
-  vampire.combat.infect:       {description: be infectious in combat, default: false}
-  vampire.combat.contract:     {description: contract infection in combat, default: false}
-  vampire.list:                {description: list vampires and infected, default: false}
-  vampire.set:                 {description: set player attributes, default: false}
-  vampire.set.vampire:         {description: cure or turn yourself into a vampire, default: false}
-  vampire.set.vampire.other:   {description: cure or turn a player into a vampire, default: false}
-  vampire.set.nosferatu:       {description: turn yourself into a high tier vampire or a normal one, default: false}
-  vampire.set.nosferatu.other: {description: turn someone into a high tier vampire or a normal one, default: false}
-  vampire.set.infection:       {description: set infection (0 to 1), default: false}
-  vampire.set.food:            {description: set food (0 to 20), default: false}
-  vampire.set.health:          {description: set health (0 to 20), default: false}
-  vampire.set.help:            {description: show set subcommand help, default: false}
-  vampire.version:             {description: see plugin version, default: false}
-  vampire.reload:              {description: reload config or lang files, default: false}
+  vampire.basecommand:          {description: use the vampire base command, default: false}
+  vampire.help:                 {description: show command help, default: false}
+  vampire.show:                 {description: show player info, default: false}
+  vampire.show.other:           {description: show other player info, default: false}
+  vampire.shriek:               {description: shriek, default: false}
+  vampire.mode.bloodlust:       {description: use bloodlust, default: false}
+  vampire.mode.intent:          {description: use intent to infect, default: false}
+  vampire.mode.nightvision:     {description: use nightvision, default: false}
+  vampire.mode.batusi:          {description: turn into a cloud of bats, default: false}
+  vampire.mode.batusi.disguise: {description: disguise into a bat when using batusi, default: false}
+  vampire.trade.offer:          {description: offer blood to someone, default: false}
+  vampire.trade.accept:         {description: accept blood offer, default: false}
+  vampire.trade.contract:       {description: contract infection by drinking vampiric blood directly, default: false}
+  vampire.give.ring:            {description: give yourself a sun protection ring, default: false}
+  vampire.give.holywater:       {description: give yourself a holy water bottle, default: false}
+  vampire.flask:                {description: create blood flask, default: false}
+  vampire.flask.contract:       {description: contract infection by drinking vampiric blood flask, default: false}
+  vampire.combat.infect:        {description: be infectious in combat, default: false}
+  vampire.combat.contract:      {description: contract infection in combat, default: false}
+  vampire.list:                 {description: list vampires and infected, default: false}
+  vampire.set:                  {description: set player attributes, default: false}
+  vampire.set.vampire:          {description: cure or turn yourself into a vampire, default: false}
+  vampire.set.vampire.other:    {description: cure or turn a player into a vampire, default: false}
+  vampire.set.nosferatu:        {description: turn yourself into a high tier vampire or a normal one, default: false}
+  vampire.set.nosferatu.other:  {description: turn someone into a high tier vampire or a normal one, default: false}
+  vampire.set.infection:        {description: set infection (0 to 1), default: false}
+  vampire.set.food:             {description: set food (0 to 20), default: false}
+  vampire.set.health:           {description: set health (0 to 20), default: false}
+  vampire.set.help:             {description: show set subcommand help, default: false}
+  vampire.version:              {description: see plugin version, default: false}
+  vampire.reload:               {description: reload config or lang files, default: false}
 # OTHER
-  vampire.altar.dark:          {description: use an altar of darkness, default: false}
-  vampire.altar.light:         {description: use an altar of light, default: false}
+  vampire.altar.dark:           {description: use an altar of darkness, default: false}
+  vampire.altar.light:          {description: use an altar of light, default: false}
 # -------------------------------------------- #
 # STAR NOTATION
 # -------------------------------------------- #
@@ -60,12 +65,14 @@ permissions:
       vampire.mode.batusi: true
       vampire.trade.offer: true
       vampire.trade.accept: true
+      vampire.trade.contract: true
       vampire.flask: true
+      vampire.flask.contract: true
       vampire.combat.infect: true
       vampire.combat.contract: true
       vampire.list: true
-      vampire.ring: true
-      vampire.holywater: true
+      vampire.give.ring: true
+      vampire.give.holywater: true
       vampire.set: true
       vampire.set.vampire: true
       vampire.set.vampire.other: true
@@ -104,8 +111,8 @@ permissions:
       vampire.set.food: true
       vampire.set.health: true
       vampire.set.help: true
-      vampire.ring: true
-      vampire.holywater: true
+      vampire.give.ring: true
+      vampire.give.holywater: true
   vampire.kit.rank1:
     default: false
     children:
@@ -125,7 +132,9 @@ permissions:
       vampire.mode.batusi: true
       vampire.trade.offer: true
       vampire.trade.accept: true
+      vampire.trade.contract: true
       vampire.flask: true
+      vampire.flask.contract: true
       vampire.combat.infect: true
       vampire.combat.contract: true
       vampire.version: true

@@ -115,7 +115,7 @@ public class VampireRevamp extends JavaPlugin {
 		return vc;
 	}
 
-	public boolean setVampireGroup(Player player, boolean isVampire) {
+	public boolean setVampireGroup(@NotNull Player player, boolean isVampire) {
 		if (perms != null) {
 			if (isVampire)
 				return perms.playerAddGroup(player, conf.compatibility.vampirePermissionGroup);
@@ -775,7 +775,7 @@ public class VampireRevamp extends JavaPlugin {
 		if (maxes == null ||
 				(key == InfectionMessageKeys.FEELING && maxes.x == 0) ||
 				(key == InfectionMessageKeys.HINT && maxes.y == 0))
-			maxes = maxFeelHint.get(Locale.of(locale.getCountry()));
+			maxes = maxFeelHint.get(Locale.of(locale.getLanguage()));
 		if (maxes == null ||
 				(key == InfectionMessageKeys.FEELING && maxes.x == 0) ||
 				(key == InfectionMessageKeys.HINT && maxes.y == 0))
@@ -797,7 +797,7 @@ public class VampireRevamp extends JavaPlugin {
 			locale = player.locale();
 		Map<String, String> messages = locales.get(locale);
 		if (messages == null) {
-			messages = locales.get(Locale.of(locale.getCountry()));
+			messages = locales.get(Locale.of(locale.getLanguage()));
 		}
 		if (messages == null) {
 			messages = locales.get(conf.general.defaultLocale);

@@ -3,6 +3,7 @@ package com.clanjhoo.vampire.compat;
 import com.clanjhoo.vampire.VampireRevamp;
 import com.sk89q.worldedit.bukkit.BukkitAdapter;
 import com.sk89q.worldedit.world.weather.WeatherType;
+import com.sk89q.worldedit.world.weather.WeatherTypes;
 import com.sk89q.worldguard.WorldGuard;
 import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
 import com.sk89q.worldguard.protection.flags.Flag;
@@ -90,9 +91,9 @@ public class WorldGuardCompat {
     public boolean isSkyClear(Player player, Location location) {
         boolean clear = !location.getWorld().isThundering() && !location.getWorld().hasStorm();
         WeatherType qres = queryFlag(player, location, Flags.WEATHER_LOCK);
-        if (qres != null) {
-            clear = !qres.getName().equals(org.bukkit.WeatherType.DOWNFALL.name());
-        }
+        if (qres != null)
+            clear = qres == WeatherTypes.CLEAR;
+
         return clear;
     }
 
@@ -117,7 +118,7 @@ public class WorldGuardCompat {
                 if (h < 0) {
                     h += 24;
                 }
-                wtime = h + m * 60 + s * 3600;
+                wtime = h * 3600 + m * 60 + s;
                 rtime = (long) (wtime * 1000);
             }
         }

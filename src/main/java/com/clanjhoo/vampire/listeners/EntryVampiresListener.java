@@ -37,7 +37,7 @@ public class EntryVampiresListener implements Listener {
         }
         WorldGuardCompat wgc = plugin.getWorldGuardCompat();
         boolean allowedFrom = wgc.canVampiresEnter(player, from);
-        boolean allowedTo = wgc.canVampiresEnter(player, from);
+        boolean allowedTo = wgc.canVampiresEnter(player, to);
         if (allowedFrom && !allowedTo) {
             event.setCancelled(true);
         }

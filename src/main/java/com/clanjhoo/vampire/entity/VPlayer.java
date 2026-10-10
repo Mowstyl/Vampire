@@ -5,6 +5,7 @@ import com.clanjhoo.dbhandler.annotations.Entity;
 import com.clanjhoo.dbhandler.annotations.NotNullField;
 import com.clanjhoo.dbhandler.annotations.PrimaryKey;
 import com.clanjhoo.vampire.InfectionReason;
+import com.clanjhoo.vampire.Perm;
 import com.clanjhoo.vampire.cmd.MessageType;
 import com.clanjhoo.vampire.compat.VersionCompat;
 import com.clanjhoo.vampire.compat.WorldGuardCompat;
@@ -296,9 +297,9 @@ public class VPlayer {
                                     MessageType.INFO,
                                     InfectionMessageKeys.CURED);
                         }
-                        this.infection = 0D;
                         plugin.getVampireConfig().potionEffects.infected.removePotionEffects(player);
                     }
+                    this.infection = 0D;
                 } else {
                     this.infection = val;
                 }
@@ -330,7 +331,7 @@ public class VPlayer {
             }
 
             // plugin.log(this.getReasonDesc(false));
-            if (reason.isNoticeable())
+            if (reason.isNoticeable() && player != null)
                 plugin.sendMessage(player,
                         MessageType.INFO,
                         reason.getDescKey(),
@@ -382,9 +383,7 @@ public class VPlayer {
     }
 
     public void setIntending(boolean val) {
-        this.intending = val;
         Player p = Bukkit.getPlayer(uuid);
-
         if (p == null) {
             plugin.log(Level.WARNING, "An offline player is trying to infect on intend!");
             return;
@@ -398,6 +397,7 @@ public class VPlayer {
             return;
         }
 
+        this.intending = val;
         Component on = plugin.getMessage(p, GrammarMessageKeys.ON);
         Component off = plugin.getMessage(p, GrammarMessageKeys.OFF);
 
@@ -1200,7 +1200,7 @@ public class VPlayer {
                         if (this.isInfected()) {
                             this.addInfection(0.01D);
                         }
-                        else if (me.hasPermission("vampire.trade.contract")
+                        else if (me.hasPermission(Perm.TRADE_CONTRACT.getPermissionNode())
                                 && ThreadLocalRandom.current().nextDouble() * 20 < amount) {
                             this.addInfection(0.05D, InfectionReason.TRADE, vyou);
                         }

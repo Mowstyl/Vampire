@@ -122,7 +122,7 @@ public class CmdVampire {
 		if (success) {
 			result = Command.SINGLE_SUCCESS;
 			getPlugin().sendMessage(sender,
-					MessageType.ERROR,
+					MessageType.INFO,
 					CommandMessageKeys.RELOAD_SUCCESS);
 		}
 		else {
@@ -309,9 +309,9 @@ public class CmdVampire {
 
 		int result = 0;
 		for (PlayerProfile profile : profiles) {
-			if (profile.getName() == null)
+			if (profile.getId() == null)
 				continue;
-			OfflinePlayer target = Bukkit.getOfflinePlayer(profile.getName());
+			OfflinePlayer target = Bukkit.getOfflinePlayer(profile.getId());
 			boolean self = sender instanceof Player && ((Player) sender).getUniqueId().equals(target.getUniqueId());
 
 			VPlayer vPlayer = getPlugin().getVPlayer(target);
@@ -382,7 +382,7 @@ public class CmdVampire {
 		getPlugin().debugLog(Level.INFO, "Acceptance");
 		if (vPlayer.isVampire()) {
 			getPlugin().debugLog(Level.INFO, "Le vampire");
-			boolean isActive = bloodlustEnabled == null ? vPlayer.isBloodlusting() : bloodlustEnabled;
+			boolean isActive = bloodlustEnabled == null ? vPlayer.isBloodlusting() : !bloodlustEnabled;
 			vPlayer.setBloodlusting(!isActive);
 		} else {
 			getPlugin().debugLog(Level.INFO, "Non non non!");
@@ -451,7 +451,7 @@ public class CmdVampire {
 			return 0;
 		}
 		if (vPlayer.isVampire()) {
-			boolean isActive = intendEnabled == null ? vPlayer.isIntending() : intendEnabled;
+			boolean isActive = intendEnabled == null ? vPlayer.isIntending() : !intendEnabled;
 			vPlayer.setIntending(!isActive);
 		} else {
 			Component vampireType = getPlugin().getMessage(sender, GrammarMessageKeys.VAMPIRE_TYPE);
@@ -516,7 +516,7 @@ public class CmdVampire {
 			return 0;
 		}
 		if (vPlayer.isVampire()) {
-			boolean isActive = nvEnabled == null ? vPlayer.isUsingNightVision() : nvEnabled;
+			boolean isActive = nvEnabled == null ? vPlayer.isUsingNightVision() : !nvEnabled;
 			vPlayer.setUsingNightVision(!isActive);
 		} else {
 			Component vampireType = getPlugin().getMessage(sender, GrammarMessageKeys.VAMPIRE_TYPE);
@@ -1068,9 +1068,9 @@ public class CmdVampire {
 
 		int result = 0;
 		for (PlayerProfile profile : profiles) {
-			if (profile.getName() == null)
+			if (profile.getId() == null)
 				continue;
-			OfflinePlayer target = Bukkit.getOfflinePlayer(profile.getName());
+			OfflinePlayer target = Bukkit.getOfflinePlayer(profile.getId());
 
 			VPlayer vPlayer = getPlugin().getVPlayer(target);
 			if (vPlayer == null) {
@@ -1157,9 +1157,9 @@ public class CmdVampire {
 
 		int result = 0;
 		for (PlayerProfile profile : profiles) {
-			if (profile.getName() == null)
+			if (profile.getId() == null)
 				continue;
-			OfflinePlayer target = Bukkit.getOfflinePlayer(profile.getName());
+			OfflinePlayer target = Bukkit.getOfflinePlayer(profile.getId());
 
 			VPlayer vPlayer = getPlugin().getVPlayer(target);
 			if (vPlayer == null) {
@@ -1169,7 +1169,7 @@ public class CmdVampire {
 				continue;
 			}
 			if (vPlayer.isVampire() != isNosferatu) {
-				Component displayName = Component.text(profile.getName());
+				Component displayName = Component.text(profile.getName() == null ? "???" : profile.getName());
 				if (!isNosferatu || !getPlugin().getWerewolvesCompat().isWerewolf(profile.getId())) {
 					if (isNosferatu && !vPlayer.isVampire()) {
 						vPlayer.setReason(InfectionReason.OPERATOR);
@@ -1377,7 +1377,7 @@ public class CmdVampire {
 			.requires(sender -> sender.getSender().hasPermission(Perm.SET_HEALTH.getPermissionNode()))
 			.then(Commands.argument("value", DoubleArgumentType.doubleArg(0))
 					.executes(CmdVampire::setHealthCommand)
-					.then(Commands.argument("targets", ArgumentTypes.players())
+					.then(Commands.argument("targets", ArgumentTypes.entities())
 							.requires(sender -> sender.getSender().hasPermission(Perm.SET_HEALTH_OTHER.getPermissionNode()))
 							.executes(CmdVampire::setHealthCommand)))
 			.build();

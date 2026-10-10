@@ -66,21 +66,12 @@ public class ResourceUtil {
 	}
 
 	public boolean playerHas(Player player, ItemStack stack) {
-		Material requiredType = stack.getType();
 		int requiredAmount = stack.getAmount();
-		PotionType requiredPotion = null;
-		if (requiredType == Material.POTION) {
-			requiredPotion = plugin.getVersionCompat().getBasePotionType((PotionMeta) stack.getItemMeta());
-		}
 		
 		int actualAmount = 0;
 		for (ItemStack pstack : player.getInventory().getStorageContents()) {
-			if (pstack != null && pstack.getType() == requiredType) {
-				if (requiredPotion == null
-						|| plugin.getVersionCompat().getBasePotionType((PotionMeta) pstack.getItemMeta()) == requiredPotion) {
-					actualAmount += pstack.getAmount();
-				}
-			}
+			if (pstack != null && pstack.isSimilar(stack))
+				actualAmount += pstack.getAmount();
 		}
 		
 		return actualAmount >= requiredAmount;
@@ -108,13 +99,17 @@ public class ResourceUtil {
 	
 	public static void playerAdd(Player player, Collection<? extends ItemStack> stacks) {
 		Inventory inventory = player.getInventory();
-		inventory.addItem(stacks.toArray(new ItemStack[0]));
+		Map<Integer, ItemStack> result = inventory.addItem(stacks.toArray(new ItemStack[0]));
+		for (ItemStack remaining : result.values())
+			player.getWorld().dropItem(player.getLocation(), remaining);
 		player.updateInventory();
 	}
 	
 	public static void playerAdd(Player player, ItemStack stack) {
 		Inventory inventory = player.getInventory();
-		inventory.addItem(stack);
+		Map<Integer, ItemStack> result = inventory.addItem(stack);
+		for (ItemStack remaining : result.values())
+			player.getWorld().dropItem(player.getLocation(), remaining);
 		player.updateInventory();
 	}
 	

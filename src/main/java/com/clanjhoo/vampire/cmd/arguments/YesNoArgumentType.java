@@ -22,7 +22,7 @@ public final class YesNoArgumentType implements CustomArgumentType<Boolean, Stri
     private static final DynamicCommandExceptionType ERROR_NOT_EXISTS = new DynamicCommandExceptionType(
             name -> MessageComponentSerializer
                     .message()
-                    .serialize(Component.text(name + " is not a supported player class!")));
+                    .serialize(Component.text(name + " is not yes or no!")));
 
     public static YesNoArgumentType yesNoClass() {
         return new YesNoArgumentType();

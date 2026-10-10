@@ -31,21 +31,25 @@ public class RaytracingTask implements Runnable {
 
     private void rayTraceEveryone() {
         // Raytrace for all vampire players
-        for (Player player : Bukkit.getOnlinePlayers()) {
-            if (!player.isOnline())
-                continue;
-            VPlayer vPlayer = plugin.getVPlayer(player);
-            if (vPlayer == null || vPlayer.isHuman())
-                continue;
-            World playerWorld = player.getWorld();
-            Location startLocation = player.getLocation();
-            // Angle between the Sun and the Y axis on the XY plane
-            double angleWithY = -sunUtil.calcSunAngle(player.getWorld(), player);
-            Vector direction = new Vector(Math.sin(angleWithY), Math.cos(angleWithY), 0);
-            vPlayer.setLastRayTrace(
-                    playerWorld.rayTraceBlocks(startLocation, direction, 64, FluidCollisionMode.ALWAYS, true));
+        try {
+            for (Player player : Bukkit.getOnlinePlayers()) {
+                if (!player.isOnline())
+                    continue;
+                VPlayer vPlayer = plugin.getVPlayer(player);
+                if (vPlayer == null || vPlayer.isHuman())
+                    continue;
+                World playerWorld = player.getWorld();
+                Location startLocation = player.getLocation();
+                // Angle between the Sun and the Y axis on the XY plane
+                double angleWithY = -sunUtil.calcSunAngle(player.getWorld(), player);
+                Vector direction = new Vector(Math.sin(angleWithY), Math.cos(angleWithY), 0);
+                vPlayer.setLastRayTrace(
+                        playerWorld.rayTraceBlocks(startLocation, direction, 64, FluidCollisionMode.ALWAYS, true));
+            }
         }
-        currentTask = null;
+        finally {
+            currentTask = null;
+        }
     }
 
     public void stop() {

@@ -21,7 +21,7 @@ public final class ReloadArgumentType implements CustomArgumentType<ReloadArgume
     private static final DynamicCommandExceptionType ERROR_NOT_EXISTS = new DynamicCommandExceptionType(
             name -> MessageComponentSerializer
                     .message()
-                    .serialize(Component.text(name + " is not a supported player class!")));
+                    .serialize(Component.text(name + " is not something to reload!")));
 
     public static ReloadArgumentType reloadClass() {
         return new ReloadArgumentType();

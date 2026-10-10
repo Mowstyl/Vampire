@@ -637,7 +637,7 @@ public class ListenerMain implements Listener {
                                 double baseMaxHealthDamagee = 20;
                                 if (maxHealthDamagee != null)
                                     baseMaxHealthDamagee = maxHealthDamagee.getBaseValue();
-                                AttributeInstance maxHealthDamager = damagee.getAttribute(plugin.getVersionCompat().HEALTH_ATTR);
+                                AttributeInstance maxHealthDamager = ((Player) damager).getAttribute(plugin.getVersionCompat().HEALTH_ATTR);
                                 double baseMaxHealthDamager = 20;
                                 if (maxHealthDamager != null)
                                     baseMaxHealthDamager = maxHealthDamager.getBaseValue();
@@ -693,7 +693,7 @@ public class ListenerMain implements Listener {
                 // ... finally, if the player is human did they contract the dark disease from vampiric blood?
                 if (vPlayer.isInfected()) {
                     vPlayer.addInfection(0.01D);
-                } else if (event.getPlayer().hasPermission("vampire.flask.contract")
+                } else if (event.getPlayer().hasPermission(Perm.FLASK_CONTRACT.getPermissionNode())
                         && ThreadLocalRandom.current().nextDouble() * 20 < amount) {
                     vPlayer.addInfection(0.05D, InfectionReason.FLASK, bloodFlaskData.getOwner());
                 }
@@ -726,18 +726,15 @@ public class ListenerMain implements Listener {
             if (holyUtil.isHolyWater((ThrownPotion) projectile)) {
                 ProjectileSource shooter = projectile.getShooter();
                 Component displayName = null;
-                if (shooter instanceof Player) {
-                    displayName = Component.text(((Player) shooter).getDisplayName());
-                }
-                else if (shooter instanceof BlockProjectileSource) {
+                if (shooter instanceof Player)
+                    displayName = ((Player) shooter).displayName();
+                else if (shooter instanceof BlockProjectileSource)
                     displayName = Component.text(((BlockProjectileSource) shooter).getBlock().getType().name());
-                }
-                else if (shooter instanceof Entity) {
-                    displayName = Component.text(((Entity) shooter).getName());
-                }
-                else if (shooter != null) {
+                else if (shooter instanceof Entity)
+                    displayName = ((Entity) shooter).name();
+                else if (shooter != null)
                     displayName = Component.text("???");
-                }
+
                 // ... who is the thrower and where did it splash? ...
                 Location splashLocation = projectile.getLocation();
                 // ... then to all nearby players ...
@@ -747,7 +744,7 @@ public class ListenerMain implements Listener {
                         VPlayer vPlayer = plugin.getVPlayer(player);
                         if (vPlayer == null) {
                             plugin.log(Level.WARNING, "There was an error while loading " + player.getName() + " data");
-                            return;
+                            continue;
                         }
                         if (displayName != null) {
                             plugin.sendMessage(player,

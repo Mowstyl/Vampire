@@ -159,7 +159,7 @@ public class SunUtil {
 	private static double getMaterialOpacity(Material type) {
 		String name = type.name();
 		double opacity;
-		if (name.contains("AIR") || type == Material.BARRIER)
+		if (type.isAir() || type == Material.BARRIER)
 			opacity = 0;
 		else if (type == Material.GLASS || type == Material.GLASS_PANE)
 			opacity = 0.05;
