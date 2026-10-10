@@ -12,7 +12,6 @@ import com.mojang.brigadier.Command;
 import com.mojang.brigadier.arguments.DoubleArgumentType;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
-import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.tree.CommandNode;
@@ -339,15 +338,13 @@ public class CmdVampire {
 			.literal("modebloodlust")
 			.requires(sender -> sender.getSender().hasPermission(Perm.MODE_BLOODLUST.getPermissionNode()))
 			.executes(CmdVampire::bloodlustCommand)
-			.then(Commands.argument("enable", YesNoArgumentType.yesNoClass())
-					.executes(CmdVampire::bloodlustCommand))
+			.redirect(bloodlust)
 			.build();
 	public static final LiteralCommandNode<CommandSourceStack> b = Commands
 			.literal("b")
 			.requires(sender -> sender.getSender().hasPermission(Perm.MODE_BLOODLUST.getPermissionNode()))
 			.executes(CmdVampire::bloodlustCommand)
-			.then(Commands.argument("enable", YesNoArgumentType.yesNoClass())
-					.executes(CmdVampire::bloodlustCommand))
+			.redirect(bloodlust)
 			.build();
 	public static final CommandMessageKeys bloodlustDesc = CommandMessageKeys.BLOODLUST_DESCRIPTION;
 	public static int bloodlustCommand(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
@@ -414,15 +411,13 @@ public class CmdVampire {
 			.literal("modeintend")
 			.requires(sender -> sender.getSender().hasPermission(Perm.MODE_INTENT.getPermissionNode()))
 			.executes(CmdVampire::intendCommand)
-			.then(Commands.argument("enable", YesNoArgumentType.yesNoClass())
-					.executes(CmdVampire::intendCommand))
+			.redirect(intend)
 			.build();
 	public static final LiteralCommandNode<CommandSourceStack> i = Commands
 			.literal("i")
 			.requires(sender -> sender.getSender().hasPermission(Perm.MODE_INTENT.getPermissionNode()))
 			.executes(CmdVampire::intendCommand)
-			.then(Commands.argument("enable", YesNoArgumentType.yesNoClass())
-					.executes(CmdVampire::intendCommand))
+			.redirect(intend)
 			.build();
 	public static final CommandMessageKeys intendDesc = CommandMessageKeys.INTENT_DESCRIPTION;
 	public static int intendCommand(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
@@ -482,15 +477,13 @@ public class CmdVampire {
 			.literal("modenightvision")
 			.requires(sender -> sender.getSender().hasPermission(Perm.MODE_NIGHTVISION.getPermissionNode()))
 			.executes(CmdVampire::nightvisionCommand)
-			.then(Commands.argument("enable", YesNoArgumentType.yesNoClass())
-					.executes(CmdVampire::nightvisionCommand))
+			.redirect(nightvision)
 			.build();
 	public static final LiteralCommandNode<CommandSourceStack> nv = Commands
 			.literal("nv")
 			.requires(sender -> sender.getSender().hasPermission(Perm.MODE_NIGHTVISION.getPermissionNode()))
 			.executes(CmdVampire::nightvisionCommand)
-			.then(Commands.argument("enable", YesNoArgumentType.yesNoClass())
-					.executes(CmdVampire::nightvisionCommand))
+			.redirect(nightvision)
 			.build();
 	public static final CommandMessageKeys nightvisionDesc = CommandMessageKeys.NIGHTVISION_DESCRIPTION;
 	public static int nightvisionCommand(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
@@ -549,10 +542,7 @@ public class CmdVampire {
 	public static final LiteralCommandNode<CommandSourceStack> o = Commands
 			.literal("o")
 			.requires(sender -> sender.getSender().hasPermission(Perm.TRADE_OFFER.getPermissionNode()))
-			.then(Commands.argument("target", ArgumentTypes.player())
-					.executes(CmdVampire::offerCommand)
-					.then(Commands.argument("amount", DoubleArgumentType.doubleArg(0, 20))
-							.executes(CmdVampire::offerCommand)))
+			.redirect(offer)
 			.build();
 	public static final CommandMessageKeys offerDesc = CommandMessageKeys.OFFER_DESCRIPTION;
 	public static int offerCommand(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
@@ -607,6 +597,7 @@ public class CmdVampire {
 			.literal("a")
 			.requires(sender -> sender.getSender().hasPermission(Perm.TRADE_ACCEPT.getPermissionNode()))
 			.executes(CmdVampire::acceptCommand)
+			.redirect(accept)
 			.build();
 	public static final CommandMessageKeys acceptDesc = CommandMessageKeys.ACCEPT_DESCRIPTION;
 	public static int acceptCommand(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
@@ -644,8 +635,7 @@ public class CmdVampire {
 			.literal("f")
 			.requires(sender -> sender.getSender().hasPermission(Perm.FLASK.getPermissionNode()))
 			.executes(CmdVampire::flaskCommand)
-			.then(Commands.argument("amount", DoubleArgumentType.doubleArg(0, 20))
-					.executes(CmdVampire::flaskCommand))
+			.redirect(flask)
 			.build();
 	public static final CommandMessageKeys flaskDesc = CommandMessageKeys.FLASK_DESCRIPTION;
 	public static int flaskCommand(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
@@ -658,6 +648,10 @@ public class CmdVampire {
 		double amount = 4;
 		try {
 			amount = ctx.getArgument("amount", double.class);
+			if (amount == 0) {
+				sender.sendMessage("¬¬");
+				return Command.SINGLE_SUCCESS;
+			}
 		}
 		catch (IllegalArgumentException ex) {
 			if (!ex.getMessage().startsWith("No such argument"))
@@ -841,6 +835,7 @@ public class CmdVampire {
 			.literal("v")
 			.requires(sender -> sender.getSender().hasPermission(Perm.VERSION.getPermissionNode()))
 			.executes(CmdVampire::versionCommand)
+			.redirect(version)
 			.build();
 	public static final CommandMessageKeys versionDesc = CommandMessageKeys.VERSION_DESCRIPTION;
 	public static int versionCommand(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
@@ -873,14 +868,7 @@ public class CmdVampire {
 			.literal("bat")
 			.requires(sender -> sender.getSender().hasPermission(Perm.MODE_BATUSI.getPermissionNode()))
 			.executes(CmdVampire::batusiCommand)
-			.then(Commands.argument("numberOfBats", IntegerArgumentType.integer(0, getPlugin().getVampireConfig().vampire.batusi.maxBats))
-					.executes(CmdVampire::batusiCommand)
-					.then(Commands.argument("enableBatusi", YesNoArgumentType.yesNoClass())
-							.executes(CmdVampire::batusiCommand)))
-			.then(Commands.argument("enableBatusi", YesNoArgumentType.yesNoClass())
-					.executes(CmdVampire::batusiCommand)
-					.then(Commands.argument("numberOfBats", IntegerArgumentType.integer(0, getPlugin().getVampireConfig().vampire.batusi.maxBats))
-							.executes(CmdVampire::batusiCommand)))
+			.redirect(batusi)
 			.build();
 	public static final CommandMessageKeys batusiDesc = CommandMessageKeys.BATUSI_DESCRIPTION;
 	public static int batusiCommand(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
@@ -1048,11 +1036,7 @@ public class CmdVampire {
 	public static final LiteralCommandNode<CommandSourceStack> setV = Commands
 			.literal("v")
 			.requires(sender -> sender.getSender().hasPermission(Perm.SET_VAMPIRE.getPermissionNode()))
-			.then(Commands.argument("isVampire", YesNoArgumentType.yesNoClass())
-					.executes(CmdVampire::setVampireCommand)
-					.then(Commands.argument("targets", ArgumentTypes.playerProfiles())
-							.requires(sender -> sender.getSender().hasPermission(Perm.SET_VAMPIRE_OTHER.getPermissionNode()))
-							.executes(CmdVampire::setVampireCommand)))
+			.redirect(setVampire)
 			.build();
 	public static final CommandMessageKeys setVampireDesc = CommandMessageKeys.SET_VAMPIRE_DESCRIPTION;
 	public static int setVampireCommand(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
@@ -1141,11 +1125,7 @@ public class CmdVampire {
 	public static final LiteralCommandNode<CommandSourceStack> setN = Commands
 			.literal("n")
 			.requires(sender -> sender.getSender().hasPermission(Perm.SET_NOSFERATU.getPermissionNode()))
-			.then(Commands.argument("isNosferatu", YesNoArgumentType.yesNoClass())
-					.executes(CmdVampire::setNosferatuCommand)
-					.then(Commands.argument("targets", ArgumentTypes.playerProfiles())
-							.requires(sender -> sender.getSender().hasPermission(Perm.SET_NOSFERATU_OTHER.getPermissionNode()))
-							.executes(CmdVampire::setNosferatuCommand)))
+			.redirect(setNosferatu)
 			.build();
 	public static final CommandMessageKeys setNosferatuDesc = CommandMessageKeys.SET_NOSFERATU_DESCRIPTION;
 	public static int setNosferatuCommand(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
@@ -1242,11 +1222,7 @@ public class CmdVampire {
 	public static final LiteralCommandNode<CommandSourceStack> setI = Commands
 			.literal("i")
 			.requires(sender -> sender.getSender().hasPermission(Perm.SET_INFECTION.getPermissionNode()))
-			.then(Commands.argument("value", DoubleArgumentType.doubleArg(0, 100))
-					.executes(CmdVampire::setInfectionCommand)
-					.then(Commands.argument("targets", ArgumentTypes.playerProfiles())
-							.requires(sender -> sender.getSender().hasPermission(Perm.SET_INFECTION_OTHER.getPermissionNode()))
-							.executes(CmdVampire::setInfectionCommand)))
+			.redirect(setInfection)
 			.build();
 	public static final CommandMessageKeys setInfectionDesc = CommandMessageKeys.SET_INFECTION_DESCRIPTION;
 	public static int setInfectionCommand(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
@@ -1345,11 +1321,7 @@ public class CmdVampire {
 	public static final LiteralCommandNode<CommandSourceStack> setF = Commands
 			.literal("f")
 			.requires(sender -> sender.getSender().hasPermission(Perm.SET_FOOD.getPermissionNode()))
-			.then(Commands.argument("value", IntegerArgumentType.integer(0, 20))
-					.executes(CmdVampire::setFoodCommand)
-					.then(Commands.argument("targets", ArgumentTypes.players())
-							.requires(sender -> sender.getSender().hasPermission(Perm.SET_FOOD_OTHER.getPermissionNode()))
-							.executes(CmdVampire::setFoodCommand)))
+			.redirect(setFood)
 			.build();
 	public static final CommandMessageKeys setFoodDesc = CommandMessageKeys.SET_FOOD_DESCRIPTION;
 	public static int setFoodCommand(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
@@ -1412,11 +1384,7 @@ public class CmdVampire {
 	public static final LiteralCommandNode<CommandSourceStack> setH = Commands
 			.literal("h")
 			.requires(sender -> sender.getSender().hasPermission(Perm.SET_HEALTH.getPermissionNode()))
-			.then(Commands.argument("value", DoubleArgumentType.doubleArg(0))
-					.executes(CmdVampire::setHealthCommand)
-					.then(Commands.argument("targets", ArgumentTypes.players())
-							.requires(sender -> sender.getSender().hasPermission(Perm.SET_HEALTH_OTHER.getPermissionNode()))
-							.executes(CmdVampire::setHealthCommand)))
+			.redirect(setHealth)
 			.build();
 	public static final CommandMessageKeys setHealthDesc = CommandMessageKeys.SET_HEALTH_DESCRIPTION;
 	public static int setHealthCommand(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
@@ -1605,26 +1573,26 @@ public class CmdVampire {
 		commandData.put("reload", new Tuple<>(reload, reloadDesc));
 		commandData.put("show", new Tuple<>(show, showDesc));
 		commandData.put("bloodlust", new Tuple<>(bloodlust, bloodlustDesc));
-		commandData.put("modebloodlust", new Tuple<>(modebloodlust, bloodlustDesc));
-		commandData.put("b", new Tuple<>(b, bloodlustDesc));
+		commandData.put("modebloodlust", new Tuple<>(bloodlust, bloodlustDesc));
+		commandData.put("b", new Tuple<>(bloodlust, bloodlustDesc));
 		commandData.put("intend", new Tuple<>(intend, intendDesc));
-		commandData.put("modeintend", new Tuple<>(modeintend, intendDesc));
-		commandData.put("i", new Tuple<>(i, intendDesc));
+		commandData.put("modeintend", new Tuple<>(intend, intendDesc));
+		commandData.put("i", new Tuple<>(intend, intendDesc));
 		commandData.put("nightvision", new Tuple<>(nightvision, nightvisionDesc));
-		commandData.put("modenightvision", new Tuple<>(modenightvision, nightvisionDesc));
-		commandData.put("nv", new Tuple<>(nv, nightvisionDesc));
+		commandData.put("modenightvision", new Tuple<>(nightvision, nightvisionDesc));
+		commandData.put("nv", new Tuple<>(nightvision, nightvisionDesc));
 		commandData.put("offer", new Tuple<>(offer, offerDesc));
-		commandData.put("o", new Tuple<>(o, offerDesc));
+		commandData.put("o", new Tuple<>(offer, offerDesc));
 		commandData.put("accept", new Tuple<>(accept, acceptDesc));
-		commandData.put("a", new Tuple<>(a, acceptDesc));
+		commandData.put("a", new Tuple<>(accept, acceptDesc));
 		commandData.put("flask", new Tuple<>(flask, flaskDesc));
-		commandData.put("f", new Tuple<>(f, flaskDesc));
+		commandData.put("f", new Tuple<>(flask, flaskDesc));
 		commandData.put("shriek", new Tuple<>(shriek, shriekDesc));
 		commandData.put("list", new Tuple<>(list, listDesc));
 		commandData.put("version", new Tuple<>(version, versionDesc));
-		commandData.put("v", new Tuple<>(v, versionDesc));
+		commandData.put("v", new Tuple<>(version, versionDesc));
 		commandData.put("batusi", new Tuple<>(batusi, batusiDesc));
-		commandData.put("bat", new Tuple<>(bat, batusiDesc));
+		commandData.put("bat", new Tuple<>(batusi, batusiDesc));
 		commandData.put("holywater", new Tuple<>(holywater, holywaterDesc));
 		commandData.put("ring", new Tuple<>(ring, ringDesc));
 		commandData.put("set", new Tuple<>(set, setDesc));
@@ -1636,16 +1604,16 @@ public class CmdVampire {
 	);
 	private static final Map<String, Tuple<LiteralCommandNode<CommandSourceStack>, KeyProvider>> setCommandData = new HashMap<>(VAMPIRE_COMMAND.getChildren().size() + 1);
 	static {
-		commandData.put("set vampire", new Tuple<>(setVampire, setVampireDesc));
-		commandData.put("set v", new Tuple<>(setV, setVampireDesc));
-		commandData.put("set nosferatu", new Tuple<>(setNosferatu, setNosferatuDesc));
-		commandData.put("set n", new Tuple<>(setN, setNosferatuDesc));
-		commandData.put("set infection", new Tuple<>(setInfection, setInfectionDesc));
-		commandData.put("set i", new Tuple<>(setI, setInfectionDesc));
-		commandData.put("set food", new Tuple<>(setFood, setFoodDesc));
-		commandData.put("set f", new Tuple<>(setF, setFoodDesc));
-		commandData.put("set health", new Tuple<>(setHealth, setHealthDesc));
-		commandData.put("set h", new Tuple<>(setH, setHealthDesc));
-		commandData.put("set help", new Tuple<>(setHelp, setHelpDesc));
+		setCommandData.put("vampire", new Tuple<>(setVampire, setVampireDesc));
+		setCommandData.put("v", new Tuple<>(setVampire, setVampireDesc));
+		setCommandData.put("nosferatu", new Tuple<>(setNosferatu, setNosferatuDesc));
+		setCommandData.put("n", new Tuple<>(setNosferatu, setNosferatuDesc));
+		setCommandData.put("infection", new Tuple<>(setInfection, setInfectionDesc));
+		setCommandData.put("i", new Tuple<>(setInfection, setInfectionDesc));
+		setCommandData.put("food", new Tuple<>(setFood, setFoodDesc));
+		setCommandData.put("f", new Tuple<>(setFood, setFoodDesc));
+		setCommandData.put("health", new Tuple<>(setHealth, setHealthDesc));
+		setCommandData.put("h", new Tuple<>(setHealth, setHealthDesc));
+		setCommandData.put("help", new Tuple<>(setHelp, setHelpDesc));
 	}
 }

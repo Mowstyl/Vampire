@@ -1,8 +1,6 @@
 package com.clanjhoo.vampire.keyproviders;
 
 
-import java.util.Locale;
-
 public enum CommandMessageKeys implements KeyProvider {
     COMMAND_HELP_HEADER("commands.commandHelpHeader"),
     NO_PLAYER_FOUND("commands.noPlayerFound"),

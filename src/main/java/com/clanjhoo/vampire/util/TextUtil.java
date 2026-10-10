@@ -36,8 +36,7 @@ public class TextUtil {
     public static Component capitalizeFirst(@NotNull Component text) {
         GsonComponentSerializer serializer = GsonComponentSerializer.gson();
         String rawText = serializer.serialize(text);
-        JsonParser jsonParser = new JsonParser();
-        JsonElement jsonText = jsonParser.parse(rawText);
+        JsonElement jsonText = JsonParser.parseString(rawText);
         return serializer.deserialize(capitalizeFirst(jsonText).toString());
     }
 
@@ -46,8 +45,7 @@ public class TextUtil {
             String aux = capitalizeFirst(jsonText.getAsString());
             if (aux.contains(" "))
                 aux = "\"" + aux + "\"";
-            JsonParser jsonParser = new JsonParser();
-            return jsonParser.parse(aux);
+            return JsonParser.parseString(aux);
         }
         JsonObject root = jsonText.getAsJsonObject();
         if (root.has("text")) {
@@ -114,12 +112,12 @@ public class TextUtil {
         description.add(getPluginDescriptionHeader());
 
         description.add(Component.text("Name: ", NamedTextColor.LIGHT_PURPLE)
-                .append(Component.text(plugin.getDescription().getName(), NamedTextColor.AQUA)));
+                .append(Component.text(plugin.getPluginMeta().getName(), NamedTextColor.AQUA)));
 
         description.add(Component.text("Version: ", NamedTextColor.LIGHT_PURPLE)
-                .append(Component.text(plugin.getDescription().getVersion(), NamedTextColor.AQUA)));
+                .append(Component.text(plugin.getPluginMeta().getVersion(), NamedTextColor.AQUA)));
 
-        String rawWebsite = plugin.getDescription().getDescription();
+        String rawWebsite = plugin.getPluginMeta().getWebsite();
         if (rawWebsite != null) {
             description.add(Component.text("Website: ", NamedTextColor.LIGHT_PURPLE)
                     .append(Component.text(rawWebsite, NamedTextColor.AQUA)
@@ -128,10 +126,10 @@ public class TextUtil {
 
         description.add(Component.text("Authors: ", NamedTextColor.LIGHT_PURPLE)
                 .append(Component.text(
-                        String.join(", ", plugin.getDescription().getAuthors()),
+                        String.join(", ", plugin.getPluginMeta().getAuthors()),
                         NamedTextColor.AQUA)));
 
-        String rawDescription = plugin.getDescription().getDescription();
+        String rawDescription = plugin.getPluginMeta().getDescription();
         if (rawDescription != null) {
             description.add(Component.text("Description: ", NamedTextColor.LIGHT_PURPLE)
                     .append(Component.text(rawDescription, NamedTextColor.YELLOW)));
