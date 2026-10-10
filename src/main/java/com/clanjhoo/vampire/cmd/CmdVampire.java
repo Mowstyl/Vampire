@@ -1483,8 +1483,8 @@ public class CmdVampire {
 			.build();
 	public static final CommandMessageKeys setHelpDesc = CommandMessageKeys.SET_HELP_DESCRIPTION;;
 	public static int setHelpCommand(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
-		CommandSender sender = ctx.getSource().getSender();
 		Entity executor = ctx.getSource().getExecutor();
+		CommandSender sender = executor != null ? executor : ctx.getSource().getSender();
 
 		Tuple<LiteralCommandNode<CommandSourceStack>, KeyProvider> commandInfo = setData;
 		String subcommand = "";
@@ -1500,7 +1500,7 @@ public class CmdVampire {
 				throw ex;
 		}
 
-		VampireRevamp.getInstance().sendMessage(executor, MessageType.HELP, commandInfo.y);
+		VampireRevamp.getInstance().sendMessage(sender, MessageType.HELP, commandInfo.y);
 		Map<CommandNode<CommandSourceStack>, String> usages = VampireRevamp.getInstance().getDispatcher()
 				.getSmartUsage(commandInfo.x, ctx.getSource());
 		String finalSubcommand = subcommand;
@@ -1537,8 +1537,8 @@ public class CmdVampire {
 			.build();
 	public static final CommandMessageKeys helpDesc = CommandMessageKeys.HELP_DESCRIPTION;;
 	public static int helpCommand(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
-		CommandSender sender = ctx.getSource().getSender();
 		Entity executor = ctx.getSource().getExecutor();
+		CommandSender sender = executor != null ? executor : ctx.getSource().getSender();
 
 		Tuple<LiteralCommandNode<CommandSourceStack>, KeyProvider> commandInfo = baseData;
 		String subcommand = "";
@@ -1554,7 +1554,7 @@ public class CmdVampire {
 				throw ex;
 		}
 
-		VampireRevamp.getInstance().sendMessage(executor, MessageType.HELP, commandInfo.y);
+		VampireRevamp.getInstance().sendMessage(sender, MessageType.HELP, commandInfo.y);
 		Map<CommandNode<CommandSourceStack>, String> usages = VampireRevamp.getInstance().getDispatcher()
 				.getSmartUsage(commandInfo.x, ctx.getSource());
 		String finalSubcommand = subcommand;

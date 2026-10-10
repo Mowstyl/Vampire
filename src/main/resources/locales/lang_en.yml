@@ -118,6 +118,7 @@ infection:
     hint3: "<yellow>Only bright light may purge you of this darkness"
     hint4: "<yellow>You want to touch a lapis lazuli block"
 commands:
+    base_description: "Vampire Revamped Commands"
     commandHelpHeader: "Help for command \"{command}\""
     noPlayerFound: "<red>No player matches: <light_purple>{player}"
     blacklistedWorld: "<red>You can't use that command in this world"
@@ -176,4 +177,5 @@ commands:
     set_health_attribute: "health"
     set_food_description: "set food (0 to 20)"
     set_food_attribute: "food"
+    set_help_description: "shows set subcommand help"
     unknown_description: "<dark_red>This error should not be ever seen. Please contact the plugin developer"

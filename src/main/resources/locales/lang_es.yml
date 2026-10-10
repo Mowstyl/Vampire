@@ -118,6 +118,7 @@ infection:
     hint3: "<yellow>Solo la luz brillante te purgará de esta oscuridad"
     hint4: "<yellow>Quieres tocar un bloque de lapislázuli"
 commands:
+    base_description: "Comandos de Vampire Revamped"
     commandHelpHeader: "Ayuda para el comando \"{command}\""
     noPlayerFound: "<red>Ningun jugador coincide: <light_purple>{player}"
     blacklistedWorld: "<red>No puedes usar ese comando en este mundo"
@@ -176,4 +177,5 @@ commands:
     set_health_attribute: "vida"
     set_food_description: "estado de hambre (0 a 20)"
     set_food_attribute: "hambre"
+    set_help_description: "muestra ayuda para los subcomandos del subcomando set"
     unknown_description: "<dark_red>Este error no debería ser visto. Por favor contacte al desarrollador del plugin"
