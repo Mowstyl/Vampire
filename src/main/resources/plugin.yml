@@ -7,140 +7,286 @@ authors: [Mowstyl, Massivecraft, Cayorion]
 website: https://clanjhoo.com
 softdepend: [WorldEdit, WorldGuard, LibsDisguises, PlaceholderAPI, Vault, ProtocolLib]
 loadbefore: [Werewolf]
-libraries:
-  - ${libs.kyori.adventure.minimessage.get()}
-  - ${libs.kyori.adventure.gson.get()}
+default-permission: op
 permissions:
 # -------------------------------------------- #
 # THE REAL NODES
 # -------------------------------------------- #
-# COMMANDS
-  vampire.basecommand:          {description: use the vampire base command, default: false}
-  vampire.help:                 {description: show command help, default: false}
-  vampire.show:                 {description: show player info, default: false}
-  vampire.show.other:           {description: show other player info, default: false}
-  vampire.shriek:               {description: shriek, default: false}
-  vampire.mode.bloodlust:       {description: use bloodlust, default: false}
-  vampire.mode.intent:          {description: use intent to infect, default: false}
-  vampire.mode.nightvision:     {description: use nightvision, default: false}
-  vampire.mode.batusi:          {description: turn into a cloud of bats, default: false}
-  vampire.mode.batusi.disguise: {description: disguise into a bat when using batusi, default: false}
-  vampire.trade.offer:          {description: offer blood to someone, default: false}
-  vampire.trade.accept:         {description: accept blood offer, default: false}
-  vampire.trade.contract:       {description: contract infection by drinking vampiric blood directly, default: false}
-  vampire.give.ring:            {description: give yourself a sun protection ring, default: false}
-  vampire.give.holywater:       {description: give yourself a holy water bottle, default: false}
-  vampire.flask:                {description: create blood flask, default: false}
-  vampire.flask.contract:       {description: contract infection by drinking vampiric blood flask, default: false}
-  vampire.combat.infect:        {description: be infectious in combat, default: false}
-  vampire.combat.contract:      {description: contract infection in combat, default: false}
-  vampire.list:                 {description: list vampires and infected, default: false}
-  vampire.set:                  {description: set player attributes, default: false}
-  vampire.set.vampire:          {description: cure or turn yourself into a vampire, default: false}
-  vampire.set.vampire.other:    {description: cure or turn a player into a vampire, default: false}
-  vampire.set.nosferatu:        {description: turn yourself into a high tier vampire or a normal one, default: false}
-  vampire.set.nosferatu.other:  {description: turn someone into a high tier vampire or a normal one, default: false}
-  vampire.set.infection:        {description: set infection (0 to 1), default: false}
-  vampire.set.food:             {description: set food (0 to 20), default: false}
-  vampire.set.health:           {description: set health (0 to 20), default: false}
-  vampire.set.help:             {description: show set subcommand help, default: false}
-  vampire.version:              {description: see plugin version, default: false}
-  vampire.reload:               {description: reload config or lang files, default: false}
-# OTHER
-  vampire.altar.dark:           {description: use an altar of darkness, default: false}
-  vampire.altar.light:          {description: use an altar of light, default: false}
+  # USE ALTARS
+  vampire.altar.dark:
+    description: "Allows using an altar of darkness"
+    default: true
+  vampire.altar.light:
+    description: "Allows using an altar of light"
+    default: true
+  # USE COMMANDS
+  vampire.command:
+    description: "Allows the usage of commands"
+    default: true
+  vampire.command.batusi:
+    description: "Allows the usage of batusi subcommand"
+    default: true
+  vampire.command.bloodlust:
+    description: "Allows the usage of bloodlust subcommand"
+    default: true
+  vampire.command.flask:
+    description: "Allows the usage of flask subcommand"
+    default: false
+  vampire.command.give.holywater:
+    description: "Allows the usage of holywater subcommand"
+    default: op
+  vampire.command.give.ring:
+    description: "Allows the usage of ring subcommand"
+    default: op
+  vampire.command.help:
+    description: "Allows the usage of help subcommand"
+    default: true
+  vampire.command.intent:
+    description: "Allows the usage of intent subcommand"
+    default: true
+  vampire.command.list:
+    description: "Allows the usage of list subcommand"
+    default: op
+  vampire.command.nightvision:
+    description: "Allows the usage of nightvision subcommand"
+    default: true
+  vampire.command.reload:
+    description: "Allows the usage of reload subcommand"
+    default: op
+  vampire.command.set:
+    description: "Allows the usage of set subcommand"
+    default: op
+  vampire.command.set.food:
+    description: "Allows to set the food level of the command executor"
+    default: op
+  vampire.command.set.food.others:
+    description: "Allows to set the food level of anyone (needs base permission)"
+    default: op
+  vampire.command.set.health:
+    description: "Allows to set the health of the command executor"
+    default: op
+  vampire.command.set.health.others:
+    description: "Allows to set the health of anyone (needs base permission)"
+    default: op
+  vampire.command.set.help:
+    description: "Allows to see help for set subcommand"
+    default: op
+  vampire.command.set.infection:
+    description: "Allows to set the infection level of the command executor"
+    default: op
+  vampire.command.set.infection.others:
+    description: "Allows to set the infection level of anyone (needs base permission)"
+    default: op
+  vampire.command.set.nosferatu:
+    description: "Allows to set the nosferatu state of the command executor"
+    default: op
+  vampire.command.set.nosferatu.others:
+    description: "Allows to set the nosferatu state of anyone (needs base permission)"
+    default: op
+  vampire.command.set.vampire:
+    description: "Allows to set the vampire state of the command executor"
+    default: op
+  vampire.command.set.vampire.others:
+    description: "Allows to set the vampire state of anyone (needs base permission)"
+    default: op
+  vampire.command.show:
+    description: "Allows the usage of show subcommand to see the executor's info"
+    default: true
+  vampire.command.show.others:
+    description: "Allows to see anyone's info (needs base permission)"
+    default: op
+  vampire.command.shriek:
+    description: "Allows the usage of shriek subcommand"
+    default: true
+  vampire.command.trade.accept:
+    description: "Allows the usage of accept subcommand"
+    default: true
+  vampire.command.trade.offer:
+    description: "Allows the usage of offer subcommand"
+    default: true
+  vampire.command.version:
+    description: "Allows the usage of version subcommand"
+    default: op
+  # BECOME INFECTED
+  vampire.contract.combat:
+    description: "Contract infection in combat"
+    default: true
+  vampire.contract.flask:
+    description: "Contract infection by drinking a vampiric blood flask"
+    default: true
+  vampire.contract.trade:
+    description: "Contract infection by drinking vampiric blood directly"
+    default: true
+  # FEATURES
+  vampire.feature.disguise:
+    description: "Allows disguising into a bat when using batusi"
+    default: true
+  # INFECT OTHERS
+  vampire.infect.combat:
+    description: "Allows a player to infect others by hitting them"
+    default: true
 # -------------------------------------------- #
 # STAR NOTATION
 # -------------------------------------------- #
   vampire.*:
+    description: "Allows everything this plugin has to offer"
+    default: op
     children:
-      vampire.basecommand: true
-      vampire.help: true
-      vampire.show: true
-      vampire.show.other: true
-      vampire.shriek: true
-      vampire.mode.bloodlust: true
-      vampire.mode.intent: true
-      vampire.mode.nightvision: true
-      vampire.mode.batusi: true
-      vampire.trade.offer: true
-      vampire.trade.accept: true
-      vampire.trade.contract: true
-      vampire.flask: true
-      vampire.flask.contract: true
-      vampire.combat.infect: true
-      vampire.combat.contract: true
-      vampire.list: true
-      vampire.give.ring: true
-      vampire.give.holywater: true
-      vampire.set: true
-      vampire.set.vampire: true
-      vampire.set.vampire.other: true
-      vampire.set.nosferatu: true
-      vampire.set.nosferatu.other: true
-      vampire.set.infection: true
-      vampire.set.food: true
-      vampire.set.health: true
-      vampire.set.help: true
-      vampire.version: true
+      vampire.altar.*: true
+      vampire.command.*: true
+      vampire.contract.*: true
+      vampire.feature.*: true
+      vampire.infect.*: true
+  vampire.altar.*:
+    description: "Allows the usage of all altars"
+    default: true
+    children:
       vampire.altar.dark: true
       vampire.altar.light: true
-      vampire.reload: true
+  vampire.command.*:
+    description: "Allows the usage of all commands"
+    default: op
+    children:
+      vampire.command: true
+      vampire.command.batusi: true
+      vampire.command.bloodlust: true
+      vampire.command.flask: true
+      vampire.command.give.*: true
+      vampire.command.help: true
+      vampire.command.intent: true
+      vampire.command.list: true
+      vampire.command.nightvision: true
+      vampire.command.reload: true
+      vampire.command.set.*: true
+      vampire.command.show.*: true
+      vampire.command.shriek: true
+      vampire.command.trade.*: true
+      vampire.command.version: true
+  vampire.command.give.*:
+    description: "Allows usage of commands that give items for free"
+    default: op
+    children:
+      vampire.command.give.holywater: true
+      vampire.command.give.ring: true
+  vampire.command.set.*:
+    description: "Allows unrestricted usage of all set subcommand options"
+    default: op
+    children:
+      vampire.command.set: true
+      vampire.command.set.food.*: true
+      vampire.command.set.health.*: true
+      vampire.command.set.help: true
+      vampire.command.set.infection.*: true
+      vampire.command.set.nosferatu.*: true
+      vampire.command.set.vampire.*: true
+  vampire.command.set.food.*:
+    description: "Allows set food level command unrestricted"
+    default: op
+    children:
+      vampire.command.set.food: true
+      vampire.command.set.food.others: true
+  vampire.command.set.health.*:
+    description: "Allows set health command unrestricted"
+    default: op
+    children:
+      vampire.command.set.health: true
+      vampire.command.set.health.others: true
+  vampire.command.set.infection.*:
+    description: "Allows set infection level command unrestricted"
+    default: op
+    children:
+      vampire.command.set.infection: true
+      vampire.command.set.infection.others: true
+  vampire.command.set.nosferatu.*:
+    description: "Allows set nosferatu command unrestricted"
+    default: op
+    children:
+      vampire.command.set.nosferatu: true
+      vampire.command.set.nosferatu.others: true
+  vampire.command.set.vampire.*:
+    description: "Allows set vampire command unrestricted"
+    default: op
+    children:
+      vampire.command.set.vampire: true
+      vampire.command.set.vampire.others: true
+  vampire.command.show.*:
+    description: "Allows unrestricted usage of show command"
+    default: op
+    children:
+      vampire.command.show: true
+      vampire.command.show.others: true
+  vampire.command.trade.*:
+    description: "Allows usage of blood trading commands"
+    default: op
+    children:
+      vampire.command.trade.accept: true
+      vampire.command.trade.offer: true
+  vampire.contract.*:
+    description: "Allows humans to become infected by any available means"
+    default: true
+    children:
+      vampire.contract.combat: true
+      vampire.contract.flask: true
+      vampire.contract.trade: true
+  vampire.feature.*:
+    description: "Allows all features available"
+    default: true
+    children:
+      vampire.feature.disguise: true
+  vampire.infect.*:
+    description: "Allows vampires to infect other players by any available means"
+    default: true
+    children:
+      vampire.infect.combat: true
 # -------------------------------------------- #
 # KITS
 # -------------------------------------------- #
+  vampire.kit.default:
+    description: "Things all players can do by default. Same as the rank0 kit"
+    default: true
+    children:
+      vampire.kit.rank0: true
   vampire.kit.op:
+    description: "Same as vampire.*. Gives access to everything"
     default: op
     children:
       vampire.*: true
+  vampire.kit.rank0:
+    description: "Commands and stuff that only the executor and do not give them anything"
+    default: false
+    children:
+      vampire.altar.*: true
+      vampire.command: true
+      vampire.command.batusi: true
+      vampire.command.bloodlust: true
+      vampire.command.flask: true
+      vampire.command.help: true
+      vampire.command.intent: true
+      vampire.command.nightvision: true
+      vampire.command.show: true
+      vampire.command.shriek: true
+      vampire.command.trade.*: true
+      vampire.command.version: true
+      vampire.contract.*: true
+      vampire.feature.*: true
+      vampire.infect.*: true
+  vampire.kit.rank1:
+    description: "Same as rank0, but can see if other players are vampires and list them all"
+    default: false
+    children:
+      vampire.kit.rank0: true
+      vampire.command.list: true
+      vampire.command.show.*: true
+  vampire.kit.rank2:
+    description: "Same as rank1, but can give items to the executor and set someone's state"
+    default: false
+    children:
+      vampire.kit.rank1: true
+      vampire.command.give.*: true
+      vampire.command.set.*: true
   vampire.kit.rank3:
+    description: "Same as rank2, but can reload the config and lang files"
     default: false
     children:
       vampire.kit.rank2: true
       vampire.reload: true
-  vampire.kit.rank2:
-    default: false
-    children:
-      vampire.kit.rank1: true
-      vampire.set: true
-      vampire.set.vampire: true
-      vampire.set.vampire.other: true
-      vampire.set.nosferatu: true
-      vampire.set.nosferatu.other: true
-      vampire.set.infection: true
-      vampire.set.food: true
-      vampire.set.health: true
-      vampire.set.help: true
-      vampire.give.ring: true
-      vampire.give.holywater: true
-  vampire.kit.rank1:
-    default: false
-    children:
-      vampire.kit.rank0: true
-      vampire.show.other: true
-      vampire.list: true
-  vampire.kit.rank0:
-    default: false
-    children:
-      vampire.basecommand: true
-      vampire.help: true
-      vampire.show: true
-      vampire.shriek: true
-      vampire.mode.intent: true
-      vampire.mode.nightvision: true
-      vampire.mode.bloodlust: true
-      vampire.mode.batusi: true
-      vampire.trade.offer: true
-      vampire.trade.accept: true
-      vampire.trade.contract: true
-      vampire.flask: true
-      vampire.flask.contract: true
-      vampire.combat.infect: true
-      vampire.combat.contract: true
-      vampire.version: true
-      vampire.altar.dark: true
-      vampire.altar.light: true
-  vampire.kit.default:
-    default: true
-    children:
-      vampire.kit.rank0: true

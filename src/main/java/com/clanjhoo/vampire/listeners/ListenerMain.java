@@ -516,8 +516,8 @@ public class ListenerMain implements Listener {
                     // ... and the vampire is allowed to infect through combat ...
                     // ... and the human is allowed to contract through combat ...
                     // ... Then there is a risk for infection ...
-                    if (resUtil.hasPermission(vampire, Perm.COMBAT_INFECT)
-                            && resUtil.hasPermission(human, Perm.COMBAT_CONTRACT)
+                    if (resUtil.hasPermission(vampire, Perm.INFECT_COMBAT)
+                            && resUtil.hasPermission(human, Perm.CONTRACT_COMBAT)
                             && ThreadLocalRandom.current().nextDouble() < vampiree.combatInfectRisk()) {
                         InfectionReason reason = vampiree.isIntending() ? InfectionReason.COMBAT_INTENDED : InfectionReason.COMBAT_MISTAKE;
                         humanee.addInfection(0.01D, reason, vampiree);
@@ -550,7 +550,7 @@ public class ListenerMain implements Listener {
                     return;
                 }
                 // ... and the vampire is allowed to infect through combat ...
-                if (vPlayer.isVampire() && resUtil.hasPermission(damager, Perm.COMBAT_INFECT)) {
+                if (vPlayer.isVampire() && resUtil.hasPermission(damager, Perm.INFECT_COMBAT)) {
                     Horse horse = (Horse) event.getEntity();
                     // If the horse has already died we exit
                     if (!horse.isValid() || horse.isDead()) {
@@ -693,7 +693,7 @@ public class ListenerMain implements Listener {
                 // ... finally, if the player is human did they contract the dark disease from vampiric blood?
                 if (vPlayer.isInfected()) {
                     vPlayer.addInfection(0.01D);
-                } else if (event.getPlayer().hasPermission(Perm.FLASK_CONTRACT.getPermissionNode())
+                } else if (event.getPlayer().hasPermission(Perm.CONTRACT_FLASK.getPermissionNode())
                         && ThreadLocalRandom.current().nextDouble() * 20 < amount) {
                     vPlayer.addInfection(0.05D, InfectionReason.FLASK, bloodFlaskData.getOwner());
                 }

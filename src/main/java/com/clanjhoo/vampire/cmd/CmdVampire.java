@@ -92,10 +92,10 @@ public class CmdVampire {
 
 	public static final LiteralCommandNode<CommandSourceStack> reload = Commands
 			.literal("reload")
-			.requires(sender -> sender.getSender().hasPermission(Perm.RELOAD.getPermissionNode()))
+			.requires(sender -> sender.getSender().hasPermission(Perm.COMMAND_RELOAD.getPermissionNode()))
 			.executes(CmdVampire::reloadCommand)
 			.then(Commands.argument("what", ReloadArgumentType.reloadClass())
-					.requires(sender -> sender.getSender().hasPermission(Perm.RELOAD.getPermissionNode()))
+					.requires(sender -> sender.getSender().hasPermission(Perm.COMMAND_RELOAD.getPermissionNode()))
 					.executes(CmdVampire::reloadCommand))
 			.build();
 	public static final CommandMessageKeys reloadDesc = CommandMessageKeys.RELOAD_DESCRIPTION;
@@ -275,10 +275,10 @@ public class CmdVampire {
 
 	public static final LiteralCommandNode<CommandSourceStack> show = Commands
 			.literal("show")
-			.requires(sender -> sender.getSender().hasPermission(Perm.SHOW.getPermissionNode()))
+			.requires(sender -> sender.getSender().hasPermission(Perm.COMMAND_SHOW.getPermissionNode()))
 			.executes(CmdVampire::showCommand)
 			.then(Commands.argument("targets", ArgumentTypes.playerProfiles())
-					.requires(sender -> sender.getSender().hasPermission(Perm.SHOW_OTHER.getPermissionNode()))
+					.requires(sender -> sender.getSender().hasPermission(Perm.COMMAND_SHOW_OTHERS.getPermissionNode()))
 					.executes(CmdVampire::showCommand))
 			.build();
 	public static final CommandMessageKeys showDesc = CommandMessageKeys.SHOW_DESCRIPTION;
@@ -329,20 +329,20 @@ public class CmdVampire {
 
 	public static final LiteralCommandNode<CommandSourceStack> bloodlust = Commands
 			.literal("bloodlust")
-			.requires(sender -> sender.getSender().hasPermission(Perm.MODE_BLOODLUST.getPermissionNode()))
+			.requires(sender -> sender.getSender().hasPermission(Perm.COMMAND_BLOODLUST.getPermissionNode()))
 			.executes(CmdVampire::bloodlustCommand)
 			.then(Commands.argument("enable", YesNoArgumentType.yesNoClass())
 					.executes(CmdVampire::bloodlustCommand))
 			.build();
 	public static final LiteralCommandNode<CommandSourceStack> modebloodlust = Commands
 			.literal("modebloodlust")
-			.requires(sender -> sender.getSender().hasPermission(Perm.MODE_BLOODLUST.getPermissionNode()))
+			.requires(sender -> sender.getSender().hasPermission(Perm.COMMAND_BLOODLUST.getPermissionNode()))
 			.executes(CmdVampire::bloodlustCommand)
 			.redirect(bloodlust)
 			.build();
 	public static final LiteralCommandNode<CommandSourceStack> b = Commands
 			.literal("b")
-			.requires(sender -> sender.getSender().hasPermission(Perm.MODE_BLOODLUST.getPermissionNode()))
+			.requires(sender -> sender.getSender().hasPermission(Perm.COMMAND_BLOODLUST.getPermissionNode()))
 			.executes(CmdVampire::bloodlustCommand)
 			.redirect(bloodlust)
 			.build();
@@ -402,20 +402,20 @@ public class CmdVampire {
 
 	public static final LiteralCommandNode<CommandSourceStack> intend = Commands
 			.literal("intend")
-			.requires(sender -> sender.getSender().hasPermission(Perm.MODE_INTENT.getPermissionNode()))
+			.requires(sender -> sender.getSender().hasPermission(Perm.COMMAND_INTENT.getPermissionNode()))
 			.executes(CmdVampire::intendCommand)
 			.then(Commands.argument("enable", YesNoArgumentType.yesNoClass())
 					.executes(CmdVampire::intendCommand))
 			.build();
 	public static final LiteralCommandNode<CommandSourceStack> modeintend = Commands
 			.literal("modeintend")
-			.requires(sender -> sender.getSender().hasPermission(Perm.MODE_INTENT.getPermissionNode()))
+			.requires(sender -> sender.getSender().hasPermission(Perm.COMMAND_INTENT.getPermissionNode()))
 			.executes(CmdVampire::intendCommand)
 			.redirect(intend)
 			.build();
 	public static final LiteralCommandNode<CommandSourceStack> i = Commands
 			.literal("i")
-			.requires(sender -> sender.getSender().hasPermission(Perm.MODE_INTENT.getPermissionNode()))
+			.requires(sender -> sender.getSender().hasPermission(Perm.COMMAND_INTENT.getPermissionNode()))
 			.executes(CmdVampire::intendCommand)
 			.redirect(intend)
 			.build();
@@ -468,20 +468,20 @@ public class CmdVampire {
 
 	public static final LiteralCommandNode<CommandSourceStack> nightvision = Commands
 			.literal("nightvision")
-			.requires(sender -> sender.getSender().hasPermission(Perm.MODE_NIGHTVISION.getPermissionNode()))
+			.requires(sender -> sender.getSender().hasPermission(Perm.COMMAND_NIGHTVISION.getPermissionNode()))
 			.executes(CmdVampire::nightvisionCommand)
 			.then(Commands.argument("enable", YesNoArgumentType.yesNoClass())
 					.executes(CmdVampire::nightvisionCommand))
 			.build();
 	public static final LiteralCommandNode<CommandSourceStack> modenightvision = Commands
 			.literal("modenightvision")
-			.requires(sender -> sender.getSender().hasPermission(Perm.MODE_NIGHTVISION.getPermissionNode()))
+			.requires(sender -> sender.getSender().hasPermission(Perm.COMMAND_NIGHTVISION.getPermissionNode()))
 			.executes(CmdVampire::nightvisionCommand)
 			.redirect(nightvision)
 			.build();
 	public static final LiteralCommandNode<CommandSourceStack> nv = Commands
 			.literal("nv")
-			.requires(sender -> sender.getSender().hasPermission(Perm.MODE_NIGHTVISION.getPermissionNode()))
+			.requires(sender -> sender.getSender().hasPermission(Perm.COMMAND_NIGHTVISION.getPermissionNode()))
 			.executes(CmdVampire::nightvisionCommand)
 			.redirect(nightvision)
 			.build();
@@ -533,7 +533,7 @@ public class CmdVampire {
 
 	public static final LiteralCommandNode<CommandSourceStack> offer = Commands
 			.literal("offer")
-			.requires(sender -> sender.getSender().hasPermission(Perm.TRADE_OFFER.getPermissionNode()))
+			.requires(sender -> sender.getSender().hasPermission(Perm.COMMAND_TRADE_OFFER.getPermissionNode()))
 			.then(Commands.argument("target", ArgumentTypes.player())
 					.executes(CmdVampire::offerCommand)
 					.then(Commands.argument("amount", DoubleArgumentType.doubleArg(0, 20))
@@ -541,7 +541,7 @@ public class CmdVampire {
 			.build();
 	public static final LiteralCommandNode<CommandSourceStack> o = Commands
 			.literal("o")
-			.requires(sender -> sender.getSender().hasPermission(Perm.TRADE_OFFER.getPermissionNode()))
+			.requires(sender -> sender.getSender().hasPermission(Perm.COMMAND_TRADE_OFFER.getPermissionNode()))
 			.redirect(offer)
 			.build();
 	public static final CommandMessageKeys offerDesc = CommandMessageKeys.OFFER_DESCRIPTION;
@@ -590,12 +590,12 @@ public class CmdVampire {
 
 	public static final LiteralCommandNode<CommandSourceStack> accept = Commands
 			.literal("accept")
-			.requires(sender -> sender.getSender().hasPermission(Perm.TRADE_ACCEPT.getPermissionNode()))
+			.requires(sender -> sender.getSender().hasPermission(Perm.COMMAND_TRADE_ACCEPT.getPermissionNode()))
 			.executes(CmdVampire::acceptCommand)
 			.build();
 	public static final LiteralCommandNode<CommandSourceStack> a = Commands
 			.literal("a")
-			.requires(sender -> sender.getSender().hasPermission(Perm.TRADE_ACCEPT.getPermissionNode()))
+			.requires(sender -> sender.getSender().hasPermission(Perm.COMMAND_TRADE_ACCEPT.getPermissionNode()))
 			.executes(CmdVampire::acceptCommand)
 			.redirect(accept)
 			.build();
@@ -626,14 +626,14 @@ public class CmdVampire {
 
 	public static final LiteralCommandNode<CommandSourceStack> flask = Commands
 			.literal("flask")
-			.requires(sender -> sender.getSender().hasPermission(Perm.FLASK.getPermissionNode()))
+			.requires(sender -> sender.getSender().hasPermission(Perm.COMMAND_FLASK.getPermissionNode()))
 			.executes(CmdVampire::flaskCommand)
 			.then(Commands.argument("amount", DoubleArgumentType.doubleArg(0, 20))
 					.executes(CmdVampire::flaskCommand))
 			.build();
 	public static final LiteralCommandNode<CommandSourceStack> f = Commands
 			.literal("f")
-			.requires(sender -> sender.getSender().hasPermission(Perm.FLASK.getPermissionNode()))
+			.requires(sender -> sender.getSender().hasPermission(Perm.COMMAND_FLASK.getPermissionNode()))
 			.executes(CmdVampire::flaskCommand)
 			.redirect(flask)
 			.build();
@@ -700,7 +700,7 @@ public class CmdVampire {
 
 	public static final LiteralCommandNode<CommandSourceStack> shriek = Commands
 			.literal("shriek")
-			.requires(sender -> sender.getSender().hasPermission(Perm.SHRIEK.getPermissionNode()))
+			.requires(sender -> sender.getSender().hasPermission(Perm.COMMAND_SHRIEK.getPermissionNode()))
 			.executes(CmdVampire::shriekCommand)
 			.build();
 	public static final CommandMessageKeys shriekDesc = CommandMessageKeys.SHRIEK_DESCRIPTION;
@@ -741,7 +741,7 @@ public class CmdVampire {
 
 	public static final LiteralCommandNode<CommandSourceStack> list = Commands
 			.literal("list")
-			.requires(sender -> sender.getSender().hasPermission(Perm.LIST.getPermissionNode()))
+			.requires(sender -> sender.getSender().hasPermission(Perm.COMMAND_LIST.getPermissionNode()))
 			.executes(CmdVampire::listCommand)
 			.then(Commands.argument("page", IntegerArgumentType.integer(1))
 					.executes(CmdVampire::listCommand))
@@ -828,12 +828,12 @@ public class CmdVampire {
 
 	public static final LiteralCommandNode<CommandSourceStack> version = Commands
 			.literal("version")
-			.requires(sender -> sender.getSender().hasPermission(Perm.VERSION.getPermissionNode()))
+			.requires(sender -> sender.getSender().hasPermission(Perm.COMMAND_VERSION.getPermissionNode()))
 			.executes(CmdVampire::versionCommand)
 			.build();
 	public static final LiteralCommandNode<CommandSourceStack> v = Commands
 			.literal("v")
-			.requires(sender -> sender.getSender().hasPermission(Perm.VERSION.getPermissionNode()))
+			.requires(sender -> sender.getSender().hasPermission(Perm.COMMAND_VERSION.getPermissionNode()))
 			.executes(CmdVampire::versionCommand)
 			.redirect(version)
 			.build();
@@ -853,7 +853,7 @@ public class CmdVampire {
 
 	public static final LiteralCommandNode<CommandSourceStack> batusi = Commands
 			.literal("batusi")
-			.requires(sender -> sender.getSender().hasPermission(Perm.MODE_BATUSI.getPermissionNode()))
+			.requires(sender -> sender.getSender().hasPermission(Perm.COMMAND_BATUSI.getPermissionNode()))
 			.executes(CmdVampire::batusiCommand)
 			.then(Commands.argument("numberOfBats", IntegerArgumentType.integer(0, getPlugin().getVampireConfig().vampire.batusi.maxBats))
 					.executes(CmdVampire::batusiCommand)
@@ -866,7 +866,7 @@ public class CmdVampire {
 			.build();
 	public static final LiteralCommandNode<CommandSourceStack> bat = Commands
 			.literal("bat")
-			.requires(sender -> sender.getSender().hasPermission(Perm.MODE_BATUSI.getPermissionNode()))
+			.requires(sender -> sender.getSender().hasPermission(Perm.COMMAND_BATUSI.getPermissionNode()))
 			.executes(CmdVampire::batusiCommand)
 			.redirect(batusi)
 			.build();
@@ -966,7 +966,7 @@ public class CmdVampire {
 
 	public static final LiteralCommandNode<CommandSourceStack> holywater = Commands
 			.literal("holywater")
-			.requires(sender -> sender.getSender().hasPermission(Perm.GIVE_HOLYWATER.getPermissionNode()))
+			.requires(sender -> sender.getSender().hasPermission(Perm.COMMAND_GIVE_HOLYWATER.getPermissionNode()))
 			.executes(CmdVampire::holywaterCommand)
 			.then(Commands.argument("amount", IntegerArgumentType.integer(1, 64))
 					.executes(CmdVampire::holywaterCommand))
@@ -1002,7 +1002,7 @@ public class CmdVampire {
 
 	public static final LiteralCommandNode<CommandSourceStack> ring = Commands
 			.literal("ring")
-			.requires(sender -> sender.getSender().hasPermission(Perm.GIVE_RING.getPermissionNode()))
+			.requires(sender -> sender.getSender().hasPermission(Perm.COMMAND_GIVE_RING.getPermissionNode()))
 			.executes(CmdVampire::ringCommand)
 			.build();
 	public static final CommandMessageKeys ringDesc = CommandMessageKeys.RING_DESCRIPTION;
@@ -1026,16 +1026,16 @@ public class CmdVampire {
 
 	public static final LiteralCommandNode<CommandSourceStack> setVampire = Commands
 			.literal("vampire")
-			.requires(sender -> sender.getSender().hasPermission(Perm.SET_VAMPIRE.getPermissionNode()))
+			.requires(sender -> sender.getSender().hasPermission(Perm.COMMAND_SET_VAMPIRE.getPermissionNode()))
 			.then(Commands.argument("isVampire", YesNoArgumentType.yesNoClass())
 					.executes(CmdVampire::setVampireCommand)
 					.then(Commands.argument("targets", ArgumentTypes.playerProfiles())
-							.requires(sender -> sender.getSender().hasPermission(Perm.SET_VAMPIRE_OTHER.getPermissionNode()))
+							.requires(sender -> sender.getSender().hasPermission(Perm.COMMAND_SET_VAMPIRE_OTHERS.getPermissionNode()))
 							.executes(CmdVampire::setVampireCommand)))
 			.build();
 	public static final LiteralCommandNode<CommandSourceStack> setV = Commands
 			.literal("v")
-			.requires(sender -> sender.getSender().hasPermission(Perm.SET_VAMPIRE.getPermissionNode()))
+			.requires(sender -> sender.getSender().hasPermission(Perm.COMMAND_SET_VAMPIRE.getPermissionNode()))
 			.redirect(setVampire)
 			.build();
 	public static final CommandMessageKeys setVampireDesc = CommandMessageKeys.SET_VAMPIRE_DESCRIPTION;
@@ -1115,16 +1115,16 @@ public class CmdVampire {
 
 	public static final LiteralCommandNode<CommandSourceStack> setNosferatu = Commands
 			.literal("nosferatu")
-			.requires(sender -> sender.getSender().hasPermission(Perm.SET_NOSFERATU.getPermissionNode()))
+			.requires(sender -> sender.getSender().hasPermission(Perm.COMMAND_SET_NOSFERATU.getPermissionNode()))
 			.then(Commands.argument("isNosferatu", YesNoArgumentType.yesNoClass())
 					.executes(CmdVampire::setNosferatuCommand)
 					.then(Commands.argument("targets", ArgumentTypes.playerProfiles())
-							.requires(sender -> sender.getSender().hasPermission(Perm.SET_NOSFERATU_OTHER.getPermissionNode()))
+							.requires(sender -> sender.getSender().hasPermission(Perm.COMMAND_SET_NOSFERATU_OTHERS.getPermissionNode()))
 							.executes(CmdVampire::setNosferatuCommand)))
 			.build();
 	public static final LiteralCommandNode<CommandSourceStack> setN = Commands
 			.literal("n")
-			.requires(sender -> sender.getSender().hasPermission(Perm.SET_NOSFERATU.getPermissionNode()))
+			.requires(sender -> sender.getSender().hasPermission(Perm.COMMAND_SET_NOSFERATU.getPermissionNode()))
 			.redirect(setNosferatu)
 			.build();
 	public static final CommandMessageKeys setNosferatuDesc = CommandMessageKeys.SET_NOSFERATU_DESCRIPTION;
@@ -1212,16 +1212,16 @@ public class CmdVampire {
 
 	public static final LiteralCommandNode<CommandSourceStack> setInfection = Commands
 			.literal("infection")
-			.requires(sender -> sender.getSender().hasPermission(Perm.SET_INFECTION.getPermissionNode()))
+			.requires(sender -> sender.getSender().hasPermission(Perm.COMMAND_SET_INFECTION.getPermissionNode()))
 			.then(Commands.argument("value", DoubleArgumentType.doubleArg(0, 100))
 					.executes(CmdVampire::setInfectionCommand)
 					.then(Commands.argument("targets", ArgumentTypes.playerProfiles())
-							.requires(sender -> sender.getSender().hasPermission(Perm.SET_INFECTION_OTHER.getPermissionNode()))
+							.requires(sender -> sender.getSender().hasPermission(Perm.COMMAND_SET_INFECTION_OTHERS.getPermissionNode()))
 							.executes(CmdVampire::setInfectionCommand)))
 			.build();
 	public static final LiteralCommandNode<CommandSourceStack> setI = Commands
 			.literal("i")
-			.requires(sender -> sender.getSender().hasPermission(Perm.SET_INFECTION.getPermissionNode()))
+			.requires(sender -> sender.getSender().hasPermission(Perm.COMMAND_SET_INFECTION.getPermissionNode()))
 			.redirect(setInfection)
 			.build();
 	public static final CommandMessageKeys setInfectionDesc = CommandMessageKeys.SET_INFECTION_DESCRIPTION;
@@ -1311,16 +1311,16 @@ public class CmdVampire {
 
 	public static final LiteralCommandNode<CommandSourceStack> setFood = Commands
 			.literal("food")
-			.requires(sender -> sender.getSender().hasPermission(Perm.SET_FOOD.getPermissionNode()))
+			.requires(sender -> sender.getSender().hasPermission(Perm.COMMAND_SET_FOOD.getPermissionNode()))
 			.then(Commands.argument("value", IntegerArgumentType.integer(0, 20))
 					.executes(CmdVampire::setFoodCommand)
 					.then(Commands.argument("targets", ArgumentTypes.players())
-							.requires(sender -> sender.getSender().hasPermission(Perm.SET_FOOD_OTHER.getPermissionNode()))
+							.requires(sender -> sender.getSender().hasPermission(Perm.COMMAND_SET_FOOD_OTHERS.getPermissionNode()))
 							.executes(CmdVampire::setFoodCommand)))
 			.build();
 	public static final LiteralCommandNode<CommandSourceStack> setF = Commands
 			.literal("f")
-			.requires(sender -> sender.getSender().hasPermission(Perm.SET_FOOD.getPermissionNode()))
+			.requires(sender -> sender.getSender().hasPermission(Perm.COMMAND_SET_FOOD.getPermissionNode()))
 			.redirect(setFood)
 			.build();
 	public static final CommandMessageKeys setFoodDesc = CommandMessageKeys.SET_FOOD_DESCRIPTION;
@@ -1374,16 +1374,16 @@ public class CmdVampire {
 
 	public static final LiteralCommandNode<CommandSourceStack> setHealth = Commands
 			.literal("health")
-			.requires(sender -> sender.getSender().hasPermission(Perm.SET_HEALTH.getPermissionNode()))
+			.requires(sender -> sender.getSender().hasPermission(Perm.COMMAND_SET_HEALTH.getPermissionNode()))
 			.then(Commands.argument("value", DoubleArgumentType.doubleArg(0))
 					.executes(CmdVampire::setHealthCommand)
 					.then(Commands.argument("targets", ArgumentTypes.entities())
-							.requires(sender -> sender.getSender().hasPermission(Perm.SET_HEALTH_OTHER.getPermissionNode()))
+							.requires(sender -> sender.getSender().hasPermission(Perm.COMMAND_SET_HEALTH_OTHERS.getPermissionNode()))
 							.executes(CmdVampire::setHealthCommand)))
 			.build();
 	public static final LiteralCommandNode<CommandSourceStack> setH = Commands
 			.literal("h")
-			.requires(sender -> sender.getSender().hasPermission(Perm.SET_HEALTH.getPermissionNode()))
+			.requires(sender -> sender.getSender().hasPermission(Perm.COMMAND_SET_HEALTH.getPermissionNode()))
 			.redirect(setHealth)
 			.build();
 	public static final CommandMessageKeys setHealthDesc = CommandMessageKeys.SET_HEALTH_DESCRIPTION;
@@ -1444,7 +1444,7 @@ public class CmdVampire {
 
 	public static final LiteralCommandNode<CommandSourceStack> setHelp = Commands
 			.literal("help")
-			.requires(sender -> sender.getSender().hasPermission(Perm.SET_HELP.getPermissionNode()))
+			.requires(sender -> sender.getSender().hasPermission(Perm.COMMAND_SET_HELP.getPermissionNode()))
 			.executes(CmdVampire::setHelpCommand)
 			.then(Commands.argument("subcommand", StringArgumentType.word())
 					.executes(CmdVampire::setHelpCommand))
@@ -1481,7 +1481,7 @@ public class CmdVampire {
 
 	public static final LiteralCommandNode<CommandSourceStack> set = Commands
 			.literal("set")
-			.requires(sender -> sender.getSender().hasPermission(Perm.SET.getPermissionNode()))
+			.requires(sender -> sender.getSender().hasPermission(Perm.COMMAND_SET.getPermissionNode()))
 			.then(setVampire)
 			.then(setV)
 			.then(setNosferatu)
@@ -1498,7 +1498,7 @@ public class CmdVampire {
 
 	public static final LiteralCommandNode<CommandSourceStack> help = Commands
 			.literal("help")
-			.requires(sender -> sender.getSender().hasPermission(Perm.HELP.getPermissionNode()))
+			.requires(sender -> sender.getSender().hasPermission(Perm.COMMAND_HELP.getPermissionNode()))
 			.executes(CmdVampire::helpCommand)
 			.then(Commands.argument("subcommand", StringArgumentType.word())
 					.executes(CmdVampire::helpCommand))
@@ -1535,7 +1535,7 @@ public class CmdVampire {
 
 	public static final LiteralCommandNode<CommandSourceStack> VAMPIRE_COMMAND = Commands
 			.literal("vampire")
-			.requires(sender -> sender.getSender().hasPermission(Perm.BASECOMMAND.getPermissionNode()))
+			.requires(sender -> sender.getSender().hasPermission(Perm.COMMAND.getPermissionNode()))
 			.then(reload)
 			.then(show)
 			.then(bloodlust)

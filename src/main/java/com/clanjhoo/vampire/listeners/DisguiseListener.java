@@ -35,7 +35,7 @@ public class DisguiseListener implements Listener {
         VPlayer vPlayer = plugin.getVPlayer(player);
         if (vPlayer == null || !vPlayer.isChangingDisguise())
             return;
-        if (!resUtil.hasPermission(player, Perm.MODE_BATUSI_DISGUISE))
+        if (!resUtil.hasPermission(player, Perm.FEATURE_DISGUISE))
             event.setCancelled(true);
     }
 
@@ -53,7 +53,7 @@ public class DisguiseListener implements Listener {
             return;
         // This event is also called when the player already has a disguise before using batusi.
         // We don't care about it in that case.
-        if (!resUtil.hasPermission(player, Perm.MODE_BATUSI_DISGUISE)) {
+        if (!resUtil.hasPermission(player, Perm.FEATURE_DISGUISE)) {
             event.setCancelled(true);
         }
     }

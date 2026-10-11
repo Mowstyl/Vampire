@@ -1,132 +1,55 @@
 package com.clanjhoo.vampire;
 
-import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.Locale;
 
 public enum Perm {
-	// -------------------------------------------- //
-	// ENUM
-	// -------------------------------------------- //
-	
-	BASECOMMAND,
-
-	HELP,
-	SHOW,
-	SHOW_OTHER,
-	SHRIEK,
-	MODE_BLOODLUST,
-	MODE_INTENT,
-	MODE_NIGHTVISION,
-	MODE_BATUSI,
-	MODE_BATUSI_DISGUISE,
-	TRADE_OFFER,
-	TRADE_ACCEPT,
-	TRADE_CONTRACT,
-	FLASK,
-	FLASK_CONTRACT,
-	GIVE_HOLYWATER,
-	GIVE_RING,
-	COMBAT_INFECT,
-	COMBAT_CONTRACT,
-	LIST,
-	SET,
-	SET_HELP,
-	SET_VAMPIRE,
-	SET_VAMPIRE_OTHER,
-	SET_NOSFERATU,
-	SET_NOSFERATU_OTHER,
-	SET_INFECTION,
-	SET_INFECTION_OTHER,
-	SET_FOOD,
-	SET_FOOD_OTHER,
-	SET_HEALTH,
-	SET_HEALTH_OTHER,
-	VERSION,
-	
 	ALTAR_DARK,
 	ALTAR_LIGHT,
-	
-	CONFIG,
-	LANG,
-	RELOAD
+
+	COMMAND,
+	COMMAND_BATUSI,
+	COMMAND_BLOODLUST,
+	COMMAND_FLASK,
+	COMMAND_GIVE_HOLYWATER,
+	COMMAND_GIVE_RING,
+	COMMAND_HELP,
+	COMMAND_INTENT,
+	COMMAND_LIST,
+	COMMAND_NIGHTVISION,
+	COMMAND_RELOAD,
+	COMMAND_SET,
+	COMMAND_SET_FOOD,
+	COMMAND_SET_FOOD_OTHERS,
+	COMMAND_SET_HEALTH,
+	COMMAND_SET_HEALTH_OTHERS,
+	COMMAND_SET_HELP,
+	COMMAND_SET_INFECTION,
+	COMMAND_SET_INFECTION_OTHERS,
+	COMMAND_SET_NOSFERATU,
+	COMMAND_SET_NOSFERATU_OTHERS,
+	COMMAND_SET_VAMPIRE,
+	COMMAND_SET_VAMPIRE_OTHERS,
+	COMMAND_SHOW,
+	COMMAND_SHOW_OTHERS,
+	COMMAND_SHRIEK,
+	COMMAND_TRADE_ACCEPT,
+	COMMAND_TRADE_OFFER,
+	COMMAND_VERSION,
+
+	CONTRACT_COMBAT,
+	CONTRACT_FLASK,
+	CONTRACT_TRADE,
+
+	FEATURE_DISGUISE,
+
+	INFECT_COMBAT,
+
 	
 	// END OF LIST
 	;
 
 	public String getPermissionNode() {
 		return "vampire." + this.name().toLowerCase(Locale.ROOT).replace("_", ".");
-	}
-
-	@Nullable
-	@Contract(value = "null -> null", pure = true)
-	public static Perm getPermFromString(String command) {
-		Perm perm = null;
-
-		if (command != null) {
-			switch (command) {
-				case "show":
-					perm = Perm.SHOW;
-					break;
-				case "bloodlust":
-					perm = Perm.MODE_BLOODLUST;
-					break;
-				case "intend":
-					perm = Perm.MODE_INTENT;
-					break;
-				case "nightvision":
-					perm = Perm.MODE_NIGHTVISION;
-					break;
-				case "batusi":
-					perm = Perm.MODE_BATUSI;
-					break;
-				case "disguise batusi":
-					perm = Perm.MODE_BATUSI_DISGUISE;
-					break;
-				case "offer":
-					perm = Perm.TRADE_OFFER;
-					break;
-				case "accept":
-					perm = Perm.TRADE_ACCEPT;
-					break;
-				case "flask":
-					perm = Perm.FLASK;
-					break;
-				case "shriek":
-					perm = Perm.SHRIEK;
-					break;
-				case "list":
-					perm = Perm.LIST;
-					break;
-				case "set":
-					perm = Perm.SET;
-					break;
-				case "version":
-					perm = Perm.VERSION;
-					break;
-				case "vampire":
-					perm = Perm.SET_VAMPIRE;
-					break;
-				case "nosferatu":
-					perm = Perm.SET_NOSFERATU;
-					break;
-				case "infection":
-					perm = Perm.SET_INFECTION;
-					break;
-				case "food":
-					perm = Perm.SET_FOOD;
-					break;
-				case "health":
-					perm = Perm.SET_HEALTH;
-					break;
-				case "help":
-					perm = Perm.BASECOMMAND;
-					break;
-				default:
-            }
-		}
-
-		return perm;
 	}
 }

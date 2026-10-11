@@ -1200,7 +1200,7 @@ public class VPlayer {
                         if (this.isInfected()) {
                             this.addInfection(0.01D);
                         }
-                        else if (me.hasPermission(Perm.TRADE_CONTRACT.getPermissionNode())
+                        else if (me.hasPermission(Perm.CONTRACT_TRADE.getPermissionNode())
                                 && ThreadLocalRandom.current().nextDouble() * 20 < amount) {
                             this.addInfection(0.05D, InfectionReason.TRADE, vyou);
                         }

@@ -137,8 +137,6 @@ dependencies {
         isTransitive = false
     }
     implementation(libs.clanjhoo.dbhandler)
-    compileOnly(libs.kyori.adventure.minimessage)
-    compileOnly(libs.kyori.adventure.gson)
 }
 
 tasks {
@@ -157,8 +155,6 @@ tasks {
     }
 
     shadowJar {
-        relocate("co.aikar.commands", "co.aikar.${rootProject.name.lowercase()}.acf")
-        relocate("co.aikar.locales", "co.aikar.${rootProject.name.lowercase()}.locales")
         relocate("com.clanjhoo.dbhandler", "com.clanjhoo.${rootProject.name.lowercase()}.dbhandler")
         //relocate("net.kyori", "net.kyori.${rootProject.name.lowercase()}")
         //relocate("org.slf4j", "org.${rootProject.name.lowercase()}.sl4fj")
